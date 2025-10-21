@@ -5,6 +5,7 @@ import { getProductById, getProductsBySeller, ProductWithDetails, Product } from
 import ImageGallery from '../../components/products/ImageGallery';
 import ProductCard from '../../components/home/ProductCard';
 import Button from '../../components/common/Button';
+import { useCart } from '../../contexts/CartContext';
 import { COLORS } from '../../constants/theme';
 
 interface ProductDetailScreenProps {
@@ -17,6 +18,7 @@ export default function ProductDetailScreen({ route, navigation }: ProductDetail
   const [product, setProduct] = useState<ProductWithDetails | null>(null);
   const [sellerProducts, setSellerProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const { addItem, items } = useCart();
 
   useEffect(() => {
     loadProduct();
@@ -31,7 +33,6 @@ export default function ProductDetailScreen({ route, navigation }: ProductDetail
       // Cargar productos del vendedor
       if (data?.seller_id) {
         const sellerProds = await getProductsBySeller(data.seller_id, 6);
-        // Filtrar el producto actual
         setSellerProducts(sellerProds.filter(p => p.id !== productId));
       }
     } catch (error) {
@@ -41,6 +42,47 @@ export default function ProductDetailScreen({ route, navigation }: ProductDetail
       setLoading(false);
     }
   }
+
+  const handleAddToCart = () => {
+    if (!product) return;
+
+    // Verificar si ya está en el carrito
+    const itemInCart = items.find(item => item.id === product.id);
+    
+    if (itemInCart && itemInCart.quantity >= product.stock) {
+      Alert.alert(
+        'Stock insuficiente',
+        `Ya tienes ${itemInCart.quantity} unidades en el carrito (stock máximo: ${product.stock})`
+      );
+      return;
+    }
+
+    addItem({
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      stock: product.stock,
+      imageUrl: product.images?.[0]?.url,
+    });
+
+    Alert.alert(
+      '¡Agregado al carrito!',
+      `${product.name} fue agregado a tu carrito`,
+      [
+        { text: 'Seguir comprando', style: 'cancel' },
+        { text: 'Ir al carrito', onPress: () => navigation.navigate('Cart') },
+      ]
+    );
+  };
+
+  const handleBuyNow = () => {
+    if (!product) return;
+    
+    handleAddToCart();
+    setTimeout(() => {
+      navigation.navigate('Cart');
+    }, 500);
+  };
 
   if (loading) {
     return (
@@ -268,7 +310,7 @@ export default function ProductDetailScreen({ route, navigation }: ProductDetail
           <View className="flex-1">
             <Button
               title="Agregar al carrito"
-              onPress={() => Alert.alert('Carrito', 'Producto agregado al carrito')}
+              onPress={handleAddToCart}
               variant="outline"
               disabled={product.stock === 0}
             />
@@ -276,7 +318,7 @@ export default function ProductDetailScreen({ route, navigation }: ProductDetail
           <View className="flex-1">
             <Button
               title="Comprar ahora"
-              onPress={() => Alert.alert('Comprar', 'Ir al checkout')}
+              onPress={handleBuyNow}
               disabled={product.stock === 0}
             />
           </View>

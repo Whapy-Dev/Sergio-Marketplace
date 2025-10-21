@@ -5,10 +5,12 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { View, Text } from 'react-native';
 import { COLORS } from '../constants/theme';
 import { useAuth } from '../contexts/AuthContext';
+import { useCart } from '../contexts/CartContext';
 
 // Screens
 import HomeScreen from '../screens/home/HomeScreen';
 import ProductDetailScreen from '../screens/products/ProductDetailScreen';
+import CartScreen from '../screens/cart/CartScreen';
 import LoginScreen from '../screens/auth/LoginScreen';
 import RegisterScreen from '../screens/auth/RegisterScreen';
 import SplashScreen from '../screens/SplashScreen';
@@ -21,14 +23,6 @@ function FavoritesScreen() {
   return (
     <View className="flex-1 items-center justify-center bg-white">
       <Text className="text-2xl font-bold text-primary">❤️ Favoritos</Text>
-    </View>
-  );
-}
-
-function CartScreen() {
-  return (
-    <View className="flex-1 items-center justify-center bg-white">
-      <Text className="text-2xl font-bold text-primary">🛒 Carrito</Text>
     </View>
   );
 }
@@ -68,6 +62,8 @@ function HomeStack() {
 
 // Bottom Tabs Navigator
 function TabNavigator() {
+  const { totalItems } = useCart();
+
   return (
     <Tab.Navigator
       screenOptions={{
@@ -104,7 +100,31 @@ function TabNavigator() {
         component={CartScreen}
         options={{
           tabBarLabel: 'Carrito',
-          tabBarIcon: () => <Text style={{ fontSize: 24 }}>🛒</Text>,
+          tabBarIcon: () => (
+            <View>
+              <Text style={{ fontSize: 24 }}>🛒</Text>
+              {totalItems > 0 && (
+                <View
+                  style={{
+                    position: 'absolute',
+                    right: -6,
+                    top: -4,
+                    backgroundColor: COLORS.primary,
+                    borderRadius: 10,
+                    width: 20,
+                    height: 20,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                  }}
+                >
+                  <Text style={{ color: 'white', fontSize: 12, fontWeight: 'bold' }}>
+                    {totalItems > 9 ? '9+' : totalItems}
+                  </Text>
+                </View>
+              )}
+            </View>
+          ),
+          tabBarBadge: totalItems > 0 ? totalItems : undefined,
         }}
       />
       <Tab.Screen
