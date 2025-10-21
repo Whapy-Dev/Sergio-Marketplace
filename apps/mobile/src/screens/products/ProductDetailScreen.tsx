@@ -6,6 +6,8 @@ import ImageGallery from '../../components/products/ImageGallery';
 import ProductCard from '../../components/home/ProductCard';
 import Button from '../../components/common/Button';
 import { useCart } from '../../contexts/CartContext';
+import { useFavorites } from '../../contexts/FavoritesContext';
+import { useAuth } from '../../contexts/AuthContext';
 import { COLORS } from '../../constants/theme';
 
 interface ProductDetailScreenProps {
@@ -18,7 +20,17 @@ export default function ProductDetailScreen({ route, navigation }: ProductDetail
   const [product, setProduct] = useState<ProductWithDetails | null>(null);
   const [sellerProducts, setSellerProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isTogglingFavorite, setIsTogglingFavorite] = useState(false);
+  
   const { addItem, items } = useCart();
+  const { isFavorite, toggleFavorite, favorites } = useFavorites();
+  const { user } = useAuth();
+
+  const isProductFavorite = product ? isFavorite(product.id) : false;
+
+  console.log('🎨 ProductDetail render - productId:', productId?.slice(0, 8));
+  console.log('🎨 Todos los favoritos:', favorites);
+  console.log('🎨 isProductFavorite:', isProductFavorite);
 
   useEffect(() => {
     loadProduct();
@@ -30,7 +42,6 @@ export default function ProductDetailScreen({ route, navigation }: ProductDetail
       const data = await getProductById(productId);
       setProduct(data);
 
-      // Cargar productos del vendedor
       if (data?.seller_id) {
         const sellerProds = await getProductsBySeller(data.seller_id, 6);
         setSellerProducts(sellerProds.filter(p => p.id !== productId));
@@ -43,10 +54,9 @@ export default function ProductDetailScreen({ route, navigation }: ProductDetail
     }
   }
 
-  const handleAddToCart = () => {
+  function handleAddToCart() {
     if (!product) return;
 
-    // Verificar si ya está en el carrito
     const itemInCart = items.find(item => item.id === product.id);
     
     if (itemInCart && itemInCart.quantity >= product.stock) {
@@ -73,16 +83,50 @@ export default function ProductDetailScreen({ route, navigation }: ProductDetail
         { text: 'Ir al carrito', onPress: () => navigation.navigate('Cart') },
       ]
     );
-  };
+  }
 
-  const handleBuyNow = () => {
+  function handleBuyNow() {
     if (!product) return;
-    
     handleAddToCart();
     setTimeout(() => {
       navigation.navigate('Cart');
     }, 500);
-  };
+  }
+
+  async function handleToggleFavorite() {
+    if (!product) return;
+
+    if (!user) {
+      Alert.alert(
+        'Inicia sesión',
+        'Debes iniciar sesión para guardar favoritos',
+        [
+          { text: 'Cancelar', style: 'cancel' },
+          { text: 'Iniciar sesión', onPress: () => navigation.navigate('Login') },
+        ]
+      );
+      return;
+    }
+
+    if (isTogglingFavorite) {
+      console.log('⏳ Ya hay un toggle en progreso');
+      return;
+    }
+
+    try {
+      setIsTogglingFavorite(true);
+      console.log('🔥 handleToggleFavorite - productId:', product.id.slice(0, 8));
+      
+      const success = await toggleFavorite(product.id);
+      console.log('🔥 toggleFavorite result:', success);
+      
+      if (!success) {
+        Alert.alert('Error', 'No se pudo actualizar favoritos');
+      }
+    } finally {
+      setIsTogglingFavorite(false);
+    }
+  }
 
   if (loading) {
     return (
@@ -118,28 +162,26 @@ export default function ProductDetailScreen({ route, navigation }: ProductDetail
 
   return (
     <SafeAreaView className="flex-1 bg-white" edges={['top']}>
-      {/* Header */}
       <View className="flex-row items-center justify-between px-4 py-3 border-b border-gray-200">
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Text className="text-primary text-lg">← Volver</Text>
         </TouchableOpacity>
-        <View className="flex-row">
-          <TouchableOpacity className="ml-4">
-            <Text className="text-2xl">🔗</Text>
-          </TouchableOpacity>
-          <TouchableOpacity className="ml-4">
-            <Text className="text-2xl">❤️</Text>
-          </TouchableOpacity>
-        </View>
+        <TouchableOpacity 
+          onPress={handleToggleFavorite}
+          activeOpacity={0.7}
+          disabled={isTogglingFavorite}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        >
+          <Text className="text-3xl">
+            {isProductFavorite ? '❤️' : '🤍'}
+          </Text>
+        </TouchableOpacity>
       </View>
 
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-        {/* Galería */}
         <ImageGallery images={images} />
 
-        {/* Contenido */}
         <View className="p-4">
-          {/* Condición del producto */}
           {product.condition && (
             <View className="mb-2">
               <Text className="text-xs text-gray-500 uppercase">
@@ -148,12 +190,10 @@ export default function ProductDetailScreen({ route, navigation }: ProductDetail
             </View>
           )}
 
-          {/* Nombre */}
           <Text className="text-2xl font-bold text-gray-900 mb-2">
             {product.name}
           </Text>
 
-          {/* Vendedor */}
           {product.seller && (
             <TouchableOpacity className="mb-4">
               <Text className="text-sm text-gray-600">
@@ -168,7 +208,6 @@ export default function ProductDetailScreen({ route, navigation }: ProductDetail
             </TouchableOpacity>
           )}
 
-          {/* Precio */}
           {product.compare_at_price && (
             <Text className="text-base text-gray-400 line-through">
               ${product.compare_at_price.toLocaleString()}
@@ -186,7 +225,6 @@ export default function ProductDetailScreen({ route, navigation }: ProductDetail
             )}
           </View>
 
-          {/* Promociones */}
           <View className="bg-blue-50 rounded-lg p-3 mb-4">
             <Text className="text-sm font-semibold text-primary mb-1">
               🎉 ¡Nuestras promociones bancarias!
@@ -194,21 +232,13 @@ export default function ProductDetailScreen({ route, navigation }: ProductDetail
             <Text className="text-sm text-gray-700">
               3 cuotas sin interés de ${(product.price / 3).toLocaleString()}
             </Text>
-            <TouchableOpacity>
-              <Text className="text-sm text-primary mt-1">Ver todos los medios de pago →</Text>
-            </TouchableOpacity>
           </View>
 
-          {/* Envío */}
           <View className="border border-gray-200 rounded-lg p-3 mb-4">
             <View className="flex-row items-center mb-2">
               <Text className="text-lg mr-2">🚚</Text>
               <Text className="text-base font-semibold text-gray-900">
-                {product.free_shipping
-                  ? 'Envío GRATIS'
-                  : product.shipping_cost
-                  ? `Envío $${product.shipping_cost.toLocaleString()}`
-                  : 'Envío a coordinar'}
+                {product.free_shipping ? 'Envío GRATIS' : 'Envío a coordinar'}
               </Text>
             </View>
             {product.free_shipping && (
@@ -221,25 +251,8 @@ export default function ProductDetailScreen({ route, navigation }: ProductDetail
             <Text className="text-sm text-gray-600">
               Llega en 3-5 días hábiles
             </Text>
-            <TouchableOpacity className="mt-2">
-              <Text className="text-sm text-primary">Calcular envío para otra dirección →</Text>
-            </TouchableOpacity>
           </View>
 
-          {/* Stock */}
-          <View className="mb-6">
-            {product.stock > 0 ? (
-              <Text className="text-sm text-gray-600">
-                Stock disponible: <Text className="font-semibold">{product.stock} unidades</Text>
-              </Text>
-            ) : (
-              <Text className="text-sm text-red-500 font-semibold">
-                ⚠️ Sin stock disponible
-              </Text>
-            )}
-          </View>
-
-          {/* Descripción */}
           {product.description && (
             <View className="mb-6">
               <Text className="text-lg font-bold text-gray-900 mb-2">
@@ -251,22 +264,6 @@ export default function ProductDetailScreen({ route, navigation }: ProductDetail
             </View>
           )}
 
-          {/* Especificaciones */}
-          {product.specifications && Object.keys(product.specifications).length > 0 && (
-            <View className="mb-6">
-              <Text className="text-lg font-bold text-gray-900 mb-3">
-                Especificaciones técnicas
-              </Text>
-              {Object.entries(product.specifications).map(([key, value]) => (
-                <View key={key} className="flex-row justify-between py-2 border-b border-gray-100">
-                  <Text className="text-sm text-gray-600">{key}</Text>
-                  <Text className="text-sm font-semibold text-gray-900">{String(value)}</Text>
-                </View>
-              ))}
-            </View>
-          )}
-
-          {/* Productos del vendedor */}
           {sellerProducts.length > 0 && (
             <View className="mb-6">
               <Text className="text-lg font-bold text-gray-900 mb-3">
@@ -289,22 +286,9 @@ export default function ProductDetailScreen({ route, navigation }: ProductDetail
               </ScrollView>
             </View>
           )}
-
-          {/* Garantía y devoluciones */}
-          {product.accepts_returns && (
-            <View className="bg-gray-50 rounded-lg p-3 mb-6">
-              <Text className="text-sm font-semibold text-gray-900 mb-1">
-                🛡️ Garantía de devolución
-              </Text>
-              <Text className="text-sm text-gray-600">
-                Tenés 7 días para devolver el producto si no te satisface
-              </Text>
-            </View>
-          )}
         </View>
       </ScrollView>
 
-      {/* Botones fijos */}
       <View className="border-t border-gray-200 p-4 bg-white">
         <View className="flex-row" style={{ gap: 12 }}>
           <View className="flex-1">

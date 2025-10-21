@@ -6,26 +6,19 @@ import { View, Text } from 'react-native';
 import { COLORS } from '../constants/theme';
 import { useAuth } from '../contexts/AuthContext';
 import { useCart } from '../contexts/CartContext';
+import { useFavorites } from '../contexts/FavoritesContext';
 
 // Screens
 import HomeScreen from '../screens/home/HomeScreen';
 import ProductDetailScreen from '../screens/products/ProductDetailScreen';
 import CartScreen from '../screens/cart/CartScreen';
+import FavoritesScreen from '../screens/favorites/FavoritesScreen';
 import LoginScreen from '../screens/auth/LoginScreen';
 import RegisterScreen from '../screens/auth/RegisterScreen';
 import SplashScreen from '../screens/SplashScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
-
-// Screens temporales
-function FavoritesScreen() {
-  return (
-    <View className="flex-1 items-center justify-center bg-white">
-      <Text className="text-2xl font-bold text-primary">❤️ Favoritos</Text>
-    </View>
-  );
-}
 
 function ProfileScreen() {
   const { user, signOut } = useAuth();
@@ -63,6 +56,7 @@ function HomeStack() {
 // Bottom Tabs Navigator
 function TabNavigator() {
   const { totalItems } = useCart();
+  const { favorites } = useFavorites();
 
   return (
     <Tab.Navigator
@@ -92,7 +86,31 @@ function TabNavigator() {
         component={FavoritesScreen}
         options={{
           tabBarLabel: 'Favoritos',
-          tabBarIcon: () => <Text style={{ fontSize: 24 }}>❤️</Text>,
+          tabBarIcon: () => (
+            <View>
+              <Text style={{ fontSize: 24 }}>❤️</Text>
+              {favorites.length > 0 && (
+                <View
+                  style={{
+                    position: 'absolute',
+                    right: -6,
+                    top: -4,
+                    backgroundColor: COLORS.primary,
+                    borderRadius: 10,
+                    width: 20,
+                    height: 20,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                  }}
+                >
+                  <Text style={{ color: 'white', fontSize: 12, fontWeight: 'bold' }}>
+                    {favorites.length > 9 ? '9+' : favorites.length}
+                  </Text>
+                </View>
+              )}
+            </View>
+          ),
+          tabBarBadge: favorites.length > 0 ? favorites.length : undefined,
         }}
       />
       <Tab.Screen
