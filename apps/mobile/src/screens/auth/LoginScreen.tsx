@@ -32,7 +32,7 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
       }
 
       console.log('Login exitoso:', data.user);
-      navigation.replace('MainTabs');
+// La navegación se maneja automáticamente por el AuthContext
     } catch (error: any) {
       Alert.alert('Error', error.message);
     } finally {
@@ -121,7 +121,7 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
 
             <TouchableOpacity 
               className="mt-4"
-              onPress={() => navigation.replace('MainTabs')}
+              onPress={() => navigation.navigate('MainTabs')}
             >
               <Text className="text-gray-500 text-center">
                 Explorar sin cuenta →

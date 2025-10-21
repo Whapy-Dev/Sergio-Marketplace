@@ -4,11 +4,13 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { View, Text } from 'react-native';
 import { COLORS } from '../constants/theme';
+import { useAuth } from '../contexts/AuthContext';
 
 // Screens
 import HomeScreen from '../screens/home/HomeScreen';
 import LoginScreen from '../screens/auth/LoginScreen';
 import RegisterScreen from '../screens/auth/RegisterScreen';
+import SplashScreen from '../screens/SplashScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -31,9 +33,26 @@ function CartScreen() {
 }
 
 function ProfileScreen() {
+  const { user, signOut } = useAuth();
+  
   return (
-    <View className="flex-1 items-center justify-center bg-white">
-      <Text className="text-2xl font-bold text-primary">👤 Perfil</Text>
+    <View className="flex-1 items-center justify-center bg-white px-6">
+      <Text className="text-2xl font-bold text-primary mb-4">👤 Perfil</Text>
+      {user && (
+        <>
+          <Text className="text-base text-gray-700 mb-2">
+            Email: {user.email}
+          </Text>
+          <View className="mt-6 w-full">
+            <Text 
+              onPress={signOut}
+              className="bg-red-500 text-white text-center py-3 px-6 rounded-lg font-semibold"
+            >
+              Cerrar Sesión
+            </Text>
+          </View>
+        </>
+      )}
     </View>
   );
 }
@@ -93,18 +112,25 @@ function TabNavigator() {
 
 // Main Stack Navigator
 export default function AppNavigator() {
+  const { session, loading } = useAuth();
+
+  if (loading) {
+    return <SplashScreen />;
+  }
+
   return (
     <NavigationContainer>
-      <Stack.Navigator 
-        screenOptions={{ headerShown: false }}
-        initialRouteName="Login"
-      >
-        {/* Auth Screens */}
-        <Stack.Screen name="Login" component={LoginScreen} />
-        <Stack.Screen name="Register" component={RegisterScreen} />
-        
-        {/* Main App */}
-        <Stack.Screen name="MainTabs" component={TabNavigator} />
+      <Stack.Navigator screenOptions={{ headerShown: false }}>
+        {session ? (
+          // Usuario autenticado
+          <Stack.Screen name="MainTabs" component={TabNavigator} />
+        ) : (
+          // Usuario NO autenticado
+          <>
+            <Stack.Screen name="Login" component={LoginScreen} />
+            <Stack.Screen name="Register" component={RegisterScreen} />
+          </>
+        )}
       </Stack.Navigator>
     </NavigationContainer>
   );
