@@ -1,0 +1,185 @@
+import React from 'react';
+import { NavigationContainer } from '@react-navigation/native';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { View, Text } from 'react-native';
+import { COLORS } from '../constants/theme';
+import { useAuth } from '../contexts/AuthContext';
+import { useCart } from '../contexts/CartContext';
+import { useFavorites } from '../contexts/FavoritesContext';
+import SearchScreen from '../screens/search/SearchScreen';
+
+// Screens
+import HomeScreen from '../screens/home/HomeScreen';
+import ProductDetailScreen from '../screens/products/ProductDetailScreen';
+import CartScreen from '../screens/cart/CartScreen';
+import FavoritesScreen from '../screens/favorites/FavoritesScreen';
+import LoginScreen from '../screens/auth/LoginScreen';
+import RegisterScreen from '../screens/auth/RegisterScreen';
+import SplashScreen from '../screens/SplashScreen';
+
+const Tab = createBottomTabNavigator();
+const Stack = createNativeStackNavigator();
+
+function ProfileScreen() {
+  const { user, signOut } = useAuth();
+
+  return (
+    <View className="flex-1 items-center justify-center bg-white px-6">
+      <Text className="text-2xl font-bold text-primary mb-4">👤 Perfil</Text>
+      {user && (
+        <>
+          <Text className="text-base text-gray-700 mb-2">Email: {user.email}</Text>
+          <View className="mt-6 w-full">
+            <Text
+              onPress={signOut}
+              className="bg-red-500 text-white text-center py-3 px-6 rounded-lg font-semibold"
+            >
+              Cerrar Sesión
+            </Text>
+          </View>
+        </>
+      )}
+    </View>
+  );
+}
+
+// Home Stack Navigator (con ProductDetail)
+function HomeStack() {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="HomeMain" component={HomeScreen} />
+      <Stack.Screen name="ProductDetail" component={ProductDetailScreen} />
+      <Stack.Screen name="Search" component={SearchScreen} />
+    </Stack.Navigator>
+  );
+}
+
+// Bottom Tabs Navigator
+function TabNavigator() {
+  const { totalItems } = useCart();
+  const { favorites } = useFavorites();
+
+  return (
+    <Tab.Navigator
+      screenOptions={{
+        tabBarActiveTintColor: COLORS.primary,
+        tabBarInactiveTintColor: COLORS.textGray,
+        tabBarStyle: {
+          borderTopWidth: 1,
+          borderTopColor: COLORS.border,
+          paddingTop: 8,
+          paddingBottom: 8,
+          height: 60,
+        },
+        headerShown: false,
+      }}
+    >
+      <Tab.Screen
+        name="Home"
+        component={HomeStack}
+        options={{
+          tabBarLabel: 'Inicio',
+          tabBarIcon: () => <Text style={{ fontSize: 24 }}>🏠</Text>,
+        }}
+      />
+      <Tab.Screen
+        name="Favorites"
+        component={FavoritesScreen}
+        options={{
+          tabBarLabel: 'Favoritos',
+          tabBarIcon: () => (
+            <View>
+              <Text style={{ fontSize: 24 }}>❤️</Text>
+              {favorites.length > 0 && (
+                <View
+                  style={{
+                    position: 'absolute',
+                    right: -6,
+                    top: -4,
+                    backgroundColor: COLORS.primary,
+                    borderRadius: 10,
+                    width: 20,
+                    height: 20,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                  }}
+                >
+                  <Text style={{ color: 'white', fontSize: 12, fontWeight: 'bold' }}>
+                    {favorites.length > 9 ? '9+' : favorites.length}
+                  </Text>
+                </View>
+              )}
+            </View>
+          ),
+          tabBarBadge: favorites.length > 0 ? favorites.length : undefined,
+        }}
+      />
+      <Tab.Screen
+        name="Cart"
+        component={CartScreen}
+        options={{
+          tabBarLabel: 'Carrito',
+          tabBarIcon: () => (
+            <View>
+              <Text style={{ fontSize: 24 }}>🛒</Text>
+              {totalItems > 0 && (
+                <View
+                  style={{
+                    position: 'absolute',
+                    right: -6,
+                    top: -4,
+                    backgroundColor: COLORS.primary,
+                    borderRadius: 10,
+                    width: 20,
+                    height: 20,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                  }}
+                >
+                  <Text style={{ color: 'white', fontSize: 12, fontWeight: 'bold' }}>
+                    {totalItems > 9 ? '9+' : totalItems}
+                  </Text>
+                </View>
+              )}
+            </View>
+          ),
+          tabBarBadge: totalItems > 0 ? totalItems : undefined,
+        }}
+      />
+      <Tab.Screen
+        name="Profile"
+        component={ProfileScreen}
+        options={{
+          tabBarLabel: 'Perfil',
+          tabBarIcon: () => <Text style={{ fontSize: 24 }}>👤</Text>,
+        }}
+      />
+    </Tab.Navigator>
+  );
+}
+
+// Main Stack Navigator
+export default function AppNavigator() {
+  const { session, loading } = useAuth();
+
+  if (loading) {
+    return <SplashScreen />;
+  }
+
+  return (
+    <NavigationContainer>
+      <Stack.Navigator screenOptions={{ headerShown: false }}>
+        {session ? (
+          <Stack.Screen name="MainTabs" component={TabNavigator} />
+        ) : (
+          <>
+            <Stack.Screen name="Login" component={LoginScreen} />
+            <Stack.Screen name="Register" component={RegisterScreen} />
+            <Stack.Screen name="MainTabs" component={TabNavigator} />
+          </>
+        )}
+      </Stack.Navigator>
+    </NavigationContainer>
+  );
+}
