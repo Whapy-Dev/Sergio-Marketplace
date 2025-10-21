@@ -60,6 +60,14 @@ export default function FavoritesScreen({ navigation }: any) {
     }
   }
 
+  function handleProductPress(productId: string) {
+    // Navegar al stack de Home y luego a ProductDetail
+    navigation.navigate('Home', {
+      screen: 'ProductDetail',
+      params: { productId }
+    });
+  }
+
   if (!user) {
     return (
       <SafeAreaView className="flex-1 bg-white" edges={['top']}>
@@ -110,7 +118,7 @@ export default function FavoritesScreen({ navigation }: any) {
           </Text>
           <Button
             title="Explorar productos"
-            onPress={() => navigation.navigate('Home')}
+            onPress={() => navigation.navigate('Home', { screen: 'HomeMain' })}
           />
         </View>
       </SafeAreaView>
@@ -138,13 +146,7 @@ export default function FavoritesScreen({ navigation }: any) {
                 name={product.name}
                 price={product.price}
                 compareAtPrice={product.compare_at_price}
-                onPress={() => navigation.navigate('Home', {
-                  screen: 'HomeMain',
-                  params: {
-                    screen: 'ProductDetail',
-                    params: { productId: product.id }
-                  }
-                })}
+                onPress={() => handleProductPress(product.id)}
               />
             </View>
           ))}
