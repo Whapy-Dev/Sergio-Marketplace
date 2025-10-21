@@ -1,0 +1,98 @@
+import React from 'react';
+import { NavigationContainer } from '@react-navigation/native';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { View, Text } from 'react-native';
+import { COLORS } from '../constants/theme';
+
+// Iconos simples con emojis por ahora
+const Tab = createBottomTabNavigator();
+const Stack = createNativeStackNavigator();
+
+import HomeScreen from '../screens/home/HomeScreen';
+
+function FavoritesScreen() {
+  return (
+    <View className="flex-1 items-center justify-center bg-white">
+      <Text className="text-2xl font-bold text-primary">❤️ Favoritos</Text>
+    </View>
+  );
+}
+
+function CartScreen() {
+  return (
+    <View className="flex-1 items-center justify-center bg-white">
+      <Text className="text-2xl font-bold text-primary">🛒 Carrito</Text>
+    </View>
+  );
+}
+
+function ProfileScreen() {
+  return (
+    <View className="flex-1 items-center justify-center bg-white">
+      <Text className="text-2xl font-bold text-primary">👤 Perfil</Text>
+    </View>
+  );
+}
+
+function TabNavigator() {
+  return (
+    <Tab.Navigator
+      screenOptions={{
+        tabBarActiveTintColor: COLORS.primary,
+        tabBarInactiveTintColor: COLORS.textGray,
+        tabBarStyle: {
+          borderTopWidth: 1,
+          borderTopColor: COLORS.border,
+          paddingTop: 8,
+          paddingBottom: 8,
+          height: 60,
+        },
+        headerShown: false,
+      }}
+    >
+      <Tab.Screen 
+        name="Home" 
+        component={HomeScreen}
+        options={{
+          tabBarLabel: 'Inicio',
+          tabBarIcon: () => <Text style={{ fontSize: 24 }}>🏠</Text>,
+        }}
+      />
+      <Tab.Screen 
+        name="Favorites" 
+        component={FavoritesScreen}
+        options={{
+          tabBarLabel: 'Favoritos',
+          tabBarIcon: () => <Text style={{ fontSize: 24 }}>❤️</Text>,
+        }}
+      />
+      <Tab.Screen 
+        name="Cart" 
+        component={CartScreen}
+        options={{
+          tabBarLabel: 'Carrito',
+          tabBarIcon: () => <Text style={{ fontSize: 24 }}>🛒</Text>,
+        }}
+      />
+      <Tab.Screen 
+        name="Profile" 
+        component={ProfileScreen}
+        options={{
+          tabBarLabel: 'Perfil',
+          tabBarIcon: () => <Text style={{ fontSize: 24 }}>👤</Text>,
+        }}
+      />
+    </Tab.Navigator>
+  );
+}
+
+export default function AppNavigator() {
+  return (
+    <NavigationContainer>
+      <Stack.Navigator screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="MainTabs" component={TabNavigator} />
+      </Stack.Navigator>
+    </NavigationContainer>
+  );
+}
