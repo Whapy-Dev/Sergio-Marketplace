@@ -5,12 +5,15 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { View, Text } from 'react-native';
 import { COLORS } from '../constants/theme';
 
-// Iconos simples con emojis por ahora
+// Screens
+import HomeScreen from '../screens/home/HomeScreen';
+import LoginScreen from '../screens/auth/LoginScreen';
+import RegisterScreen from '../screens/auth/RegisterScreen';
+
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
-import HomeScreen from '../screens/home/HomeScreen';
-
+// Screens temporales
 function FavoritesScreen() {
   return (
     <View className="flex-1 items-center justify-center bg-white">
@@ -35,6 +38,7 @@ function ProfileScreen() {
   );
 }
 
+// Bottom Tabs Navigator
 function TabNavigator() {
   return (
     <Tab.Navigator
@@ -87,10 +91,19 @@ function TabNavigator() {
   );
 }
 
+// Main Stack Navigator
 export default function AppNavigator() {
   return (
     <NavigationContainer>
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Navigator 
+        screenOptions={{ headerShown: false }}
+        initialRouteName="Login"
+      >
+        {/* Auth Screens */}
+        <Stack.Screen name="Login" component={LoginScreen} />
+        <Stack.Screen name="Register" component={RegisterScreen} />
+        
+        {/* Main App */}
         <Stack.Screen name="MainTabs" component={TabNavigator} />
       </Stack.Navigator>
     </NavigationContainer>
