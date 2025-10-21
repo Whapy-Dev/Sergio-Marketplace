@@ -7,13 +7,33 @@ import { COLORS } from '../constants/theme';
 import { useAuth } from '../contexts/AuthContext';
 import { useCart } from '../contexts/CartContext';
 import { useFavorites } from '../contexts/FavoritesContext';
-import SearchScreen from '../screens/search/SearchScreen';
 
-// Screens
+// Screens - Home
 import HomeScreen from '../screens/home/HomeScreen';
 import ProductDetailScreen from '../screens/products/ProductDetailScreen';
+import SearchScreen from '../screens/search/SearchScreen';
+
+// Screens - Cart & Favorites
 import CartScreen from '../screens/cart/CartScreen';
 import FavoritesScreen from '../screens/favorites/FavoritesScreen';
+
+// Screens - Profile
+import ProfileScreen from '../screens/profile/ProfileScreen';
+import EditProfileScreen from '../screens/profile/EditProfileScreen';
+import ChangePasswordScreen from '../screens/profile/ChangePasswordScreen';
+import MyOrdersScreen from '../screens/profile/MyOrdersScreen';
+import NotificationsScreen from '../screens/profile/NotificationsScreen';
+import DeleteAccountScreen from '../screens/profile/DeleteAccountScreen';
+import HelpScreen from '../screens/profile/HelpScreen';
+import TermsScreen from '../screens/profile/TermsScreen';
+import LanguageScreen from '../screens/profile/LanguageScreen';
+
+// Screens - Seller
+import MyProductsScreen from '../screens/seller/MyProductsScreen';
+import CreateProductScreen from '../screens/seller/CreateProductScreen';
+import EditProductScreen from '../screens/seller/EditProductScreen';
+
+// Screens - Auth
 import LoginScreen from '../screens/auth/LoginScreen';
 import RegisterScreen from '../screens/auth/RegisterScreen';
 import SplashScreen from '../screens/SplashScreen';
@@ -21,30 +41,7 @@ import SplashScreen from '../screens/SplashScreen';
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
-function ProfileScreen() {
-  const { user, signOut } = useAuth();
-
-  return (
-    <View className="flex-1 items-center justify-center bg-white px-6">
-      <Text className="text-2xl font-bold text-primary mb-4">👤 Perfil</Text>
-      {user && (
-        <>
-          <Text className="text-base text-gray-700 mb-2">Email: {user.email}</Text>
-          <View className="mt-6 w-full">
-            <Text
-              onPress={signOut}
-              className="bg-red-500 text-white text-center py-3 px-6 rounded-lg font-semibold"
-            >
-              Cerrar Sesión
-            </Text>
-          </View>
-        </>
-      )}
-    </View>
-  );
-}
-
-// Home Stack Navigator (con ProductDetail)
+// Home Stack Navigator
 function HomeStack() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
@@ -54,6 +51,27 @@ function HomeStack() {
     </Stack.Navigator>
   );
 }
+
+// Profile Stack Navigator
+function ProfileStack() {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="ProfileMain" component={ProfileScreen} />
+      <Stack.Screen name="EditProfile" component={EditProfileScreen} />
+      <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} />
+      <Stack.Screen name="MyOrders" component={MyOrdersScreen} />
+      <Stack.Screen name="MyProducts" component={MyProductsScreen} />
+      <Stack.Screen name="CreateProduct" component={CreateProductScreen} />
+      <Stack.Screen name="EditProduct" component={EditProductScreen} />
+      <Stack.Screen name="Notifications" component={NotificationsScreen} />
+      <Stack.Screen name="DeleteAccount" component={DeleteAccountScreen} />
+      <Stack.Screen name="Help" component={HelpScreen} />
+      <Stack.Screen name="Terms" component={TermsScreen} />
+      <Stack.Screen name="Language" component={LanguageScreen} />
+    </Stack.Navigator>
+  );
+}
+
 
 // Bottom Tabs Navigator
 function TabNavigator() {
@@ -112,7 +130,6 @@ function TabNavigator() {
               )}
             </View>
           ),
-          tabBarBadge: favorites.length > 0 ? favorites.length : undefined,
         }}
       />
       <Tab.Screen
@@ -144,12 +161,11 @@ function TabNavigator() {
               )}
             </View>
           ),
-          tabBarBadge: totalItems > 0 ? totalItems : undefined,
         }}
       />
       <Tab.Screen
         name="Profile"
-        component={ProfileScreen}
+        component={ProfileStack}
         options={{
           tabBarLabel: 'Perfil',
           tabBarIcon: () => <Text style={{ fontSize: 24 }}>👤</Text>,
