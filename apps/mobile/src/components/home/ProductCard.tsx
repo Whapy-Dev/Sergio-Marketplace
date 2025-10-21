@@ -4,7 +4,7 @@ import { View, Text, TouchableOpacity, Image } from 'react-native';
 interface ProductCardProps {
   name: string;
   price: number;
-  compareAtPrice?: number;
+  compareAtPrice?: number | null;
   imageUrl?: string;
   onPress: () => void;
 }
@@ -27,7 +27,6 @@ export default function ProductCard({
       className="bg-white rounded-lg border border-gray-200 overflow-hidden mb-3"
       activeOpacity={0.7}
     >
-      {/* Imagen */}
       <View className="bg-gray-100 h-40 items-center justify-center">
         {imageUrl ? (
           <Image 
@@ -39,7 +38,6 @@ export default function ProductCard({
           <Text className="text-5xl">📦</Text>
         )}
         
-        {/* Badge de descuento */}
         {discount > 0 && (
           <View className="absolute top-2 left-2 bg-primary rounded px-2 py-1">
             <Text className="text-white text-xs font-bold">{discount}% OFF</Text>
@@ -47,7 +45,6 @@ export default function ProductCard({
         )}
       </View>
       
-      {/* Info */}
       <View className="p-3">
         <Text className="text-sm text-gray-700 mb-1" numberOfLines={2}>
           {name}
