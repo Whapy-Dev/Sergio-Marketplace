@@ -134,6 +134,23 @@ export default function ProfileScreen({ navigation }: any) {
         <View className="px-4 py-4 border-b border-gray-100">
           <Text className="text-sm font-semibold text-gray-500 mb-3">MIS ACTIVIDADES</Text>
           
+          {/* Dashboard Vendedor - SOLO SI ES VENDEDOR */}
+{profile?.role === 'seller_individual' && (
+  <TouchableOpacity 
+    onPress={() => navigation.navigate('SellerDashboard')}
+    className="flex-row items-center justify-between py-3"
+  >
+    <View className="flex-row items-center flex-1">
+      <Text className="text-2xl mr-3">📊</Text>
+      <View className="flex-1">
+        <Text className="text-base font-medium text-gray-900">Dashboard Vendedor</Text>
+        <Text className="text-sm text-gray-500">Estadísticas y métricas</Text>
+      </View>
+    </View>
+    <Text className="text-gray-400">→</Text>
+  </TouchableOpacity>
+)}
+          
           <TouchableOpacity 
             onPress={() => navigation.navigate('MyOrders')}
             className="flex-row items-center justify-between py-3"

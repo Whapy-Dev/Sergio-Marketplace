@@ -1,46 +1,46 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-export interface CartItem {
+interface CartItem {
   id: string;
   name: string;
   price: number;
   quantity: number;
   imageUrl?: string;
-  stock: number;
+  sellerId: string;
 }
 
 interface CartContextType {
   items: CartItem[];
-  addItem: (product: Omit<CartItem, 'quantity'>) => void;
+  totalItems: number;
+  totalAmount: number;
+  addItem: (item: Omit<CartItem, 'quantity'>, quantity?: number) => void;
   removeItem: (productId: string) => void;
   updateQuantity: (productId: string, quantity: number) => void;
   clearCart: () => void;
-  totalItems: number;
-  totalPrice: number;
+  isInCart: (productId: string) => boolean;
 }
 
 const CartContext = createContext<CartContextType>({
   items: [],
+  totalItems: 0,
+  totalAmount: 0,
   addItem: () => {},
   removeItem: () => {},
   updateQuantity: () => {},
   clearCart: () => {},
-  totalItems: 0,
-  totalPrice: 0,
+  isInCart: () => false,
 });
 
 const CART_STORAGE_KEY = '@marketplace_cart';
 
-export function CartProvider({ children }: { children: ReactNode }) {
+export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
 
-  // Cargar carrito al inicio
   useEffect(() => {
     loadCart();
   }, []);
 
-  // Guardar carrito cuando cambie
   useEffect(() => {
     saveCart();
   }, [items]);
@@ -64,26 +64,24 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  function addItem(product: Omit<CartItem, 'quantity'>) {
-    setItems((currentItems) => {
-      const existingItem = currentItems.find((item) => item.id === product.id);
-
+  function addItem(item: Omit<CartItem, 'quantity'>, quantity: number = 1) {
+    setItems(currentItems => {
+      const existingItem = currentItems.find(i => i.id === item.id);
+      
       if (existingItem) {
-        // Si ya existe, aumentar cantidad (respetando stock)
-        return currentItems.map((item) =>
-          item.id === product.id
-            ? { ...item, quantity: Math.min(item.quantity + 1, product.stock) }
-            : item
+        return currentItems.map(i =>
+          i.id === item.id
+            ? { ...i, quantity: i.quantity + quantity }
+            : i
         );
-      } else {
-        // Si no existe, agregar nuevo
-        return [...currentItems, { ...product, quantity: 1 }];
       }
+      
+      return [...currentItems, { ...item, quantity }];
     });
   }
 
   function removeItem(productId: string) {
-    setItems((currentItems) => currentItems.filter((item) => item.id !== productId));
+    setItems(currentItems => currentItems.filter(item => item.id !== productId));
   }
 
   function updateQuantity(productId: string, quantity: number) {
@@ -91,11 +89,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
       removeItem(productId);
       return;
     }
-
-    setItems((currentItems) =>
-      currentItems.map((item) =>
+    
+    setItems(currentItems =>
+      currentItems.map(item =>
         item.id === productId
-          ? { ...item, quantity: Math.min(quantity, item.stock) }
+          ? { ...item, quantity }
           : item
       )
     );
@@ -105,19 +103,24 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setItems([]);
   }
 
+  function isInCart(productId: string): boolean {
+    return items.some(item => item.id === productId);
+  }
+
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
-  const totalPrice = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const totalAmount = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
   return (
     <CartContext.Provider
       value={{
         items,
+        totalItems,
+        totalAmount,
         addItem,
         removeItem,
         updateQuantity,
         clearCart,
-        totalItems,
-        totalPrice,
+        isInCart,
       }}
     >
       {children}

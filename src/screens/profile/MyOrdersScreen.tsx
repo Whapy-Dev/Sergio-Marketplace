@@ -21,14 +21,14 @@ const STATUS_LABELS = {
   cancelled: { label: 'Cancelado', color: 'text-red-600', bg: 'bg-red-100' },
 };
 
-export default function MyOrdersScreen({ navigation }: any) {
+export default function MyOrdersScreen({ navigation, route }: any) {
   const { user } = useAuth();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     loadOrders();
-  }, []);
+  }, [route.params]);
 
   async function loadOrders() {
     if (!user) return;
@@ -45,7 +45,7 @@ export default function MyOrdersScreen({ navigation }: any) {
           status,
           created_at
         `)
-        .eq('user_id', user.id)
+        .eq('buyer_id', user.id)
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -96,7 +96,10 @@ export default function MyOrdersScreen({ navigation }: any) {
     <SafeAreaView className="flex-1 bg-white" edges={['top']}>
       {/* Header */}
       <View className="px-4 py-3 border-b border-gray-200 flex-row items-center">
-        <TouchableOpacity onPress={() => navigation.goBack()} className="mr-3">
+        <TouchableOpacity 
+          onPress={() => navigation.navigate('ProfileMain')}
+          className="mr-3"
+        >
           <Text className="text-primary text-2xl font-bold">←</Text>
         </TouchableOpacity>
         <Text className="text-xl font-bold text-gray-900">Mis Compras</Text>
@@ -117,11 +120,12 @@ export default function MyOrdersScreen({ navigation }: any) {
       ) : (
         <ScrollView className="flex-1">
           {orders.map((order) => {
-            const statusInfo = STATUS_LABELS[order.status];
+            const statusInfo = STATUS_LABELS[order.status as keyof typeof STATUS_LABELS];
             
             return (
               <TouchableOpacity
                 key={order.id}
+                onPress={() => navigation.navigate('OrderDetail', { orderId: order.id })}
                 className="mx-4 my-2 p-4 bg-white border border-gray-200 rounded-lg"
               >
                 <View className="flex-row justify-between items-start mb-2">

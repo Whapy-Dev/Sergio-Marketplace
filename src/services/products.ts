@@ -11,6 +11,7 @@ export interface Product {
   stock: number;
   status: string;
   free_shipping: boolean;
+  image_url?: string;
   shipping_cost: number | null;
   condition: string;
   specifications: any;

@@ -24,7 +24,7 @@ export default function HomeScreen({ navigation }: any) {
 
   return (
     <View className="flex-1 bg-white">
-      <Header navigation={navigation} />
+      <Header />
       
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
         <View className="bg-blue-100 h-48 mx-4 my-4 rounded-lg items-center justify-center">
@@ -79,6 +79,8 @@ export default function HomeScreen({ navigation }: any) {
                     name={product.name}
                     price={product.price}
                     compareAtPrice={product.compare_at_price}
+                    imageUrl={product.image_url}
+                    sellerId={product.seller_id}
                     onPress={() => navigation.navigate('ProductDetail', { productId: product.id })}
                   />
                 </View>

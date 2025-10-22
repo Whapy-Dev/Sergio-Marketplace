@@ -326,12 +326,14 @@ export default function SearchScreen({ navigation }: any) {
               {products.map((product) => (
                 <View key={product.id} className="w-[48%]">
                   <ProductCard
-                    id={product.id}
-                    name={product.name}
-                    price={product.price}
-                    compareAtPrice={product.compare_at_price}
-                    onPress={() => navigation.navigate('ProductDetail', { productId: product.id })}
-                  />
+  id={product.id}
+  name={product.name}
+  price={product.price}
+  compareAtPrice={product.compare_at_price}
+  imageUrl={product.image_url}
+  sellerId={product.seller_id} // ← Agregar esto
+  onPress={() => navigation.navigate('ProductDetail', { productId: product.id })}
+/>
                 </View>
               ))}
             </View>

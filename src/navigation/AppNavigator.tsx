@@ -32,6 +32,13 @@ import LanguageScreen from '../screens/profile/LanguageScreen';
 import MyProductsScreen from '../screens/seller/MyProductsScreen';
 import CreateProductScreen from '../screens/seller/CreateProductScreen';
 import EditProductScreen from '../screens/seller/EditProductScreen';
+import SellerDashboardScreen from '../screens/seller/SellerDashboardScreen';
+import SellerAnalyticsScreen from '../screens/seller/SellerAnalyticsScreen';
+import OrderDetailScreen from '../screens/orders/OrderDetailScreen';
+import SellerOrdersScreen from '../screens/seller/SellerOrdersScreen';
+
+// Screens - Orders
+import CheckoutScreen from '../screens/orders/CheckoutScreen';
 
 // Screens - Auth
 import LoginScreen from '../screens/auth/LoginScreen';
@@ -52,7 +59,7 @@ function HomeStack() {
   );
 }
 
-// Profile Stack Navigator
+// En ProfileStack:
 function ProfileStack() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
@@ -60,9 +67,14 @@ function ProfileStack() {
       <Stack.Screen name="EditProfile" component={EditProfileScreen} />
       <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} />
       <Stack.Screen name="MyOrders" component={MyOrdersScreen} />
+      <Stack.Screen name="OrderDetail" component={OrderDetailScreen} />
       <Stack.Screen name="MyProducts" component={MyProductsScreen} />
       <Stack.Screen name="CreateProduct" component={CreateProductScreen} />
       <Stack.Screen name="EditProduct" component={EditProductScreen} />
+      <Stack.Screen name="SellerDashboard" component={SellerDashboardScreen} />
+      <Stack.Screen name="SellerAnalytics" component={SellerAnalyticsScreen} />
+      <Stack.Screen name="SellerOrders" component={SellerOrdersScreen} />
+      <Stack.Screen name="SellerOrderDetail" component={OrderDetailScreen} />
       <Stack.Screen name="Notifications" component={NotificationsScreen} />
       <Stack.Screen name="DeleteAccount" component={DeleteAccountScreen} />
       <Stack.Screen name="Help" component={HelpScreen} />
@@ -71,7 +83,6 @@ function ProfileStack() {
     </Stack.Navigator>
   );
 }
-
 
 // Bottom Tabs Navigator
 function TabNavigator() {
@@ -187,7 +198,10 @@ export default function AppNavigator() {
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         {session ? (
-          <Stack.Screen name="MainTabs" component={TabNavigator} />
+          <>
+            <Stack.Screen name="MainTabs" component={TabNavigator} />
+            <Stack.Screen name="Checkout" component={CheckoutScreen} />
+          </>
         ) : (
           <>
             <Stack.Screen name="Login" component={LoginScreen} />
