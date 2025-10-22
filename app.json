@@ -30,6 +30,12 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "e42498d5-d3c7-4317-a07f-17f6becb49ba"
+      }
+    },
+    "owner": "javieralmada"
   }
 }

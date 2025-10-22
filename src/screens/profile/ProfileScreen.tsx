@@ -32,7 +32,14 @@ export default function ProfileScreen({ navigation }: any) {
       '¿Estás seguro que deseas cerrar sesión?',
       [
         { text: 'Cancelar', style: 'cancel' },
-        { text: 'Cerrar Sesión', style: 'destructive', onPress: signOut },
+        { 
+          text: 'Cerrar Sesión', 
+          style: 'destructive', 
+          onPress: async () => {
+            await signOut();
+            // NO navegues manualmente, AuthContext lo maneja automáticamente
+          }
+        },
       ]
     );
   }
@@ -77,25 +84,29 @@ export default function ProfileScreen({ navigation }: any) {
             </View>
           )}
         </View>
+
         {/* TEMPORAL: Botón para hacerse vendedor */}
-{profile?.role === 'customer' && (
-  <TouchableOpacity
-    onPress={async () => {
-      if (!user) return;
-      const { error } = await supabase
-        .from('profiles')
-        .update({ role: 'seller_individual' })
-        .eq('id', user.id);
-      
-      if (!error) {
-        Alert.alert('¡Listo!', 'Ahora eres vendedor. Recarga la app.');
-      }
-    }}
-    className="mt-2 px-4 py-2 bg-green-500 rounded-lg"
-  >
-    <Text className="text-white font-semibold">Convertirme en Vendedor</Text>
-  </TouchableOpacity>
-)}
+        {profile?.role === 'customer' && (
+          <View className="px-4 py-4">
+            <TouchableOpacity
+              onPress={async () => {
+                if (!user) return;
+                const { error } = await supabase
+                  .from('profiles')
+                  .update({ role: 'seller_individual' })
+                  .eq('id', user.id);
+                
+                if (!error) {
+                  Alert.alert('¡Listo!', 'Ahora eres vendedor. Recarga la app.');
+                  loadProfile();
+                }
+              }}
+              className="bg-green-500 rounded-lg py-3"
+            >
+              <Text className="text-white font-semibold text-center">Convertirme en Vendedor</Text>
+            </TouchableOpacity>
+          </View>
+        )}
 
         {/* Información personal */}
         <View className="px-4 py-4 border-b border-gray-100">
@@ -135,21 +146,21 @@ export default function ProfileScreen({ navigation }: any) {
           <Text className="text-sm font-semibold text-gray-500 mb-3">MIS ACTIVIDADES</Text>
           
           {/* Dashboard Vendedor - SOLO SI ES VENDEDOR */}
-{profile?.role === 'seller_individual' && (
-  <TouchableOpacity 
-    onPress={() => navigation.navigate('SellerDashboard')}
-    className="flex-row items-center justify-between py-3"
-  >
-    <View className="flex-row items-center flex-1">
-      <Text className="text-2xl mr-3">📊</Text>
-      <View className="flex-1">
-        <Text className="text-base font-medium text-gray-900">Dashboard Vendedor</Text>
-        <Text className="text-sm text-gray-500">Estadísticas y métricas</Text>
-      </View>
-    </View>
-    <Text className="text-gray-400">→</Text>
-  </TouchableOpacity>
-)}
+          {profile?.role === 'seller_individual' && (
+            <TouchableOpacity 
+              onPress={() => navigation.navigate('SellerDashboard')}
+              className="flex-row items-center justify-between py-3"
+            >
+              <View className="flex-row items-center flex-1">
+                <Text className="text-2xl mr-3">📊</Text>
+                <View className="flex-1">
+                  <Text className="text-base font-medium text-gray-900">Dashboard Vendedor</Text>
+                  <Text className="text-sm text-gray-500">Estadísticas y métricas</Text>
+                </View>
+              </View>
+              <Text className="text-gray-400">→</Text>
+            </TouchableOpacity>
+          )}
           
           <TouchableOpacity 
             onPress={() => navigation.navigate('MyOrders')}
@@ -181,6 +192,7 @@ export default function ProfileScreen({ navigation }: any) {
             </TouchableOpacity>
           )}
 
+          {/* COMENTADO: Pendiente de implementar
           <TouchableOpacity 
             onPress={() => navigation.navigate('MyReviews')}
             className="flex-row items-center justify-between py-3"
@@ -194,6 +206,7 @@ export default function ProfileScreen({ navigation }: any) {
             </View>
             <Text className="text-gray-400">→</Text>
           </TouchableOpacity>
+          */}
         </View>
 
         {/* Configuración */}
@@ -219,7 +232,7 @@ export default function ProfileScreen({ navigation }: any) {
             className="flex-row items-center justify-between py-3"
           >
             <View className="flex-row items-center flex-1">
-              <Text className="text-2xl mr-3">🌍</Text>
+              <Text className="text-2xl mr-3">🌎</Text>
               <View className="flex-1">
                 <Text className="text-base font-medium text-gray-900">Idioma</Text>
                 <Text className="text-sm text-gray-500">Español</Text>
