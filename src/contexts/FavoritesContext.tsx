@@ -1,128 +1,108 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { useAuth } from './AuthContext';
-import { getFavorites, addFavorite, removeFavorite } from '../services/favorites';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { supabase } from '../services/supabase';
+
+interface Product {
+  id: string;
+  name: string;
+  price: number;
+  image_url?: string;
+  stock: number;
+}
 
 interface FavoritesContextType {
   favorites: string[];
-  loading: boolean;
+  favoriteProducts: Product[];
   isFavorite: (productId: string) => boolean;
-  toggleFavorite: (productId: string) => Promise<boolean>;
-  refreshFavorites: () => Promise<void>;
+  toggleFavorite: (productId: string) => void;
 }
 
 const FavoritesContext = createContext<FavoritesContextType | undefined>(undefined);
 
-export function FavoritesProvider({ children }: { children: ReactNode }) {
-  const { user } = useAuth();
+export function FavoritesProvider({ children }: { children: React.ReactNode }) {
   const [favorites, setFavorites] = useState<string[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [favoriteProducts, setFavoriteProducts] = useState<Product[]>([]);
 
   useEffect(() => {
-    console.log('🟢 FavoritesProvider - user cambió:', user?.id);
-    if (user) {
-      loadFavorites();
-    } else {
-      setFavorites([]);
-    }
-  }, [user]);
+    loadFavorites();
+  }, []);
+
+  useEffect(() => {
+    saveFavorites();
+    loadFavoriteProducts();
+  }, [favorites]);
 
   async function loadFavorites() {
-    if (!user) {
-      console.log('⚠️ loadFavorites - No hay user');
+    try {
+      const savedFavorites = await AsyncStorage.getItem('favorites');
+      if (savedFavorites) {
+        setFavorites(JSON.parse(savedFavorites));
+      }
+    } catch (error) {
+      console.error('Error loading favorites:', error);
+    }
+  }
+
+  async function saveFavorites() {
+    try {
+      await AsyncStorage.setItem('favorites', JSON.stringify(favorites));
+    } catch (error) {
+      console.error('Error saving favorites:', error);
+    }
+  }
+
+  async function loadFavoriteProducts() {
+    if (favorites.length === 0) {
+      setFavoriteProducts([]);
       return;
     }
 
     try {
-      setLoading(true);
-      console.log('📥 Cargando favoritos para user:', user.id);
-      const data = await getFavorites(user.id);
-      const productIds = data.map((fav: any) => fav.product_id);
-      setFavorites(productIds);
-      console.log('✅ Favoritos cargados:', productIds);
-    } catch (error) {
-      console.error('❌ Error loading favorites:', error);
-    } finally {
-      setLoading(false);
-    }
-  }
+      const { data, error } = await supabase
+        .from('products')
+        .select('id, name, price, image_url, stock')
+        .in('id', favorites);
 
-  function checkIsFavorite(productId: string): boolean {
-    const result = favorites.includes(productId);
-    return result;
-  }
-
-  async function toggleFavorite(productId: string): Promise<boolean> {
-    console.log('🔵 toggleFavorite LLAMADO - productId:', productId.slice(0, 8));
-    console.log('🔵 user:', user?.id);
-    console.log('🔵 favorites actuales:', favorites);
-
-    if (!user) {
-      console.error('❌ toggleFavorite - No hay user');
-      return false;
-    }
-
-    const currentlyFavorite = favorites.includes(productId);
-    console.log('🔵 currentlyFavorite:', currentlyFavorite);
-
-    try {
-      if (currentlyFavorite) {
-        // REMOVER
-        console.log('🔴 Intentando remover...');
-        const success = await removeFavorite(user.id, productId);
-        console.log('🔴 removeFavorite result:', success);
-        
-        if (success) {
-          const newFavs = favorites.filter((id) => id !== productId);
-          setFavorites(newFavs);
-          console.log('✅ REMOVIDO - Nuevos favoritos:', newFavs);
-          return true;
-        } else {
-          console.log('❌ No se pudo remover');
-          return false;
-        }
+      if (error) {
+        console.error('Error loading favorite products:', error);
       } else {
-        // AGREGAR
-        console.log('🟢 Intentando agregar...');
-        const result = await addFavorite(user.id, productId);
-        console.log('🟢 addFavorite result:', result);
-        
-        if (result) {
-          const newFavs = [...favorites, productId];
-          setFavorites(newFavs);
-          console.log('✅ AGREGADO - Nuevos favoritos:', newFavs);
-          return true;
-        } else {
-          console.log('❌ No se pudo agregar');
-          return false;
-        }
+        setFavoriteProducts(data || []);
       }
     } catch (error) {
-      console.error('❌ Error en toggleFavorite:', error);
-      return false;
+      console.error('Error loading favorite products:', error);
     }
   }
 
-  const value = {
-    favorites,
-    loading,
-    isFavorite: checkIsFavorite,
-    toggleFavorite,
-    refreshFavorites: loadFavorites,
-  };
+  function isFavorite(productId: string): boolean {
+    return favorites.includes(productId);
+  }
 
-  console.log('🎨 FavoritesProvider render - favorites:', favorites.length);
+  function toggleFavorite(productId: string) {
+    setFavorites((current) =>
+      current.includes(productId)
+        ? current.filter((id) => id !== productId)
+        : [...current, productId]
+    );
+  }
 
   return (
-    <FavoritesContext.Provider value={value}>
+    <FavoritesContext.Provider
+      value={{
+        favorites,
+        favoriteProducts,
+        isFavorite,
+        toggleFavorite,
+      }}
+    >
       {children}
     </FavoritesContext.Provider>
   );
 }
 
-export const useFavorites = () => {
+export function useFavorites() {
   const context = useContext(FavoritesContext);
   if (!context) {
     throw new Error('useFavorites must be used within FavoritesProvider');
   }
   return context;
-};
+}

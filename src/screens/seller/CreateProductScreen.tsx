@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, ScrollView, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert, Image, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import * as ImagePicker from 'expo-image-picker';
 import { useAuth } from '../../contexts/AuthContext';
-import { createProduct } from '../../services/seller';
-import { supabase } from '../../services/supabase';
+import { supabase, supabaseUrl } from '../../services/supabase';
 import Button from '../../components/common/Button';
 import { COLORS } from '../../constants/theme';
 
@@ -14,18 +14,19 @@ interface Category {
 
 export default function CreateProductScreen({ navigation }: any) {
   const { user } = useAuth();
-  const [loading, setLoading] = useState(false);
-  const [loadingCategories, setLoadingCategories] = useState(true);
-  const [categories, setCategories] = useState<Category[]>([]);
-
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [price, setPrice] = useState('');
   const [compareAtPrice, setCompareAtPrice] = useState('');
   const [stock, setStock] = useState('');
   const [condition, setCondition] = useState<'new' | 'used'>('new');
-  const [categoryId, setCategoryId] = useState('');
   const [freeShipping, setFreeShipping] = useState(true);
+  const [categoryId, setCategoryId] = useState('');
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [imageUris, setImageUris] = useState<string[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [loadingCategories, setLoadingCategories] = useState(true);
 
   useEffect(() => {
     loadCategories();
@@ -33,38 +34,155 @@ export default function CreateProductScreen({ navigation }: any) {
 
   async function loadCategories() {
     try {
-      setLoadingCategories(true);
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('categories')
         .select('id, name')
         .is('parent_id', null)
         .eq('is_active', true)
         .order('name', { ascending: true });
 
-      if (data) {
+      if (error) {
+        console.error('Error loading categories:', error);
+      } else if (data && data.length > 0) {
         setCategories(data);
-        if (data.length > 0) {
-          setCategoryId(data[0].id);
-        }
+        setCategoryId(data[0].id);
       }
     } catch (error) {
-      console.error('Error loading categories:', error);
+      console.error('Error:', error);
     } finally {
       setLoadingCategories(false);
     }
   }
 
-  async function handleCreate() {
-    if (!user) return;
-
-    // Validaciones
-    if (!name.trim()) {
-      Alert.alert('Error', 'El nombre del producto es obligatorio');
+  async function pickImage() {
+    if (imageUris.length >= 5) {
+      Alert.alert('Límite alcanzado', 'Puedes subir máximo 5 imágenes');
       return;
     }
 
-    if (!description.trim()) {
-      Alert.alert('Error', 'La descripción es obligatoria');
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    
+    if (status !== 'granted') {
+      Alert.alert('Permiso necesario', 'Necesitamos acceso a tus fotos para subir imágenes');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.6,
+    });
+
+    if (!result.canceled && result.assets[0]) {
+      setImageUris([...imageUris, result.assets[0].uri]);
+    }
+  }
+
+  function removeImage(index: number) {
+    setImageUris(imageUris.filter((_, i) => i !== index));
+  }
+
+  async function uploadImage(uri: string, index: number): Promise<string | null> {
+    try {
+      const fileExt = uri.split('.').pop()?.toLowerCase() || 'jpg';
+      const fileName = `${user?.id}-${Date.now()}-${index}.${fileExt}`;
+
+      const formData = new FormData();
+      formData.append('file', {
+        uri: uri,
+        name: fileName,
+        type: `image/${fileExt === 'jpg' ? 'jpeg' : fileExt}`,
+      } as any);
+
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        return null;
+      }
+
+      const response = await fetch(
+        `${supabaseUrl}/storage/v1/object/products/${fileName}`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`,
+          },
+          body: formData,
+        }
+      );
+
+      if (!response.ok) {
+        console.error('Upload error:', await response.json());
+        return null;
+      }
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('products')
+        .getPublicUrl(fileName);
+
+      return publicUrl;
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      return null;
+    }
+  }
+
+  async function getOrCreateSeller(): Promise<string | null> {
+    if (!user?.id) {
+      console.error('No user ID');
+      return null;
+    }
+
+    try {
+      // Buscar seller existente por user_id
+      const { data: existingSeller, error: searchError } = await supabase
+        .from('sellers')
+        .select('id')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      if (existingSeller) {
+        console.log('Seller found:', existingSeller.id);
+        return existingSeller.id;
+      }
+
+      // Si no existe, crear seller con el user.id como id (primary key)
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('full_name, email')
+        .eq('id', user.id)
+        .single();
+
+      const storeName = profile?.full_name || profile?.email?.split('@')[0] || 'Mi Tienda';
+
+      const { data: newSeller, error: createError } = await supabase
+        .from('sellers')
+        .insert({
+          id: user.id, // Usar el user.id como primary key
+          store_name: storeName,
+          description: 'Tienda verificada',
+          is_verified: false,
+        })
+        .select('id')
+        .single();
+
+      if (createError) {
+        console.error('Error creating seller:', createError);
+        return null;
+      }
+
+      console.log('New seller created:', newSeller.id);
+      return newSeller.id;
+    } catch (error) {
+      console.error('Error in getOrCreateSeller:', error);
+      return null;
+    }
+  }
+
+  async function handleCreateProduct() {
+    if (!name.trim()) {
+      Alert.alert('Error', 'Ingresa el nombre del producto');
       return;
     }
 
@@ -73,8 +191,18 @@ export default function CreateProductScreen({ navigation }: any) {
       return;
     }
 
+    if (compareAtPrice && parseFloat(compareAtPrice) < parseFloat(price)) {
+      Alert.alert('Error', 'El precio anterior debe ser mayor o igual al precio actual');
+      return;
+    }
+
     if (!stock || parseInt(stock) < 0) {
       Alert.alert('Error', 'Ingresa un stock válido');
+      return;
+    }
+
+    if (imageUris.length === 0) {
+      Alert.alert('Error', 'Agrega al menos una imagen del producto');
       return;
     }
 
@@ -83,42 +211,61 @@ export default function CreateProductScreen({ navigation }: any) {
       return;
     }
 
-    try {
-      setLoading(true);
+    setLoading(true);
+    setUploading(true);
 
-      const productData = {
+    // Obtener o crear seller_id
+    const sellerId = await getOrCreateSeller();
+    if (!sellerId) {
+      Alert.alert('Error', 'No se pudo crear el perfil de vendedor. Verifica tu conexión.');
+      setUploading(false);
+      setLoading(false);
+      return;
+    }
+
+    // Subir imágenes
+    const uploadPromises = imageUris.map((uri, index) => uploadImage(uri, index));
+    const uploadedUrls = await Promise.all(uploadPromises);
+    
+    const validUrls = uploadedUrls.filter(url => url !== null) as string[];
+
+    if (validUrls.length === 0) {
+      Alert.alert('Error', 'No se pudieron subir las imágenes. Intenta de nuevo.');
+      setUploading(false);
+      setLoading(false);
+      return;
+    }
+
+    setUploading(false);
+
+    // Crear producto
+    const { error } = await supabase
+      .from('products')
+      .insert({
         name: name.trim(),
-        description: description.trim(),
+        description: description.trim() || null,
         price: parseFloat(price),
-        compare_at_price: compareAtPrice ? parseFloat(compareAtPrice) : undefined,
+        compare_at_price: compareAtPrice ? parseFloat(compareAtPrice) : null,
         stock: parseInt(stock),
         condition,
         category_id: categoryId,
-        seller_id: user.id,
+        seller_id: sellerId,
+        image_url: validUrls[0],
+        status: 'active',
         free_shipping: freeShipping,
-      };
+      });
 
-      const result = await createProduct(productData);
+    setLoading(false);
 
-      if (result.success) {
-  Alert.alert(
-    '¡Producto Publicado!',
-    'Tu producto se publicó correctamente',
-    [
-      {
-        text: 'OK',
-        onPress: () => navigation.goBack(),
-      },
-    ]
-  );
-} else {
-        Alert.alert('Error', result.error || 'No se pudo crear el producto');
-      }
-    } catch (error: any) {
-      Alert.alert('Error', error.message);
-    } finally {
-      setLoading(false);
+    if (error) {
+      console.error('Error creating product:', error);
+      Alert.alert('Error', 'No se pudo crear el producto: ' + error.message);
+      return;
     }
+
+    Alert.alert('Éxito', 'Producto creado correctamente', [
+      { text: 'OK', onPress: () => navigation.goBack() }
+    ]);
   }
 
   if (loadingCategories) {
@@ -133,106 +280,157 @@ export default function CreateProductScreen({ navigation }: any) {
 
   return (
     <SafeAreaView className="flex-1 bg-white" edges={['top']}>
-      {/* Header */}
       <View className="px-4 py-3 border-b border-gray-200 flex-row items-center">
         <TouchableOpacity onPress={() => navigation.goBack()} className="mr-3">
           <Text className="text-primary text-2xl font-bold">←</Text>
         </TouchableOpacity>
-        <Text className="text-xl font-bold text-gray-900">Publicar Producto</Text>
+        <Text className="text-xl font-bold text-gray-900">Crear Producto</Text>
       </View>
 
       <ScrollView className="flex-1 px-4 py-6">
-        {/* Nombre */}
-        <View className="mb-4">
-          <Text className="text-sm font-medium text-gray-700 mb-2">
-            Nombre del producto *
+        <View className="mb-6">
+          <Text className="text-base font-semibold text-gray-900 mb-2">
+            Imágenes * ({imageUris.length}/5)
           </Text>
+          
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            {imageUris.map((uri, index) => (
+              <View key={index} className="mr-3 relative">
+                <Image 
+                  source={{ uri }}
+                  className="rounded-xl"
+                  style={{ width: 120, height: 120 }}
+                  resizeMode="cover"
+                />
+                <TouchableOpacity
+                  onPress={() => removeImage(index)}
+                  className="absolute top-1 right-1 bg-red-500 rounded-full w-6 h-6 items-center justify-center"
+                >
+                  <Text className="text-white text-xs font-bold">✕</Text>
+                </TouchableOpacity>
+              </View>
+            ))}
+            
+            {imageUris.length < 5 && (
+              <TouchableOpacity
+                onPress={pickImage}
+                className="border-2 border-dashed border-gray-300 rounded-xl items-center justify-center"
+                style={{ width: 120, height: 120 }}
+              >
+                <Text className="text-4xl mb-1">📷</Text>
+                <Text className="text-xs text-gray-600">Agregar</Text>
+              </TouchableOpacity>
+            )}
+          </ScrollView>
+        </View>
+
+        <View className="mb-4">
+          <Text className="text-base font-semibold text-gray-900 mb-2">Nombre *</Text>
           <TextInput
-            className="bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-base"
-            placeholder="Ej: Samsung Galaxy A54"
             value={name}
             onChangeText={setName}
-            editable={!loading}
+            placeholder="Ej: iPhone 15 Pro Max 256GB"
+            className="border border-gray-300 rounded-xl px-4 py-3 text-base"
+            placeholderTextColor="#9CA3AF"
           />
         </View>
 
-        {/* Descripción */}
         <View className="mb-4">
-          <Text className="text-sm font-medium text-gray-700 mb-2">
-            Descripción *
-          </Text>
+          <Text className="text-base font-semibold text-gray-900 mb-2">Descripción</Text>
           <TextInput
-            className="bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-base"
-            placeholder="Describe tu producto..."
             value={description}
             onChangeText={setDescription}
+            placeholder="Describe tu producto..."
             multiline
             numberOfLines={4}
-            textAlignVertical="top"
-            editable={!loading}
+            className="border border-gray-300 rounded-xl px-4 py-3 text-base"
+            style={{ height: 100, textAlignVertical: 'top' }}
+            placeholderTextColor="#9CA3AF"
           />
         </View>
 
-        {/* Precio */}
         <View className="mb-4">
-          <Text className="text-sm font-medium text-gray-700 mb-2">
-            Precio *
-          </Text>
-          <TextInput
-            className="bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-base"
-            placeholder="0.00"
-            value={price}
-            onChangeText={setPrice}
-            keyboardType="decimal-pad"
-            editable={!loading}
-          />
+          <Text className="text-base font-semibold text-gray-900 mb-2">Categoría *</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            {categories.map((category) => (
+              <TouchableOpacity
+                key={category.id}
+                onPress={() => setCategoryId(category.id)}
+                className={`mr-2 px-4 py-2 rounded-full border ${
+                  categoryId === category.id
+                    ? 'bg-primary border-primary'
+                    : 'bg-gray-50 border-gray-300'
+                }`}
+              >
+                <Text
+                  className={`text-sm font-semibold ${
+                    categoryId === category.id ? 'text-white' : 'text-gray-700'
+                  }`}
+                >
+                  {category.name}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
         </View>
 
-        {/* Precio comparado (opcional) */}
         <View className="mb-4">
-          <Text className="text-sm font-medium text-gray-700 mb-2">
+          <Text className="text-base font-semibold text-gray-900 mb-2">Precio *</Text>
+          <View className="flex-row items-center border border-gray-300 rounded-xl px-4 py-3">
+            <Text className="text-lg font-bold text-gray-900 mr-2">$</Text>
+            <TextInput
+              value={price}
+              onChangeText={setPrice}
+              placeholder="0.00"
+              keyboardType="decimal-pad"
+              className="flex-1 text-base"
+              placeholderTextColor="#9CA3AF"
+            />
+          </View>
+        </View>
+
+        <View className="mb-4">
+          <Text className="text-base font-semibold text-gray-900 mb-2">
             Precio anterior (opcional)
           </Text>
-          <TextInput
-            className="bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-base"
-            placeholder="0.00"
-            value={compareAtPrice}
-            onChangeText={setCompareAtPrice}
-            keyboardType="decimal-pad"
-            editable={!loading}
-          />
-          <Text className="text-xs text-gray-500 mt-1">
-            Muestra el descuento al comprador
+          <Text className="text-xs text-gray-500 mb-2">
+            Debe ser mayor o igual al precio actual
           </Text>
+          <View className="flex-row items-center border border-gray-300 rounded-xl px-4 py-3">
+            <Text className="text-lg font-bold text-gray-900 mr-2">$</Text>
+            <TextInput
+              value={compareAtPrice}
+              onChangeText={setCompareAtPrice}
+              placeholder="0.00"
+              keyboardType="decimal-pad"
+              className="flex-1 text-base"
+              placeholderTextColor="#9CA3AF"
+            />
+          </View>
         </View>
 
-        {/* Stock */}
         <View className="mb-4">
-          <Text className="text-sm font-medium text-gray-700 mb-2">
-            Stock disponible *
-          </Text>
+          <Text className="text-base font-semibold text-gray-900 mb-2">Stock disponible *</Text>
           <TextInput
-            className="bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-base"
-            placeholder="0"
             value={stock}
             onChangeText={setStock}
+            placeholder="Cantidad disponible"
             keyboardType="number-pad"
-            editable={!loading}
+            className="border border-gray-300 rounded-xl px-4 py-3 text-base"
+            placeholderTextColor="#9CA3AF"
           />
         </View>
 
-        {/* Condición */}
         <View className="mb-4">
-          <Text className="text-sm font-medium text-gray-700 mb-2">
-            Condición *
-          </Text>
+          <Text className="text-base font-semibold text-gray-900 mb-2">Condición *</Text>
           <View className="flex-row">
             <TouchableOpacity
               onPress={() => setCondition('new')}
-              className={`flex-1 mr-2 py-3 rounded-lg border ${
-                condition === 'new' ? 'bg-primary border-primary' : 'bg-gray-50 border-gray-300'
+              className={`flex-1 mr-2 py-3 rounded-xl border ${
+                condition === 'new'
+                  ? 'bg-primary border-primary'
+                  : 'bg-gray-50 border-gray-300'
               }`}
-              disabled={loading}
             >
               <Text
                 className={`text-center font-semibold ${
@@ -245,10 +443,11 @@ export default function CreateProductScreen({ navigation }: any) {
 
             <TouchableOpacity
               onPress={() => setCondition('used')}
-              className={`flex-1 ml-2 py-3 rounded-lg border ${
-                condition === 'used' ? 'bg-primary border-primary' : 'bg-gray-50 border-gray-300'
+              className={`flex-1 ml-2 py-3 rounded-xl border ${
+                condition === 'used'
+                  ? 'bg-primary border-primary'
+                  : 'bg-gray-50 border-gray-300'
               }`}
-              disabled={loading}
             >
               <Text
                 className={`text-center font-semibold ${
@@ -261,42 +460,10 @@ export default function CreateProductScreen({ navigation }: any) {
           </View>
         </View>
 
-        {/* Categoría */}
-        <View className="mb-4">
-          <Text className="text-sm font-medium text-gray-700 mb-2">
-            Categoría *
-          </Text>
-          <View className="bg-gray-50 border border-gray-300 rounded-lg">
-            {categories.map((cat) => (
-              <TouchableOpacity
-                key={cat.id}
-                onPress={() => setCategoryId(cat.id)}
-                className={`flex-row items-center justify-between px-4 py-3 ${
-                  categoryId === cat.id ? 'bg-blue-50' : ''
-                }`}
-                disabled={loading}
-              >
-                <Text
-                  className={`text-base ${
-                    categoryId === cat.id ? 'text-primary font-semibold' : 'text-gray-700'
-                  }`}
-                >
-                  {cat.name}
-                </Text>
-                {categoryId === cat.id && (
-                  <Text className="text-primary text-xl">✓</Text>
-                )}
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-
-        {/* Envío gratis */}
         <View className="mb-6">
           <TouchableOpacity
             onPress={() => setFreeShipping(!freeShipping)}
             className="flex-row items-center py-3"
-            disabled={loading}
           >
             <View
               className={`w-6 h-6 rounded border-2 items-center justify-center mr-3 ${
@@ -305,20 +472,24 @@ export default function CreateProductScreen({ navigation }: any) {
             >
               {freeShipping && <Text className="text-white text-sm">✓</Text>}
             </View>
-            <View className="flex-1">
-              <Text className="text-base font-medium text-gray-900">Envío gratis</Text>
-              <Text className="text-sm text-gray-500">Aumenta las posibilidades de venta</Text>
-            </View>
+            <Text className="text-base font-medium text-gray-900">Ofrecer envío gratis</Text>
           </TouchableOpacity>
         </View>
 
-        <Button
-          title="Publicar Producto"
-          onPress={handleCreate}
-          loading={loading}
-        />
+        {uploading && (
+          <View className="mb-4">
+            <ActivityIndicator size="large" color={COLORS.primary} />
+            <Text className="text-center text-gray-600 mt-2">
+              Subiendo {imageUris.length} {imageUris.length === 1 ? 'imagen' : 'imágenes'}...
+            </Text>
+          </View>
+        )}
 
-        <View className="h-6" />
+        <Button
+          title={loading ? "Creando producto..." : "Crear Producto"}
+          onPress={handleCreateProduct}
+          disabled={loading || uploading}
+        />
       </ScrollView>
     </SafeAreaView>
   );

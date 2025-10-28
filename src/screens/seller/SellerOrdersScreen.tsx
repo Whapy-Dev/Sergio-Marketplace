@@ -3,6 +3,7 @@ import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, RefreshCon
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../contexts/AuthContext';
 import { getSellerOrders } from '../../services/orders';
+import { supabase } from '../../services/supabase';
 import { COLORS } from '../../constants/theme';
 
 const STATUS_INFO = {
@@ -28,7 +29,42 @@ export default function SellerOrdersScreen({ navigation }: any) {
     if (!user) return;
 
     setLoading(true);
-    const data = await getSellerOrders(user.id);
+
+    // BUSCAR EL SELLER_ID REAL - Buscar por cualquier producto del usuario
+    const { data: products } = await supabase
+      .from('products')
+      .select('seller_id')
+      .eq('seller_id', user.id)
+      .limit(1);
+
+    let sellerId = user.id; // Por defecto usar user.id
+
+    // Si encontró productos, usar ese seller_id
+    if (products && products.length > 0) {
+      sellerId = products[0].seller_id;
+      console.log('✅ Seller ID encontrado en productos:', sellerId);
+    } else {
+      // Si no tiene productos, buscar en la tabla sellers
+      const { data: seller } = await supabase
+        .from('sellers')
+        .select('id')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      if (seller) {
+        sellerId = seller.id;
+        console.log('✅ Seller ID encontrado en tabla sellers:', sellerId);
+      } else {
+        console.log('⚠️ Usuario no tiene perfil de vendedor ni productos');
+        setOrders([]);
+        setLoading(false);
+        return;
+      }
+    }
+
+    // Obtener pedidos del vendedor
+    const data = await getSellerOrders(sellerId);
+    console.log('📦 Pedidos encontrados:', data.length);
     setOrders(data);
     setLoading(false);
   }
@@ -63,7 +99,6 @@ export default function SellerOrdersScreen({ navigation }: any) {
 
   return (
     <SafeAreaView className="flex-1 bg-white" edges={['top']}>
-      {/* Header */}
       <View className="px-4 py-3 border-b border-gray-200 flex-row items-center">
         <TouchableOpacity onPress={() => navigation.goBack()} className="mr-3">
           <Text className="text-primary text-2xl font-bold">←</Text>
@@ -71,7 +106,6 @@ export default function SellerOrdersScreen({ navigation }: any) {
         <Text className="text-xl font-bold text-gray-900">Pedidos</Text>
       </View>
 
-      {/* Filtros */}
       <ScrollView 
         horizontal 
         showsHorizontalScrollIndicator={false}
@@ -168,7 +202,7 @@ export default function SellerOrdersScreen({ navigation }: any) {
                       {itemsCount} {itemsCount === 1 ? 'producto' : 'productos'}
                     </Text>
                     <Text className="text-lg font-bold text-primary">
-                      ${order.total.toLocaleString()}
+                      ${(order.total || 0).toLocaleString()}
                     </Text>
                   </View>
                 </View>

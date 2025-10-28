@@ -1,76 +1,58 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Image, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, Image, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { supabase } from '../../services/supabase';
+import { useAuth } from '../../contexts/AuthContext';
 import { useCart } from '../../contexts/CartContext';
 import { useFavorites } from '../../contexts/FavoritesContext';
+import { supabase } from '../../services/supabase';
 import Button from '../../components/common/Button';
 import { COLORS } from '../../constants/theme';
 
 export default function ProductDetailScreen({ route, navigation }: any) {
   const { productId } = route.params;
+  const { user } = useAuth();
+  const { addItem } = useCart();
+  const { isFavorite, toggleFavorite } = useFavorites();
   const [product, setProduct] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
-  const { addItem: addToCart } = useCart();
-  const { toggleFavorite, isFavorite } = useFavorites();
 
   useEffect(() => {
     loadProduct();
   }, [productId]);
 
   async function loadProduct() {
-    try {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from('products')
-        .select(`
-          *,
-          categories(name),
-          sellers(store_name)
-        `)
-        .eq('id', productId)
-        .single();
+    const { data, error } = await supabase
+      .from('products')
+      .select('*')
+      .eq('id', productId)
+      .single();
 
-      if (error) {
-        console.error('Error loading product:', error);
-        Alert.alert('Error', 'No se pudo cargar el producto');
-        navigation.goBack();
-        return;
-      }
-
+    if (error) {
+      console.error('Error loading product:', error);
+    } else {
       setProduct(data);
-    } catch (error) {
-      console.error('Error:', error);
-    } finally {
-      setLoading(false);
     }
+    setLoading(false);
   }
 
   function handleAddToCart() {
     if (!product) return;
 
-    addToCart({
+    addItem({
       id: product.id,
       name: product.name,
       price: product.price,
+      quantity: quantity,
       imageUrl: product.image_url,
       sellerId: product.seller_id,
-    }, quantity);
+      stock: product.stock,
+    });
 
-    Alert.alert(
-      '¡Agregado!',
-      `${product.name} se agregó al carrito`,
-      [
-        { text: 'Seguir comprando', style: 'cancel' },
-        { text: 'Ir al carrito', onPress: () => navigation.navigate('Cart') },
-      ]
-    );
-  }
-
-  function handleToggleFavorite() {
-    if (!product) return;
-    toggleFavorite(product.id);
+    Alert.alert('Agregado', 'Producto agregado al carrito', [
+      { text: 'Seguir comprando', style: 'cancel' },
+      { text: 'Ir al carrito', onPress: () => navigation.navigate('Cart') },
+    ]);
   }
 
   if (loading) {
@@ -93,12 +75,6 @@ export default function ProductDetailScreen({ route, navigation }: any) {
     );
   }
 
-  const discount = product.compare_at_price 
-    ? Math.round(((product.compare_at_price - product.price) / product.compare_at_price) * 100)
-    : 0;
-
-  const favorite = isFavorite(product.id);
-
   return (
     <SafeAreaView className="flex-1 bg-white" edges={['top']}>
       {/* Header */}
@@ -106,81 +82,38 @@ export default function ProductDetailScreen({ route, navigation }: any) {
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Text className="text-primary text-2xl font-bold">←</Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={handleToggleFavorite}>
-          <Text className="text-3xl">{favorite ? '❤️' : '🤍'}</Text>
+        <TouchableOpacity onPress={() => toggleFavorite(product.id)}>
+          <Text className="text-2xl">{isFavorite(product.id) ? '❤️' : '🤍'}</Text>
         </TouchableOpacity>
       </View>
 
       <ScrollView className="flex-1">
         {/* Imagen del producto */}
-        <View className="bg-gray-100 h-80 items-center justify-center">
+        <View className="bg-gray-50 items-center justify-center" style={{ height: 300 }}>
           {product.image_url ? (
-            <Image 
-              source={{ uri: product.image_url }} 
+            <Image
+              source={{ uri: product.image_url }}
               className="w-full h-full"
-              resizeMode="cover"
+              resizeMode="contain"
             />
           ) : (
-            <Text className="text-8xl">📦</Text>
-          )}
-          {discount > 0 && (
-            <View className="absolute top-4 left-4 bg-primary rounded-lg px-3 py-2">
-              <Text className="text-white text-base font-bold">{discount}% OFF</Text>
-            </View>
+            <Text className="text-6xl">📦</Text>
           )}
         </View>
 
-        {/* Información del producto */}
-        <View className="px-4 py-4">
-          {/* Nombre */}
+        {/* Info del producto */}
+        <View className="p-4">
           <Text className="text-2xl font-bold text-gray-900 mb-2">
             {product.name}
           </Text>
 
-          {/* Categoría y condición */}
-          <View className="flex-row items-center mb-3">
-            {product.categories && (
-              <View className="bg-gray-100 rounded px-2 py-1 mr-2">
-                <Text className="text-xs text-gray-700">{product.categories.name}</Text>
-              </View>
-            )}
-            <View className="bg-blue-100 rounded px-2 py-1">
-              <Text className="text-xs text-blue-700">
-                {product.condition === 'new' ? 'Nuevo' : 'Usado'}
-              </Text>
-            </View>
-          </View>
+          <Text className="text-3xl font-bold text-primary mb-4">
+            ${product.price.toLocaleString()}
+          </Text>
 
-          {/* Precio */}
-          <View className="mb-4">
-            {product.compare_at_price && (
-              <Text className="text-base text-gray-400 line-through mb-1">
-                ${product.compare_at_price.toLocaleString()}
-              </Text>
-            )}
-            <View className="flex-row items-end">
-              <Text className="text-4xl font-bold text-primary">
-                ${product.price.toLocaleString()}
-              </Text>
-              {product.free_shipping && (
-                <Text className="text-sm text-green-600 ml-2 mb-2">
-                  Envío gratis 🚚
-                </Text>
-              )}
-            </View>
-          </View>
-
-          {/* Stock */}
-          <View className="mb-4">
-            <Text className="text-sm text-gray-600">
-              Stock disponible: {product.stock} unidades
-            </Text>
-          </View>
-
-          {/* Descripción */}
           {product.description && (
             <View className="mb-4">
-              <Text className="text-base font-semibold text-gray-900 mb-2">
+              <Text className="text-lg font-semibold text-gray-900 mb-2">
                 Descripción
               </Text>
               <Text className="text-base text-gray-700 leading-6">
@@ -189,51 +122,40 @@ export default function ProductDetailScreen({ route, navigation }: any) {
             </View>
           )}
 
-          {/* Vendedor */}
-          {product.sellers && (
-            <View className="bg-gray-50 rounded-lg p-4 mb-4">
-              <Text className="text-sm font-semibold text-gray-900 mb-1">
-                Vendido por
-              </Text>
-              <Text className="text-base text-gray-700">
-                {product.sellers.store_name || 'Vendedor'}
-              </Text>
-            </View>
-          )}
+          <View className="mb-4">
+            <Text className="text-base text-gray-600">
+              Stock disponible: <Text className="font-semibold">{product.stock}</Text>
+            </Text>
+          </View>
 
           {/* Selector de cantidad */}
-          <View className="mb-6">
-            <Text className="text-base font-semibold text-gray-900 mb-3">
-              Cantidad
-            </Text>
-            <View className="flex-row items-center">
+          <View className="flex-row items-center mb-6">
+            <Text className="text-base text-gray-900 mr-4">Cantidad:</Text>
+            <View className="flex-row items-center border border-gray-300 rounded-lg">
               <TouchableOpacity
                 onPress={() => setQuantity(Math.max(1, quantity - 1))}
-                className="w-12 h-12 rounded-full bg-gray-100 items-center justify-center"
+                className="px-4 py-2"
               >
-                <Text className="text-2xl font-bold text-gray-700">-</Text>
+                <Text className="text-xl font-bold text-gray-700">−</Text>
               </TouchableOpacity>
-
-              <Text className="text-2xl font-semibold text-gray-900 mx-6">
+              <Text className="text-lg font-semibold text-gray-900 px-4">
                 {quantity}
               </Text>
-
               <TouchableOpacity
                 onPress={() => setQuantity(Math.min(product.stock, quantity + 1))}
-                className="w-12 h-12 rounded-full bg-gray-100 items-center justify-center"
-                disabled={quantity >= product.stock}
+                className="px-4 py-2"
               >
-                <Text className="text-2xl font-bold text-gray-700">+</Text>
+                <Text className="text-xl font-bold text-gray-700">+</Text>
               </TouchableOpacity>
             </View>
           </View>
         </View>
       </ScrollView>
 
-      {/* Botones de acción */}
+      {/* Footer con botones */}
       <View className="px-4 py-4 border-t border-gray-200 bg-white">
         <Button
-          title="Agregar al Carrito"
+          title="Agregar al carrito"
           onPress={handleAddToCart}
           disabled={product.stock === 0}
         />

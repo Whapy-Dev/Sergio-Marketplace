@@ -40,6 +40,10 @@ import SellerOrdersScreen from '../screens/seller/SellerOrdersScreen';
 // Screens - Orders
 import CheckoutScreen from '../screens/orders/CheckoutScreen';
 
+// Screens - Chat
+import ConversationsScreen from '../screens/chat/ConversationsScreen';
+import ChatScreen from '../screens/chat/ChatScreen';
+
 // Screens - Auth
 import LoginScreen from '../screens/auth/LoginScreen';
 import RegisterScreen from '../screens/auth/RegisterScreen';
@@ -59,7 +63,28 @@ function HomeStack() {
   );
 }
 
-// En ProfileStack:
+// Favorites Stack Navigator (NUEVO)
+function FavoritesStack() {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="FavoritesMain" component={FavoritesScreen} />
+      <Stack.Screen name="ProductDetail" component={ProductDetailScreen} />
+    </Stack.Navigator>
+  );
+}
+
+// Cart Stack Navigator (NUEVO)
+function CartStack() {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="CartMain" component={CartScreen} />
+      <Stack.Screen name="Checkout" component={CheckoutScreen} />
+      <Stack.Screen name="ProductDetail" component={ProductDetailScreen} />
+    </Stack.Navigator>
+  );
+}
+
+// Profile Stack Navigator
 function ProfileStack() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
@@ -114,7 +139,7 @@ function TabNavigator() {
       />
       <Tab.Screen
         name="Favorites"
-        component={FavoritesScreen}
+        component={FavoritesStack}
         options={{
           tabBarLabel: 'Favoritos',
           tabBarIcon: () => (
@@ -144,8 +169,16 @@ function TabNavigator() {
         }}
       />
       <Tab.Screen
+        name="Messages"
+        component={ConversationsScreen}
+        options={{
+          tabBarLabel: 'Mensajes',
+          tabBarIcon: () => <Text style={{ fontSize: 24 }}>💬</Text>,
+        }}
+      />
+      <Tab.Screen
         name="Cart"
-        component={CartScreen}
+        component={CartStack}
         options={{
           tabBarLabel: 'Carrito',
           tabBarIcon: () => (
@@ -200,7 +233,7 @@ export default function AppNavigator() {
         {session ? (
           <>
             <Stack.Screen name="MainTabs" component={TabNavigator} />
-            <Stack.Screen name="Checkout" component={CheckoutScreen} />
+            <Stack.Screen name="Chat" component={ChatScreen} />
           </>
         ) : (
           <>

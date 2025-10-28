@@ -5,18 +5,17 @@ import { useCart } from '../../contexts/CartContext';
 import Button from '../../components/common/Button';
 
 export default function CartScreen({ navigation }: any) {
-  const { items, totalItems, totalAmount, removeItem, updateQuantity } = useCart();
+  const { items, totalItems, totalPrice, updateQuantity, removeItem } = useCart();
 
   if (items.length === 0) {
     return (
-      <SafeAreaView className="flex-1 bg-white">
+      <SafeAreaView className="flex-1 bg-white" edges={['top']}>
         <View className="px-4 py-3 border-b border-gray-200">
-          <Text className="text-xl font-bold text-gray-900">Carrito</Text>
+          <Text className="text-xl font-bold text-gray-900">Carrito (0 productos)</Text>
         </View>
-        
         <View className="flex-1 items-center justify-center px-6">
           <Text className="text-6xl mb-4">🛒</Text>
-          <Text className="text-xl font-bold text-gray-900 mb-2">
+          <Text className="text-xl font-bold text-gray-900 mb-2 text-center">
             Tu carrito está vacío
           </Text>
           <Text className="text-base text-gray-600 text-center mb-6">
@@ -24,9 +23,9 @@ export default function CartScreen({ navigation }: any) {
           </Text>
           <TouchableOpacity
             onPress={() => navigation.navigate('Home')}
-            className="bg-primary rounded-lg px-6 py-3"
+            className="bg-primary rounded-xl px-6 py-3"
           >
-            <Text className="text-white font-semibold">Explorar Productos</Text>
+            <Text className="text-white font-semibold">Explorar productos</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -34,109 +33,82 @@ export default function CartScreen({ navigation }: any) {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
-      {/* Header */}
+    <SafeAreaView className="flex-1 bg-white" edges={['top']}>
       <View className="px-4 py-3 border-b border-gray-200">
         <Text className="text-xl font-bold text-gray-900">
           Carrito ({totalItems} {totalItems === 1 ? 'producto' : 'productos'})
         </Text>
       </View>
 
-      <ScrollView className="flex-1">
+      <ScrollView className="flex-1 px-4 py-4">
         {items.map((item) => (
-          <View
-            key={item.id}
-            className="mx-4 my-2 p-4 bg-white border border-gray-200 rounded-lg"
-          >
-            <View className="flex-row">
-              {/* Imagen */}
-              <View className="w-20 h-20 bg-gray-100 rounded-lg items-center justify-center mr-3">
-                {item.imageUrl ? (
-                  <Image
-                    source={{ uri: item.imageUrl }}
-                    className="w-full h-full rounded-lg"
-                    resizeMode="cover"
-                  />
-                ) : (
-                  <Text className="text-3xl">📦</Text>
-                )}
-              </View>
-
-              {/* Info */}
-              <View className="flex-1">
-                <Text className="text-base font-semibold text-gray-900 mb-1" numberOfLines={2}>
-                  {item.name}
-                </Text>
-                <Text className="text-lg font-bold text-primary mb-2">
-                  ${item.price.toLocaleString()}
-                </Text>
-
-                {/* Controles de cantidad */}
-                <View className="flex-row items-center justify-between">
-                  <View className="flex-row items-center">
-                    <TouchableOpacity
-                      onPress={() => updateQuantity(item.id, item.quantity - 1)}
-                      className="w-8 h-8 rounded-full bg-gray-100 items-center justify-center"
-                    >
-                      <Text className="text-lg font-bold text-gray-700">-</Text>
-                    </TouchableOpacity>
-
-                    <Text className="text-base font-semibold text-gray-900 mx-4">
-                      {item.quantity}
-                    </Text>
-
-                    <TouchableOpacity
-                      onPress={() => updateQuantity(item.id, item.quantity + 1)}
-                      className="w-8 h-8 rounded-full bg-gray-100 items-center justify-center"
-                    >
-                      <Text className="text-lg font-bold text-gray-700">+</Text>
-                    </TouchableOpacity>
-                  </View>
-
-                  <TouchableOpacity
-                    onPress={() => removeItem(item.id)}
-                    className="px-3 py-1"
-                  >
-                    <Text className="text-red-600 font-semibold">Eliminar</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
+          <View key={item.id} className="flex-row bg-white rounded-xl mb-3 p-3 border border-gray-200">
+            <View className="w-20 h-20 bg-gray-100 rounded-lg items-center justify-center mr-3">
+              {item.imageUrl ? (
+                <Image
+                  source={{ uri: item.imageUrl }}
+                  className="w-full h-full rounded-lg"
+                  resizeMode="cover"
+                />
+              ) : (
+                <Text className="text-3xl">📦</Text>
+              )}
             </View>
 
-            {/* Subtotal */}
-            <View className="mt-3 pt-3 border-t border-gray-100 flex-row justify-between items-center">
-              <Text className="text-sm text-gray-600">Subtotal</Text>
-              <Text className="text-base font-bold text-gray-900">
-                ${(item.price * item.quantity).toLocaleString()}
+            <View className="flex-1">
+              <Text className="text-base font-semibold text-gray-900 mb-1" numberOfLines={2}>
+                {item.name}
               </Text>
+              <Text className="text-lg font-bold text-primary mb-2">
+                ${item.price.toLocaleString()}
+              </Text>
+
+              <View className="flex-row items-center justify-between">
+                <View className="flex-row items-center border border-gray-300 rounded-lg">
+                  <TouchableOpacity
+                    onPress={() => updateQuantity(item.id, item.quantity - 1)}
+                    className="px-3 py-1"
+                  >
+                    <Text className="text-lg font-bold text-gray-700">−</Text>
+                  </TouchableOpacity>
+                  <Text className="text-base font-semibold text-gray-900 px-3">
+                    {item.quantity}
+                  </Text>
+                  <TouchableOpacity
+                    onPress={() => updateQuantity(item.id, item.quantity + 1)}
+                    className="px-3 py-1"
+                  >
+                    <Text className="text-lg font-bold text-gray-700">+</Text>
+                  </TouchableOpacity>
+                </View>
+
+                <TouchableOpacity onPress={() => removeItem(item.id)}>
+                  <Text className="text-red-600 font-semibold">Eliminar</Text>
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
         ))}
-
-        <View className="h-20" />
       </ScrollView>
 
-      {/* Footer con total y botón */}
       <View className="px-4 py-4 border-t border-gray-200 bg-white">
-        <View className="flex-row justify-between items-center mb-3">
-          <Text className="text-base text-gray-700">Subtotal</Text>
-          <Text className="text-base font-semibold text-gray-900">
-            ${totalAmount.toLocaleString()}
-          </Text>
-        </View>
-        <View className="flex-row justify-between items-center mb-3">
-          <Text className="text-base text-gray-700">Envío</Text>
-          <Text className="text-base font-semibold text-green-600">Gratis 🎉</Text>
-        </View>
-        <View className="flex-row justify-between items-center mb-4 pt-3 border-t border-gray-200">
-          <Text className="text-lg font-bold text-gray-900">Total</Text>
-          <Text className="text-2xl font-bold text-primary">
-            ${totalAmount.toLocaleString()}
-          </Text>
+        <View className="mb-4">
+          <View className="flex-row justify-between mb-2">
+            <Text className="text-base text-gray-700">Subtotal</Text>
+            <Text className="text-base font-semibold text-gray-900">${totalPrice.toLocaleString()}</Text>
+          </View>
+          <View className="flex-row justify-between mb-2">
+            <Text className="text-base text-gray-700">Envío</Text>
+            <Text className="text-base font-semibold text-green-600">Gratis 🎉</Text>
+          </View>
+          <View className="flex-row justify-between pt-2 border-t border-gray-200">
+            <Text className="text-lg font-bold text-gray-900">Total</Text>
+            <Text className="text-2xl font-bold text-primary">${totalPrice.toLocaleString()}</Text>
+          </View>
         </View>
 
         <Button
-          title={`Finalizar Compra`}
+          title="Finalizar Compra"
           onPress={() => navigation.navigate('Checkout')}
         />
       </View>

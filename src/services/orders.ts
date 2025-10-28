@@ -59,24 +59,20 @@ export interface CreateOrderData {
   buyer_notes?: string;
 }
 
-// Generar número de orden único
 function generateOrderNumber(): string {
   const timestamp = Date.now().toString().slice(-8);
   const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
   return `ORD-${timestamp}-${random}`;
 }
 
-// Crear orden
 export async function createOrder(orderData: CreateOrderData) {
   try {
-    // 1. Calcular totales
     const subtotal = orderData.items.reduce((sum, item) => sum + (item.unit_price * item.quantity), 0);
-    const shipping_total = 0; // Envío gratis
+    const shipping_total = 0;
     const discount_total = 0;
     const tax_total = 0;
     const total = subtotal + shipping_total - discount_total + tax_total;
 
-    // 2. Crear orden
     const { data: order, error: orderError } = await supabase
       .from('orders')
       .insert([{
@@ -100,8 +96,7 @@ export async function createOrder(orderData: CreateOrderData) {
       return { success: false, error: orderError.message };
     }
 
-    // 3. Crear items de la orden
-    const commission_rate = 0.10; // 10% de comisión
+    const commission_rate = 0.10;
     
     const orderItems = orderData.items.map(item => {
       const item_subtotal = item.unit_price * item.quantity;
@@ -122,7 +117,7 @@ export async function createOrder(orderData: CreateOrderData) {
         seller_payout,
         shipping_cost: 0,
         shipping_status: 'pending',
-        shipping_address: null, // ← NULL porque es opcional
+        shipping_address: null,
       };
     });
 
@@ -132,12 +127,10 @@ export async function createOrder(orderData: CreateOrderData) {
 
     if (itemsError) {
       console.error('Error creating order items:', itemsError);
-      // Revertir orden
       await supabase.from('orders').delete().eq('id', order.id);
       return { success: false, error: itemsError.message };
     }
 
-    // 4. Actualizar stock de productos
     for (const item of orderData.items) {
       const { data: product } = await supabase
         .from('products')
@@ -160,7 +153,6 @@ export async function createOrder(orderData: CreateOrderData) {
   }
 }
 
-// Obtener órdenes del usuario
 export async function getUserOrders(userId: string) {
   try {
     const { data, error } = await supabase
@@ -191,7 +183,6 @@ export async function getUserOrders(userId: string) {
   }
 }
 
-// Obtener orden por ID
 export async function getOrderById(orderId: string) {
   try {
     const { data, error } = await supabase
@@ -229,7 +220,6 @@ export async function getOrderById(orderId: string) {
   }
 }
 
-// Actualizar estado de orden
 export async function updateOrderStatus(orderId: string, status: Order['status']) {
   try {
     const { data, error } = await supabase
@@ -254,16 +244,13 @@ export async function updateOrderStatus(orderId: string, status: Order['status']
   }
 }
 
-// Cancelar orden
 export async function cancelOrder(orderId: string) {
   try {
-    // Obtener items de la orden para restaurar stock
     const { data: orderItems } = await supabase
       .from('order_items')
       .select('product_id, quantity')
       .eq('order_id', orderId);
 
-    // Restaurar stock
     if (orderItems) {
       for (const item of orderItems) {
         const { data: product } = await supabase
@@ -281,7 +268,6 @@ export async function cancelOrder(orderId: string) {
       }
     }
 
-    // Actualizar estado
     const { data, error } = await supabase
       .from('orders')
       .update({ 
@@ -304,9 +290,10 @@ export async function cancelOrder(orderId: string) {
   }
 }
 
-// Obtener órdenes del vendedor
 export async function getSellerOrders(sellerId: string) {
   try {
+    console.log('🔍 Buscando pedidos para seller:', sellerId);
+
     const { data, error } = await supabase
       .from('order_items')
       .select(`
@@ -318,37 +305,53 @@ export async function getSellerOrders(sellerId: string) {
           total,
           status,
           payment_status,
-          created_at,
-          profiles!orders_buyer_id_fkey(
-            full_name,
-            phone
-          )
+          created_at
         )
       `)
       .eq('seller_id', sellerId)
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('Error fetching seller orders:', error);
+      console.error('❌ Error fetching seller orders:', error);
       return [];
     }
 
-    // Agrupar items por orden
+    console.log('📊 Order items encontrados:', data?.length || 0);
+
+    if (!data || data.length === 0) {
+      return [];
+    }
+
+    const buyerIds = [...new Set(data.map((item: any) => item.orders.buyer_id))];
+    
+    const { data: profiles } = await supabase
+      .from('profiles')
+      .select('id, full_name, phone')
+      .in('id', buyerIds);
+
+    const profilesMap = new Map(profiles?.map((p: any) => [p.id, p]) || []);
+
     const ordersMap = new Map();
-    data?.forEach((item: any) => {
+    
+    data.forEach((item: any) => {
       const orderId = item.orders.id;
       if (!ordersMap.has(orderId)) {
         ordersMap.set(orderId, {
           ...item.orders,
+          profiles: profilesMap.get(item.orders.buyer_id) || null,
           order_items: []
         });
       }
       ordersMap.get(orderId).order_items.push(item);
     });
 
-    return Array.from(ordersMap.values());
+    const result = Array.from(ordersMap.values());
+    console.log('✅ Pedidos agrupados:', result.length);
+    console.log('📋 Detalle:', result.map((o: any) => o.order_number));
+    
+    return result;
   } catch (error) {
-    console.error('Error:', error);
+    console.error('❌ Error:', error);
     return [];
   }
 }

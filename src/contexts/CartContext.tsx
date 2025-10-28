@@ -1,38 +1,27 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-interface CartItem {
+export interface CartItem {
   id: string;
   name: string;
   price: number;
   quantity: number;
   imageUrl?: string;
   sellerId: string;
+  stock: number;
 }
 
 interface CartContextType {
   items: CartItem[];
   totalItems: number;
-  totalAmount: number;
-  addItem: (item: Omit<CartItem, 'quantity'>, quantity?: number) => void;
-  removeItem: (productId: string) => void;
-  updateQuantity: (productId: string, quantity: number) => void;
+  totalPrice: number;
+  addItem: (item: CartItem) => void;
+  removeItem: (id: string) => void;
+  updateQuantity: (id: string, quantity: number) => void;
   clearCart: () => void;
-  isInCart: (productId: string) => boolean;
 }
 
-const CartContext = createContext<CartContextType>({
-  items: [],
-  totalItems: 0,
-  totalAmount: 0,
-  addItem: () => {},
-  removeItem: () => {},
-  updateQuantity: () => {},
-  clearCart: () => {},
-  isInCart: () => false,
-});
-
-const CART_STORAGE_KEY = '@marketplace_cart';
+const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
@@ -47,9 +36,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   async function loadCart() {
     try {
-      const cartData = await AsyncStorage.getItem(CART_STORAGE_KEY);
-      if (cartData) {
-        setItems(JSON.parse(cartData));
+      const savedCart = await AsyncStorage.getItem('cart');
+      if (savedCart) {
+        setItems(JSON.parse(savedCart));
       }
     } catch (error) {
       console.error('Error loading cart:', error);
@@ -58,42 +47,42 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   async function saveCart() {
     try {
-      await AsyncStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
+      await AsyncStorage.setItem('cart', JSON.stringify(items));
     } catch (error) {
       console.error('Error saving cart:', error);
     }
   }
 
-  function addItem(item: Omit<CartItem, 'quantity'>, quantity: number = 1) {
-    setItems(currentItems => {
-      const existingItem = currentItems.find(i => i.id === item.id);
+  function addItem(item: CartItem) {
+    setItems((currentItems) => {
+      const existingItem = currentItems.find((i) => i.id === item.id);
       
       if (existingItem) {
-        return currentItems.map(i =>
+        return currentItems.map((i) =>
           i.id === item.id
-            ? { ...i, quantity: i.quantity + quantity }
+            ? { ...i, quantity: Math.min(i.quantity + item.quantity, item.stock) }
             : i
         );
       }
       
-      return [...currentItems, { ...item, quantity }];
+      return [...currentItems, item];
     });
   }
 
-  function removeItem(productId: string) {
-    setItems(currentItems => currentItems.filter(item => item.id !== productId));
+  function removeItem(id: string) {
+    setItems((currentItems) => currentItems.filter((item) => item.id !== id));
   }
 
-  function updateQuantity(productId: string, quantity: number) {
+  function updateQuantity(id: string, quantity: number) {
     if (quantity <= 0) {
-      removeItem(productId);
+      removeItem(id);
       return;
     }
-    
-    setItems(currentItems =>
-      currentItems.map(item =>
-        item.id === productId
-          ? { ...item, quantity }
+
+    setItems((currentItems) =>
+      currentItems.map((item) =>
+        item.id === id
+          ? { ...item, quantity: Math.min(quantity, item.stock) }
           : item
       )
     );
@@ -103,24 +92,19 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     setItems([]);
   }
 
-  function isInCart(productId: string): boolean {
-    return items.some(item => item.id === productId);
-  }
-
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
-  const totalAmount = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  const totalPrice = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
   return (
     <CartContext.Provider
       value={{
         items,
         totalItems,
-        totalAmount,
+        totalPrice,
         addItem,
         removeItem,
         updateQuantity,
         clearCart,
-        isInCart,
       }}
     >
       {children}
@@ -128,10 +112,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-export const useCart = () => {
+export function useCart() {
   const context = useContext(CartContext);
   if (!context) {
     throw new Error('useCart must be used within CartProvider');
   }
   return context;
-};
+}

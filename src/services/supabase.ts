@@ -13,3 +13,6 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
     detectSessionInUrl: false,
   },
 });
+
+// Exportar también la URL
+export const supabaseUrl = SUPABASE_URL;

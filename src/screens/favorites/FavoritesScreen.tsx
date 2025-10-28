@@ -1,125 +1,25 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, ScrollView, ActivityIndicator, TouchableOpacity, Alert } from 'react-native';
+import React from 'react';
+import { View, Text, ScrollView, TouchableOpacity, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFavorites } from '../../contexts/FavoritesContext';
-import { useAuth } from '../../contexts/AuthContext';
-import { supabase } from '../../services/supabase';
-import ProductCard from '../../components/home/ProductCard';
-import Button from '../../components/common/Button';
-import { COLORS } from '../../constants/theme';
-
-interface FavoriteProduct {
-  id: string;
-  name: string;
-  price: number;
-  compare_at_price: number | null;
-  stock: number;
-  free_shipping: boolean;
-}
 
 export default function FavoritesScreen({ navigation }: any) {
-  const { favorites, loading: favoritesLoading, refreshFavorites } = useFavorites();
-  const { user } = useAuth();
-  const [products, setProducts] = useState<FavoriteProduct[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { favorites, favoriteProducts, toggleFavorite } = useFavorites();
 
-  useEffect(() => {
-    if (user) {
-      loadFavoriteProducts();
-    } else {
-      setProducts([]);
-      setLoading(false);
-    }
-  }, [favorites, user]);
-
-  async function loadFavoriteProducts() {
-    if (!user || favorites.length === 0) {
-      setProducts([]);
-      setLoading(false);
-      return;
-    }
-
-    try {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from('products')
-        .select('id, name, price, compare_at_price, stock, free_shipping')
-        .in('id', favorites)
-        .eq('status', 'active');
-
-      if (error) {
-        console.error('Error loading favorite products:', error);
-        return;
-      }
-
-      setProducts(data || []);
-    } catch (error) {
-      console.error('Error:', error);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  function handleProductPress(productId: string) {
-    // Navegar al stack de Home y luego a ProductDetail
-    navigation.navigate('Home', {
-      screen: 'ProductDetail',
-      params: { productId }
-    });
-  }
-
-  if (!user) {
+  if (favorites.length === 0) {
     return (
       <SafeAreaView className="flex-1 bg-white" edges={['top']}>
         <View className="px-4 py-3 border-b border-gray-200">
-          <Text className="text-xl font-bold text-gray-900">Mis Favoritos</Text>
+          <Text className="text-xl font-bold text-gray-900">Mis Favoritos ({favorites.length})</Text>
         </View>
-
         <View className="flex-1 items-center justify-center px-6">
           <Text className="text-6xl mb-4">❤️</Text>
-          <Text className="text-xl font-bold text-gray-900 mb-2">Inicia sesión</Text>
-          <Text className="text-base text-gray-600 text-center mb-6">
-            Debes iniciar sesión para guardar tus productos favoritos
+          <Text className="text-xl font-bold text-gray-900 mb-2 text-center">
+            No tienes favoritos
           </Text>
-          <Button
-            title="Iniciar sesión"
-            onPress={() => navigation.navigate('Login')}
-          />
-        </View>
-      </SafeAreaView>
-    );
-  }
-
-  if (loading || favoritesLoading) {
-    return (
-      <SafeAreaView className="flex-1 bg-white" edges={['top']}>
-        <View className="px-4 py-3 border-b border-gray-200">
-          <Text className="text-xl font-bold text-gray-900">Mis Favoritos</Text>
-        </View>
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color={COLORS.primary} />
-        </View>
-      </SafeAreaView>
-    );
-  }
-
-  if (products.length === 0) {
-    return (
-      <SafeAreaView className="flex-1 bg-white" edges={['top']}>
-        <View className="px-4 py-3 border-b border-gray-200">
-          <Text className="text-xl font-bold text-gray-900">Mis Favoritos</Text>
-        </View>
-
-        <View className="flex-1 items-center justify-center px-6">
-          <Text className="text-6xl mb-4">❤️</Text>
-          <Text className="text-xl font-bold text-gray-900 mb-2">No tienes favoritos</Text>
-          <Text className="text-base text-gray-600 text-center mb-6">
-            Explora productos y guarda los que más te gusten
+          <Text className="text-base text-gray-600 text-center">
+            Agrega productos a tus favoritos para verlos aquí
           </Text>
-          <Button
-            title="Explorar productos"
-            onPress={() => navigation.navigate('Home', { screen: 'HomeMain' })}
-          />
         </View>
       </SafeAreaView>
     );
@@ -127,30 +27,49 @@ export default function FavoritesScreen({ navigation }: any) {
 
   return (
     <SafeAreaView className="flex-1 bg-white" edges={['top']}>
-      {/* Header */}
       <View className="px-4 py-3 border-b border-gray-200 flex-row items-center justify-between">
-        <Text className="text-xl font-bold text-gray-900">
-          Mis Favoritos ({products.length})
-        </Text>
-        <TouchableOpacity onPress={refreshFavorites}>
-          <Text className="text-sm text-primary font-semibold">Actualizar</Text>
+        <Text className="text-xl font-bold text-gray-900">Mis Favoritos ({favorites.length})</Text>
+        <TouchableOpacity onPress={() => navigation.navigate('Home')}>
+          <Text className="text-primary font-semibold">Actualizar</Text>
         </TouchableOpacity>
       </View>
 
-      <ScrollView className="flex-1 px-4 pt-4">
-        <View className="flex-row flex-wrap justify-between">
-          {products.map((product) => (
-            <View key={product.id} className="w-[48%]">
-              <ProductCard
-                id={product.id}
-                name={product.name}
-                price={product.price}
-                compareAtPrice={product.compare_at_price}
-                onPress={() => handleProductPress(product.id)}
-              />
+      <ScrollView className="flex-1 px-4 py-4">
+        {favoriteProducts.map((product) => (
+          <TouchableOpacity
+            key={product.id}
+            onPress={() => navigation.navigate('ProductDetail', { productId: product.id })}
+            className="flex-row bg-white rounded-xl mb-3 overflow-hidden border border-gray-200"
+          >
+            <View className="w-24 h-24 bg-gray-100 items-center justify-center">
+              {product.image_url ? (
+                <Image
+                  source={{ uri: product.image_url }}
+                  className="w-full h-full"
+                  resizeMode="cover"
+                />
+              ) : (
+                <Text className="text-3xl">📦</Text>
+              )}
             </View>
-          ))}
-        </View>
+
+            <View className="flex-1 p-3 justify-between">
+              <Text className="text-base font-semibold text-gray-900" numberOfLines={2}>
+                {product.name}
+              </Text>
+              <Text className="text-lg font-bold text-primary">
+                ${product.price.toLocaleString()}
+              </Text>
+            </View>
+
+            <TouchableOpacity
+              onPress={() => toggleFavorite(product.id)}
+              className="p-3 justify-center"
+            >
+              <Text className="text-2xl">❤️</Text>
+            </TouchableOpacity>
+          </TouchableOpacity>
+        ))}
       </ScrollView>
     </SafeAreaView>
   );

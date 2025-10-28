@@ -2,23 +2,27 @@ import React from 'react';
 import { TouchableOpacity, Text, View } from 'react-native';
 
 interface CategoryItemProps {
-  name: string;
-  icon: string;
+  emoji: string;
+  label: string;
+  color: string;
   onPress: () => void;
 }
 
-export default function CategoryItem({ name, icon, onPress }: CategoryItemProps) {
+export default function CategoryItem({ emoji, label, color, onPress }: CategoryItemProps) {
   return (
-    <TouchableOpacity 
-      onPress={onPress}
-      className="items-center mr-4"
-      activeOpacity={0.7}
-    >
-      <View className="w-16 h-16 rounded-full bg-blue-50 items-center justify-center mb-2">
-        <Text className="text-3xl">{icon}</Text>
+    <TouchableOpacity onPress={onPress} className="items-center">
+      <View
+        className="w-16 h-16 rounded-full items-center justify-center mb-1.5"
+        style={{ backgroundColor: color }}
+      >
+        <Text style={{ fontSize: 32 }}>{emoji}</Text>
       </View>
-      <Text className="text-xs text-gray-700 text-center w-20" numberOfLines={2}>
-        {name}
+      <Text 
+        className="text-[11px] text-gray-700 text-center font-medium" 
+        style={{ maxWidth: 70 }}
+        numberOfLines={1}
+      >
+        {label}
       </Text>
     </TouchableOpacity>
   );

@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useAuth } from '../../contexts/AuthContext';
 import { getOrderById, cancelOrder } from '../../services/orders';
+import { getOrCreateConversation } from '../../services/chat';
+import { supabase } from '../../services/supabase';
 import { COLORS } from '../../constants/theme';
 
 const STATUS_INFO = {
@@ -45,9 +48,11 @@ const PAYMENT_METHODS = {
 
 export default function OrderDetailScreen({ route, navigation }: any) {
   const { orderId } = route.params;
+  const { user } = useAuth();
   const [order, setOrder] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [cancelling, setCancelling] = useState(false);
+  const [contacting, setContacting] = useState(false);
 
   useEffect(() => {
     loadOrder();
@@ -85,6 +90,41 @@ export default function OrderDetailScreen({ route, navigation }: any) {
         },
       ]
     );
+  }
+
+  async function handleContactSeller() {
+    if (!user || !order) return;
+
+    // Obtener el seller_id del primer item
+    const sellerId = order.order_items[0]?.seller_id;
+    
+    if (!sellerId) {
+      Alert.alert('Error', 'No se pudo identificar al vendedor');
+      return;
+    }
+
+    setContacting(true);
+    
+    const result = await getOrCreateConversation(user.id, sellerId);
+
+    if (result.success) {
+      // Obtener datos del vendedor
+      const { data: seller } = await supabase
+        .from('profiles')
+        .select('id, full_name, avatar_url, email')
+        .eq('id', sellerId)
+        .single();
+
+      navigation.navigate('Chat', {
+        conversationId: result.data.id,
+        otherUser: seller,
+        product: null,
+      });
+    } else {
+      Alert.alert('Error', 'No se pudo iniciar el chat');
+    }
+    
+    setContacting(false);
   }
 
   function formatDate(dateString: string) {
@@ -217,7 +257,7 @@ export default function OrderDetailScreen({ route, navigation }: any) {
         )}
 
         {/* Resumen */}
-        <View className="px-4 py-4">
+        <View className="px-4 py-4 border-b border-gray-100">
           <Text className="text-base font-semibold text-gray-900 mb-3">Resumen</Text>
           <View className="bg-gray-50 rounded-lg p-4">
             <View className="flex-row justify-between items-center mb-2">
@@ -237,9 +277,24 @@ export default function OrderDetailScreen({ route, navigation }: any) {
           </View>
         </View>
 
-        {/* Botón cancelar */}
-        {order.status === 'pending' && (
-          <View className="px-4 pb-6">
+        {/* Botones de acción */}
+        <View className="px-4 py-4">
+          {/* Botón Contactar Vendedor - SIEMPRE VISIBLE */}
+          <TouchableOpacity
+            onPress={handleContactSeller}
+            disabled={contacting}
+            className="bg-primary rounded-lg py-4 items-center mb-3"
+            style={{ backgroundColor: COLORS.primary }}
+          >
+            {contacting ? (
+              <ActivityIndicator color="#FFFFFF" />
+            ) : (
+              <Text className="text-white font-semibold text-base">💬 Contactar al vendedor</Text>
+            )}
+          </TouchableOpacity>
+
+          {/* Botón Cancelar - SOLO SI ESTÁ PENDIENTE */}
+          {order.status === 'pending' && (
             <TouchableOpacity
               onPress={handleCancelOrder}
               disabled={cancelling}
@@ -251,10 +306,8 @@ export default function OrderDetailScreen({ route, navigation }: any) {
                 <Text className="text-red-600 font-semibold">Cancelar Pedido</Text>
               )}
             </TouchableOpacity>
-          </View>
-        )}
-
-        <View className="h-6" />
+          )}
+        </View>
       </ScrollView>
     </SafeAreaView>
   );

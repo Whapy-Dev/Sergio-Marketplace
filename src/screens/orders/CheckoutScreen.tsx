@@ -135,12 +135,11 @@ export default function CheckoutScreen({ navigation }: any) {
     );
   }
 
-  const shippingCost = 0; // Envío gratis
-  const total = totalAmount + shippingCost;
+  const shippingCost = 0;
+  const total = (totalAmount || 0) + shippingCost;
 
   return (
     <SafeAreaView className="flex-1 bg-white" edges={['top']}>
-      {/* Header */}
       <View className="px-4 py-3 border-b border-gray-200 flex-row items-center">
         <TouchableOpacity onPress={() => navigation.goBack()} className="mr-3">
           <Text className="text-primary text-2xl font-bold">←</Text>
@@ -149,7 +148,6 @@ export default function CheckoutScreen({ navigation }: any) {
       </View>
 
       <ScrollView className="flex-1">
-        {/* Resumen de productos */}
         <View className="px-4 py-4 border-b border-gray-100">
           <Text className="text-base font-semibold text-gray-900 mb-3">
             📦 Resumen del Pedido
@@ -160,13 +158,12 @@ export default function CheckoutScreen({ navigation }: any) {
                 {item.name} x{item.quantity}
               </Text>
               <Text className="text-sm font-semibold text-gray-900">
-                ${(item.price * item.quantity).toLocaleString()}
+                ${((item.price || 0) * (item.quantity || 0)).toLocaleString()}
               </Text>
             </View>
           ))}
         </View>
 
-        {/* Datos de contacto */}
         <View className="px-4 py-4 border-b border-gray-100">
           <Text className="text-base font-semibold text-gray-900 mb-3">
             👤 Datos de Contacto
@@ -196,7 +193,6 @@ export default function CheckoutScreen({ navigation }: any) {
           </View>
         </View>
 
-        {/* Dirección de envío */}
         <View className="px-4 py-4 border-b border-gray-100">
           <Text className="text-base font-semibold text-gray-900 mb-3">
             📍 Dirección de Envío
@@ -239,7 +235,6 @@ export default function CheckoutScreen({ navigation }: any) {
           </View>
         </View>
 
-        {/* Método de pago */}
         <View className="px-4 py-4 border-b border-gray-100">
           <Text className="text-base font-semibold text-gray-900 mb-3">
             💳 Método de Pago
@@ -312,7 +307,6 @@ export default function CheckoutScreen({ navigation }: any) {
           </TouchableOpacity>
         </View>
 
-        {/* Notas adicionales */}
         <View className="px-4 py-4">
           <Text className="text-base font-semibold text-gray-900 mb-3">
             📝 Notas (opcional)
@@ -330,11 +324,10 @@ export default function CheckoutScreen({ navigation }: any) {
         </View>
       </ScrollView>
 
-      {/* Footer con total y botón */}
       <View className="px-4 py-4 border-t border-gray-200 bg-white">
         <View className="flex-row justify-between items-center mb-3">
           <Text className="text-base text-gray-700">Subtotal</Text>
-          <Text className="text-base font-semibold text-gray-900">${totalAmount.toLocaleString()}</Text>
+          <Text className="text-base font-semibold text-gray-900">${(totalAmount || 0).toLocaleString()}</Text>
         </View>
         <View className="flex-row justify-between items-center mb-3">
           <Text className="text-base text-gray-700">Envío</Text>

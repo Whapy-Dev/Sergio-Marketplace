@@ -1,70 +1,110 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, Image } from 'react-native';
+import { View, Text, Image, TouchableOpacity } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 
 interface ProductCardProps {
   id: string;
   name: string;
   price: number;
-  compareAtPrice?: number | null;
   imageUrl?: string;
-  sellerId: string;
-  onPress: () => void;
+  originalPrice?: number;
+  discount?: number;
+  hasFreeShipping?: boolean;
+  hasInstallments?: boolean;
 }
 
-export default function ProductCard({ 
+export default function ProductCard({
   id,
-  name, 
-  price, 
-  compareAtPrice,
+  name,
+  price,
   imageUrl,
-  sellerId,
-  onPress 
+  originalPrice,
+  discount,
+  hasFreeShipping,
+  hasInstallments,
 }: ProductCardProps) {
-  
-  const discount = compareAtPrice 
-    ? Math.round(((compareAtPrice - price) / compareAtPrice) * 100)
-    : 0;
+  const navigation = useNavigation<any>();
 
   return (
-    <TouchableOpacity 
-      onPress={onPress}
-      className="bg-white rounded-lg border border-gray-200 overflow-hidden mb-3"
-      activeOpacity={0.7}
+    <TouchableOpacity
+      onPress={() => navigation.navigate('ProductDetail', { productId: id })}
+      className="bg-white rounded-2xl overflow-hidden"
+      style={{ 
+        width: 155, 
+        borderWidth: 1, 
+        borderColor: '#F3F4F6',
+      }}
     >
-      <View className="bg-gray-100 h-40 items-center justify-center">
+      {/* Badges superiores - posición exacta Figma */}
+      {(hasInstallments || discount) && (
+        <View className="absolute top-2 left-2 z-10" style={{ gap: 4 }}>
+          {hasInstallments && (
+            <View 
+              className="rounded-md px-2 py-1" 
+              style={{ backgroundColor: '#11CCEE' }}
+            >
+              <Text className="text-white text-[8px] font-bold leading-[10px]">12 MESES</Text>
+              <Text className="text-white text-[8px] font-bold leading-[10px]">SIN INTERÉS</Text>
+            </View>
+          )}
+          {discount && (
+            <View 
+              className="rounded-md px-2 py-1" 
+              style={{ backgroundColor: '#11CCEE' }}
+            >
+              <Text className="text-white text-[10px] font-bold">{discount}% OFF</Text>
+            </View>
+          )}
+        </View>
+      )}
+
+      {/* Imagen */}
+      <View className="bg-gray-50 items-center justify-center" style={{ height: 130 }}>
         {imageUrl ? (
-          <Image 
-            source={{ uri: imageUrl }} 
-            className="w-full h-full"
-            resizeMode="cover"
+          <Image
+            source={{ uri: imageUrl }}
+            style={{ width: '100%', height: '100%' }}
+            resizeMode="contain"
           />
         ) : (
-          <Text className="text-5xl">📦</Text>
-        )}
-        
-        {discount > 0 && (
-          <View className="absolute top-2 left-2 bg-primary rounded px-2 py-1">
-            <Text className="text-white text-xs font-bold">{discount}% OFF</Text>
-          </View>
+          <Text style={{ fontSize: 48 }}>📦</Text>
         )}
       </View>
-      
-      <View className="p-3">
-        <Text className="text-sm text-gray-700 mb-1" numberOfLines={2}>
+
+      {/* Info del producto */}
+      <View className="p-2.5">
+        <Text 
+          className="text-xs text-gray-900 mb-2" 
+          numberOfLines={2} 
+          style={{ height: 32, lineHeight: 16 }}
+        >
           {name}
         </Text>
-        
-        {compareAtPrice && (
-          <Text className="text-xs text-gray-400 line-through">
-            ${compareAtPrice.toLocaleString()}
+
+        {/* Precio anterior tachado - MÁS VISIBLE */}
+        {originalPrice && (
+          <Text 
+            className="text-[11px] text-gray-400 line-through mb-0.5"
+            style={{ textDecorationLine: 'line-through', textDecorationColor: '#9CA3AF' }}
+          >
+            ${originalPrice.toLocaleString('es-AR')}
           </Text>
         )}
-        
-        <Text className="text-lg font-bold text-gray-900">
-          ${price.toLocaleString()}
+
+        {/* Precio actual */}
+        <Text className="text-lg font-bold text-gray-900 mb-1.5">
+          ${price.toLocaleString('es-AR')}
         </Text>
-        
-        <Text className="text-xs text-green-600 mt-1">Envío gratis</Text>
+
+        {/* Badge envío gratis - exacto a Figma */}
+        {hasFreeShipping && (
+          <View 
+            className="rounded px-1.5 py-0.5 self-start" 
+            style={{ backgroundColor: '#00A650' }}
+          >
+            <Text className="text-white text-[8px] font-bold">Envío GRATIS</Text>
+          </View>
+        )}
       </View>
     </TouchableOpacity>
   );
