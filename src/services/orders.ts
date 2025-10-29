@@ -294,35 +294,47 @@ export async function getSellerOrders(sellerId: string) {
   try {
     console.log('🔍 Buscando pedidos para seller:', sellerId);
 
-    const { data, error } = await supabase
+    // PRIMERO: Obtener order_items del seller
+    const { data: orderItemsData, error } = await supabase
       .from('order_items')
-      .select(`
-        *,
-        orders!inner(
-          id,
-          order_number,
-          buyer_id,
-          total,
-          status,
-          payment_status,
-          created_at
-        )
-      `)
-      .eq('seller_id', sellerId)
-      .order('created_at', { ascending: false });
+      .select('*')
+      .eq('seller_id', sellerId);
 
     if (error) {
-      console.error('❌ Error fetching seller orders:', error);
+      console.error('❌ Error fetching order_items:', error);
       return [];
     }
 
-    console.log('📊 Order items encontrados:', data?.length || 0);
+    console.log('📊 Order items encontrados:', orderItemsData?.length || 0);
 
-    if (!data || data.length === 0) {
+    if (!orderItemsData || orderItemsData.length === 0) {
       return [];
     }
 
-    const buyerIds = [...new Set(data.map((item: any) => item.orders.buyer_id))];
+    // SEGUNDO: Obtener las órdenes únicas
+    const orderIds = [...new Set(orderItemsData.map(item => item.order_id))];
+    
+    console.log('🔢 Order IDs únicos:', orderIds.length);
+
+    const { data: ordersData, error: ordersError } = await supabase
+      .from('orders')
+      .select('*')
+      .in('id', orderIds)
+      .order('created_at', { ascending: false });
+
+    if (ordersError) {
+      console.error('❌ Error fetching orders:', ordersError);
+      return [];
+    }
+
+    console.log('📋 Órdenes encontradas:', ordersData?.length || 0);
+
+    if (!ordersData) {
+      return [];
+    }
+
+    // TERCERO: Obtener perfiles de compradores
+    const buyerIds = [...new Set(ordersData.map(order => order.buyer_id))];
     
     const { data: profiles } = await supabase
       .from('profiles')
@@ -331,21 +343,13 @@ export async function getSellerOrders(sellerId: string) {
 
     const profilesMap = new Map(profiles?.map((p: any) => [p.id, p]) || []);
 
-    const ordersMap = new Map();
-    
-    data.forEach((item: any) => {
-      const orderId = item.orders.id;
-      if (!ordersMap.has(orderId)) {
-        ordersMap.set(orderId, {
-          ...item.orders,
-          profiles: profilesMap.get(item.orders.buyer_id) || null,
-          order_items: []
-        });
-      }
-      ordersMap.get(orderId).order_items.push(item);
-    });
+    // CUARTO: Armar el resultado agrupando items por orden
+    const result = ordersData.map(order => ({
+      ...order,
+      profiles: profilesMap.get(order.buyer_id) || null,
+      order_items: orderItemsData.filter(item => item.order_id === order.id)
+    }));
 
-    const result = Array.from(ordersMap.values());
     console.log('✅ Pedidos agrupados:', result.length);
     console.log('📋 Detalle:', result.map((o: any) => o.order_number));
     

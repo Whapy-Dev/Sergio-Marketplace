@@ -13,7 +13,7 @@ interface Category {
 }
 
 export default function CreateProductScreen({ navigation }: any) {
-  const { user } = useAuth();
+  const { user, profile, refreshProfile } = useAuth();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [price, setPrice] = useState('');
@@ -30,7 +30,74 @@ export default function CreateProductScreen({ navigation }: any) {
 
   useEffect(() => {
     loadCategories();
+    checkSellerStatus();
   }, []);
+
+  async function checkSellerStatus() {
+    if (!user?.id) return;
+
+    // Verificar si el perfil tiene rol de vendedor
+    if (profile?.role !== 'seller_individual' && profile?.role !== 'seller_store') {
+      Alert.alert(
+        'Permiso requerido',
+        'Necesitas ser vendedor para crear productos. ¿Deseas convertirte en vendedor?',
+        [
+          {
+            text: 'Cancelar',
+            style: 'cancel',
+            onPress: () => navigation.goBack()
+          },
+          {
+            text: 'Sí, ser vendedor',
+            onPress: async () => {
+              await becomeSellerAndCreateSeller();
+            }
+          }
+        ]
+      );
+    }
+  }
+
+  async function becomeSellerAndCreateSeller() {
+    if (!user?.id) return;
+
+    try {
+      // 1. Actualizar rol en profiles
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({ role: 'seller_individual' })
+        .eq('id', user.id);
+
+      if (profileError) throw profileError;
+
+      // 2. Crear registro en sellers
+      const storeName = profile?.full_name || user.email?.split('@')[0] || 'Mi Tienda';
+
+      const { error: sellerError } = await supabase
+        .from('sellers')
+        .insert({
+          id: user.id,
+          store_name: storeName,
+          description: 'Tienda verificada',
+          is_verified: false,
+          rating: 4.5,
+          total_sales: 0,
+        });
+
+      if (sellerError && sellerError.code !== '23505') {
+        throw sellerError;
+      }
+
+      // 3. Refrescar perfil
+      await refreshProfile();
+
+      Alert.alert('¡Éxito!', 'Ahora eres vendedor. Ya puedes publicar productos.');
+    } catch (error: any) {
+      console.error('Error becoming seller:', error);
+      Alert.alert('Error', 'No se pudo completar el proceso. Intenta de nuevo.');
+      navigation.goBack();
+    }
+  }
 
   async function loadCategories() {
     try {
@@ -113,7 +180,8 @@ export default function CreateProductScreen({ navigation }: any) {
       );
 
       if (!response.ok) {
-        console.error('Upload error:', await response.json());
+        const errorData = await response.json();
+        console.error('Upload error:', errorData);
         return null;
       }
 
@@ -128,14 +196,14 @@ export default function CreateProductScreen({ navigation }: any) {
     }
   }
 
-  async function getOrCreateSeller(): Promise<string | null> {
+  async function ensureSellerExists(): Promise<string | null> {
     if (!user?.id) {
       console.error('No user ID');
       return null;
     }
 
     try {
-      // Buscar seller existente por user_id
+      // Verificar si existe el seller
       const { data: existingSeller, error: searchError } = await supabase
         .from('sellers')
         .select('id')
@@ -143,26 +211,21 @@ export default function CreateProductScreen({ navigation }: any) {
         .maybeSingle();
 
       if (existingSeller) {
-        console.log('Seller found:', existingSeller.id);
         return existingSeller.id;
       }
 
-      // Si no existe, crear seller con el user.id como id (primary key)
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('full_name, email')
-        .eq('id', user.id)
-        .single();
-
-      const storeName = profile?.full_name || profile?.email?.split('@')[0] || 'Mi Tienda';
+      // Crear seller si no existe
+      const storeName = profile?.full_name || user.email?.split('@')[0] || 'Mi Tienda';
 
       const { data: newSeller, error: createError } = await supabase
         .from('sellers')
         .insert({
-          id: user.id, // Usar el user.id como primary key
+          id: user.id,
           store_name: storeName,
           description: 'Tienda verificada',
           is_verified: false,
+          rating: 4.5,
+          total_sales: 0,
         })
         .select('id')
         .single();
@@ -172,15 +235,15 @@ export default function CreateProductScreen({ navigation }: any) {
         return null;
       }
 
-      console.log('New seller created:', newSeller.id);
       return newSeller.id;
     } catch (error) {
-      console.error('Error in getOrCreateSeller:', error);
+      console.error('Error in ensureSellerExists:', error);
       return null;
     }
   }
 
   async function handleCreateProduct() {
+    // Validaciones
     if (!name.trim()) {
       Alert.alert('Error', 'Ingresa el nombre del producto');
       return;
@@ -191,8 +254,8 @@ export default function CreateProductScreen({ navigation }: any) {
       return;
     }
 
-    if (compareAtPrice && parseFloat(compareAtPrice) < parseFloat(price)) {
-      Alert.alert('Error', 'El precio anterior debe ser mayor o igual al precio actual');
+    if (compareAtPrice && parseFloat(compareAtPrice) <= parseFloat(price)) {
+      Alert.alert('Error', 'El precio anterior debe ser mayor al precio actual para mostrar descuento');
       return;
     }
 
@@ -214,58 +277,75 @@ export default function CreateProductScreen({ navigation }: any) {
     setLoading(true);
     setUploading(true);
 
-    // Obtener o crear seller_id
-    const sellerId = await getOrCreateSeller();
-    if (!sellerId) {
-      Alert.alert('Error', 'No se pudo crear el perfil de vendedor. Verifica tu conexión.');
+    try {
+      // 1. Asegurar que el seller existe
+      const sellerId = await ensureSellerExists();
+      if (!sellerId) {
+        Alert.alert('Error', 'No se pudo verificar el perfil de vendedor. Intenta de nuevo.');
+        return;
+      }
+
+      // 2. Subir imágenes
+      const uploadPromises = imageUris.map((uri, index) => uploadImage(uri, index));
+      const uploadedUrls = await Promise.all(uploadPromises);
+      
+      const validUrls = uploadedUrls.filter(url => url !== null) as string[];
+
+      if (validUrls.length === 0) {
+        Alert.alert('Error', 'No se pudieron subir las imágenes. Verifica tu conexión e intenta de nuevo.');
+        return;
+      }
+
       setUploading(false);
+
+      // 3. Crear producto
+      const { error } = await supabase
+        .from('products')
+        .insert({
+          name: name.trim(),
+          description: description.trim() || null,
+          price: parseFloat(price),
+          compare_at_price: compareAtPrice ? parseFloat(compareAtPrice) : null,
+          stock: parseInt(stock),
+          condition,
+          category_id: categoryId,
+          seller_id: sellerId,
+          image_url: validUrls[0],
+          status: 'active',
+          free_shipping: freeShipping,
+          views: 0,
+          sales: 0,
+          favorites: 0,
+        });
+
+      if (error) {
+        console.error('Error creating product:', error);
+        Alert.alert('Error', 'No se pudo crear el producto: ' + error.message);
+        return;
+      }
+
+      Alert.alert(
+        '¡Producto Publicado! 🎉',
+        'Tu producto ya está visible para los compradores',
+        [
+          {
+            text: 'Ver mis productos',
+            onPress: () => {
+              navigation.reset({
+                index: 0,
+                routes: [{ name: 'MyProducts' }],
+              });
+            }
+          }
+        ]
+      );
+    } catch (error: any) {
+      console.error('Error in handleCreateProduct:', error);
+      Alert.alert('Error', 'Ocurrió un error inesperado. Intenta de nuevo.');
+    } finally {
       setLoading(false);
-      return;
-    }
-
-    // Subir imágenes
-    const uploadPromises = imageUris.map((uri, index) => uploadImage(uri, index));
-    const uploadedUrls = await Promise.all(uploadPromises);
-    
-    const validUrls = uploadedUrls.filter(url => url !== null) as string[];
-
-    if (validUrls.length === 0) {
-      Alert.alert('Error', 'No se pudieron subir las imágenes. Intenta de nuevo.');
       setUploading(false);
-      setLoading(false);
-      return;
     }
-
-    setUploading(false);
-
-    // Crear producto
-    const { error } = await supabase
-      .from('products')
-      .insert({
-        name: name.trim(),
-        description: description.trim() || null,
-        price: parseFloat(price),
-        compare_at_price: compareAtPrice ? parseFloat(compareAtPrice) : null,
-        stock: parseInt(stock),
-        condition,
-        category_id: categoryId,
-        seller_id: sellerId,
-        image_url: validUrls[0],
-        status: 'active',
-        free_shipping: freeShipping,
-      });
-
-    setLoading(false);
-
-    if (error) {
-      console.error('Error creating product:', error);
-      Alert.alert('Error', 'No se pudo crear el producto: ' + error.message);
-      return;
-    }
-
-    Alert.alert('Éxito', 'Producto creado correctamente', [
-      { text: 'OK', onPress: () => navigation.goBack() }
-    ]);
   }
 
   if (loadingCategories) {
@@ -284,13 +364,17 @@ export default function CreateProductScreen({ navigation }: any) {
         <TouchableOpacity onPress={() => navigation.goBack()} className="mr-3">
           <Text className="text-primary text-2xl font-bold">←</Text>
         </TouchableOpacity>
-        <Text className="text-xl font-bold text-gray-900">Crear Producto</Text>
+        <Text className="text-xl font-bold text-gray-900">Publicar Producto</Text>
       </View>
 
       <ScrollView className="flex-1 px-4 py-6">
+        {/* Imágenes */}
         <View className="mb-6">
           <Text className="text-base font-semibold text-gray-900 mb-2">
-            Imágenes * ({imageUris.length}/5)
+            Fotos del producto * ({imageUris.length}/5)
+          </Text>
+          <Text className="text-xs text-gray-500 mb-3">
+            La primera imagen será la principal
           </Text>
           
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
@@ -302,6 +386,11 @@ export default function CreateProductScreen({ navigation }: any) {
                   style={{ width: 120, height: 120 }}
                   resizeMode="cover"
                 />
+                {index === 0 && (
+                  <View className="absolute top-1 left-1 bg-primary rounded px-2 py-1">
+                    <Text className="text-white text-xs font-bold">Principal</Text>
+                  </View>
+                )}
                 <TouchableOpacity
                   onPress={() => removeImage(index)}
                   className="absolute top-1 right-1 bg-red-500 rounded-full w-6 h-6 items-center justify-center"
@@ -324,31 +413,36 @@ export default function CreateProductScreen({ navigation }: any) {
           </ScrollView>
         </View>
 
+        {/* Nombre */}
         <View className="mb-4">
-          <Text className="text-base font-semibold text-gray-900 mb-2">Nombre *</Text>
+          <Text className="text-base font-semibold text-gray-900 mb-2">Nombre del producto *</Text>
           <TextInput
             value={name}
             onChangeText={setName}
             placeholder="Ej: iPhone 15 Pro Max 256GB"
             className="border border-gray-300 rounded-xl px-4 py-3 text-base"
             placeholderTextColor="#9CA3AF"
+            maxLength={100}
           />
         </View>
 
+        {/* Descripción */}
         <View className="mb-4">
           <Text className="text-base font-semibold text-gray-900 mb-2">Descripción</Text>
           <TextInput
             value={description}
             onChangeText={setDescription}
-            placeholder="Describe tu producto..."
+            placeholder="Describe tu producto: características, estado, etc."
             multiline
             numberOfLines={4}
             className="border border-gray-300 rounded-xl px-4 py-3 text-base"
             style={{ height: 100, textAlignVertical: 'top' }}
             placeholderTextColor="#9CA3AF"
+            maxLength={500}
           />
         </View>
 
+        {/* Categoría */}
         <View className="mb-4">
           <Text className="text-base font-semibold text-gray-900 mb-2">Categoría *</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
@@ -374,6 +468,7 @@ export default function CreateProductScreen({ navigation }: any) {
           </ScrollView>
         </View>
 
+        {/* Precio */}
         <View className="mb-4">
           <Text className="text-base font-semibold text-gray-900 mb-2">Precio *</Text>
           <View className="flex-row items-center border border-gray-300 rounded-xl px-4 py-3">
@@ -389,12 +484,13 @@ export default function CreateProductScreen({ navigation }: any) {
           </View>
         </View>
 
+        {/* Precio anterior */}
         <View className="mb-4">
           <Text className="text-base font-semibold text-gray-900 mb-2">
             Precio anterior (opcional)
           </Text>
           <Text className="text-xs text-gray-500 mb-2">
-            Debe ser mayor o igual al precio actual
+            Para mostrar descuento, debe ser mayor al precio actual
           </Text>
           <View className="flex-row items-center border border-gray-300 rounded-xl px-4 py-3">
             <Text className="text-lg font-bold text-gray-900 mr-2">$</Text>
@@ -409,6 +505,7 @@ export default function CreateProductScreen({ navigation }: any) {
           </View>
         </View>
 
+        {/* Stock */}
         <View className="mb-4">
           <Text className="text-base font-semibold text-gray-900 mb-2">Stock disponible *</Text>
           <TextInput
@@ -421,6 +518,7 @@ export default function CreateProductScreen({ navigation }: any) {
           />
         </View>
 
+        {/* Condición */}
         <View className="mb-4">
           <Text className="text-base font-semibold text-gray-900 mb-2">Condición *</Text>
           <View className="flex-row">
@@ -460,6 +558,7 @@ export default function CreateProductScreen({ navigation }: any) {
           </View>
         </View>
 
+        {/* Envío gratis */}
         <View className="mb-6">
           <TouchableOpacity
             onPress={() => setFreeShipping(!freeShipping)}
@@ -472,24 +571,30 @@ export default function CreateProductScreen({ navigation }: any) {
             >
               {freeShipping && <Text className="text-white text-sm">✓</Text>}
             </View>
-            <Text className="text-base font-medium text-gray-900">Ofrecer envío gratis</Text>
+            <View className="flex-1">
+              <Text className="text-base font-medium text-gray-900">Ofrecer envío gratis</Text>
+              <Text className="text-xs text-gray-500">Aumenta tus ventas hasta un 50%</Text>
+            </View>
           </TouchableOpacity>
         </View>
 
+        {/* Loading state */}
         {uploading && (
-          <View className="mb-4">
+          <View className="mb-4 bg-blue-50 rounded-xl p-4">
             <ActivityIndicator size="large" color={COLORS.primary} />
-            <Text className="text-center text-gray-600 mt-2">
+            <Text className="text-center text-primary font-semibold mt-2">
               Subiendo {imageUris.length} {imageUris.length === 1 ? 'imagen' : 'imágenes'}...
             </Text>
           </View>
         )}
 
         <Button
-          title={loading ? "Creando producto..." : "Crear Producto"}
+          title={loading ? "Publicando..." : "Publicar Producto"}
           onPress={handleCreateProduct}
           disabled={loading || uploading}
         />
+
+        <View className="h-6" />
       </ScrollView>
     </SafeAreaView>
   );

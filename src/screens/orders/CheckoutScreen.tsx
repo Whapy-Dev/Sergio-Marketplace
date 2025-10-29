@@ -5,12 +5,13 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useCart } from '../../contexts/CartContext';
 import { createOrder } from '../../services/orders';
 import { getUserProfile } from '../../services/profile';
+import { supabase } from '../../services/supabase';
 import Button from '../../components/common/Button';
 import { COLORS } from '../../constants/theme';
 
 export default function CheckoutScreen({ navigation }: any) {
   const { user } = useAuth();
-  const { items, totalAmount, clearCart } = useCart();
+  const { items, totalPrice, clearCart } = useCart(); // Cambiado: totalAmount → totalPrice
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
 
@@ -39,10 +40,36 @@ export default function CheckoutScreen({ navigation }: any) {
     setLoading(false);
   }
 
+  async function validateStockBeforeOrder() {
+    // Validar stock de cada producto antes de crear la orden
+    for (const item of items) {
+      const { data: product, error } = await supabase
+        .from('products')
+        .select('stock, name')
+        .eq('id', item.id)
+        .single();
+
+      if (error || !product) {
+        Alert.alert('Error', `No se pudo verificar el stock de "${item.name}"`);
+        return false;
+      }
+
+      if (product.stock < item.quantity) {
+        Alert.alert(
+          'Stock insuficiente',
+          `Solo hay ${product.stock} unidades disponibles de "${item.name}". Por favor actualiza tu carrito.`
+        );
+        return false;
+      }
+    }
+
+    return true;
+  }
+
   async function handleCreateOrder() {
     if (!user) return;
 
-    // Validaciones
+    // Validaciones de campos
     if (!fullName.trim()) {
       Alert.alert('Error', 'Ingresa tu nombre completo');
       return;
@@ -68,8 +95,20 @@ export default function CheckoutScreen({ navigation }: any) {
       return;
     }
 
+    if (items.length === 0) {
+      Alert.alert('Error', 'Tu carrito está vacío');
+      return;
+    }
+
+    setCreating(true);
+
     try {
-      setCreating(true);
+      // Validar stock antes de crear la orden
+      const stockValid = await validateStockBeforeOrder();
+      if (!stockValid) {
+        setCreating(false);
+        return;
+      }
 
       const orderData = {
         buyer_id: user.id,
@@ -87,7 +126,7 @@ export default function CheckoutScreen({ navigation }: any) {
 
       const result = await createOrder(orderData);
 
-      if (result.success) {
+      if (result.success && result.data) {
         clearCart();
         Alert.alert(
           '¡Pedido Realizado! 🎉',
@@ -96,11 +135,23 @@ export default function CheckoutScreen({ navigation }: any) {
             {
               text: 'Ir a Mis Compras',
               onPress: () => {
-                navigation.navigate('MainTabs', {
-                  screen: 'Profile',
-                  params: {
-                    screen: 'MyOrders',
-                  }
+                navigation.reset({
+                  index: 0,
+                  routes: [
+                    {
+                      name: 'MainTabs',
+                      state: {
+                        routes: [
+                          {
+                            name: 'Profile',
+                            state: {
+                              routes: [{ name: 'MyOrders' }]
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  ]
                 });
               },
             },
@@ -108,18 +159,20 @@ export default function CheckoutScreen({ navigation }: any) {
               text: 'Seguir Comprando',
               style: 'cancel',
               onPress: () => {
-                navigation.navigate('MainTabs', {
-                  screen: 'Home'
+                navigation.reset({
+                  index: 0,
+                  routes: [{ name: 'MainTabs' }]
                 });
               },
             },
           ]
         );
       } else {
-        Alert.alert('Error', result.error || 'No se pudo crear el pedido');
+        Alert.alert('Error', result.error || 'No se pudo crear el pedido. Intenta de nuevo.');
       }
     } catch (error: any) {
-      Alert.alert('Error', error.message);
+      console.error('Error in handleCreateOrder:', error);
+      Alert.alert('Error', 'Ocurrió un error inesperado. Intenta de nuevo.');
     } finally {
       setCreating(false);
     }
@@ -135,8 +188,36 @@ export default function CheckoutScreen({ navigation }: any) {
     );
   }
 
+  if (items.length === 0) {
+    return (
+      <SafeAreaView className="flex-1 bg-white" edges={['top']}>
+        <View className="px-4 py-3 border-b border-gray-200 flex-row items-center">
+          <TouchableOpacity onPress={() => navigation.goBack()} className="mr-3">
+            <Text className="text-primary text-2xl font-bold">←</Text>
+          </TouchableOpacity>
+          <Text className="text-xl font-bold text-gray-900">Finalizar Compra</Text>
+        </View>
+        <View className="flex-1 items-center justify-center px-6">
+          <Text className="text-6xl mb-4">🛒</Text>
+          <Text className="text-xl font-bold text-gray-900 mb-2 text-center">
+            Tu carrito está vacío
+          </Text>
+          <Text className="text-base text-gray-600 text-center mb-6">
+            Agrega productos para continuar
+          </Text>
+          <TouchableOpacity
+            onPress={() => navigation.navigate('MainTabs', { screen: 'Home' })}
+            className="bg-primary rounded-xl px-6 py-3"
+          >
+            <Text className="text-white font-semibold">Explorar productos</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   const shippingCost = 0;
-  const total = (totalAmount || 0) + shippingCost;
+  const total = totalPrice + shippingCost;
 
   return (
     <SafeAreaView className="flex-1 bg-white" edges={['top']}>
@@ -158,7 +239,7 @@ export default function CheckoutScreen({ navigation }: any) {
                 {item.name} x{item.quantity}
               </Text>
               <Text className="text-sm font-semibold text-gray-900">
-                ${((item.price || 0) * (item.quantity || 0)).toLocaleString()}
+                ${(item.price * item.quantity).toLocaleString()}
               </Text>
             </View>
           ))}
@@ -327,7 +408,7 @@ export default function CheckoutScreen({ navigation }: any) {
       <View className="px-4 py-4 border-t border-gray-200 bg-white">
         <View className="flex-row justify-between items-center mb-3">
           <Text className="text-base text-gray-700">Subtotal</Text>
-          <Text className="text-base font-semibold text-gray-900">${(totalAmount || 0).toLocaleString()}</Text>
+          <Text className="text-base font-semibold text-gray-900">${totalPrice.toLocaleString()}</Text>
         </View>
         <View className="flex-row justify-between items-center mb-3">
           <Text className="text-base text-gray-700">Envío</Text>
@@ -339,9 +420,10 @@ export default function CheckoutScreen({ navigation }: any) {
         </View>
 
         <Button
-          title="Confirmar Pedido"
+          title={creating ? "Procesando..." : "Confirmar Pedido"}
           onPress={handleCreateOrder}
           loading={creating}
+          disabled={creating}
         />
       </View>
     </SafeAreaView>

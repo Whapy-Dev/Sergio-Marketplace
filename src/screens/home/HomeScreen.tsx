@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, ScrollView, Text, ActivityIndicator, TouchableOpacity } from 'react-native';
+import React, { useState, useRef, useEffect } from 'react';
+import { View, ScrollView, Text, ActivityIndicator, TouchableOpacity, RefreshControl } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useCategories } from '../../hooks/useCategories';
 import { useProducts } from '../../hooks/useProducts';
@@ -29,10 +29,62 @@ const CATEGORY_COLORS: { [key: string]: string } = {
   'Supermercado': '#00A650',
 };
 
+const BANNERS = [
+  {
+    id: 1,
+    title: 'Hasta 40% OFF',
+    subtitle: 'La manera más práctica\nde hacer tus compras\ndel súper',
+    emoji: '🛒',
+  },
+  {
+    id: 2,
+    title: 'Envío Gratis',
+    subtitle: 'En todas tus\ncompras',
+    emoji: '🚚',
+  },
+  {
+    id: 3,
+    title: 'Nuevos Productos',
+    subtitle: 'Las últimas novedades\nde la semana',
+    emoji: '✨',
+  },
+];
+
 export default function HomeScreen({ navigation }: any) {
-  const { categories, loading: loadingCategories } = useCategories();
-  const { products, loading: loadingProducts } = useProducts();
+  const { categories, loading: loadingCategories, refresh: refreshCategories } = useCategories();
+  const { products, loading: loadingProducts, refetch: refetchProducts } = useProducts();
+  const [refreshing, setRefreshing] = useState(false);
   const [bannerIndex, setBannerIndex] = useState(0);
+  const scrollViewRef = useRef<ScrollView>(null);
+
+  // Auto-scroll del carrusel
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setBannerIndex((prevIndex) => {
+        const nextIndex = (prevIndex + 1) % BANNERS.length;
+        
+        scrollViewRef.current?.scrollTo({
+          y: nextIndex * 220,
+          animated: true,
+        });
+        
+        return nextIndex;
+      });
+    }, 4000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  async function handleRefresh() {
+    setRefreshing(true);
+    try {
+      await Promise.all([refreshCategories(), refetchProducts()]);
+    } catch (error) {
+      console.error('Error refreshing:', error);
+    } finally {
+      setRefreshing(false);
+    }
+  }
 
   return (
     <View className="flex-1 bg-gray-50">
@@ -40,8 +92,15 @@ export default function HomeScreen({ navigation }: any) {
         className="flex-1" 
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 100 }}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            colors={[COLORS.primary]}
+            tintColor={COLORS.primary}
+          />
+        }
       >
-        {/* Header con gradiente completo */}
         <LinearGradient
           colors={['#11CCEE', '#850910', '#FF450A']}
           locations={[0, 0.73, 1]}
@@ -54,7 +113,7 @@ export default function HomeScreen({ navigation }: any) {
             overflow: 'hidden',
           }}
         >
-          {/* Logo y notificaciones */}
+          {/* Header */}
           <View className="flex-row items-center justify-between px-4 pb-3">
             <TouchableOpacity className="flex-row items-center">
               <Text className="text-white text-base font-semibold mr-1">Dirección 123</Text>
@@ -64,7 +123,7 @@ export default function HomeScreen({ navigation }: any) {
               <TouchableOpacity className="mr-4">
                 <Text className="text-white text-2xl">🔔</Text>
               </TouchableOpacity>
-              <TouchableOpacity>
+              <TouchableOpacity onPress={() => navigation.navigate('Cart')}>
                 <Text className="text-white text-2xl">🛒</Text>
               </TouchableOpacity>
             </View>
@@ -88,44 +147,56 @@ export default function HomeScreen({ navigation }: any) {
             </TouchableOpacity>
           </View>
 
-          {/* Contenido del banner */}
-          <View className="px-4 pb-6">
-            <View className="relative" style={{ height: 190 }}>
-              {/* Texto */}
-              <View className="absolute left-2 top-4 z-10">
-                <Text className="text-white text-3xl font-bold mb-2" style={{ lineHeight: 36 }}>
-                  Hasta 40% OFF
-                </Text>
-                <Text className="text-white text-sm leading-5 opacity-95">
-                  La manera más práctica{'\n'}de hacer tus compras{'\n'}del súper
-                </Text>
-              </View>
-
-              {/* Ilustración del carrito */}
-              <View className="absolute right-0 bottom-0">
-                <Text style={{ fontSize: 140 }}>🛒</Text>
-                <Text style={{ fontSize: 48, position: 'absolute', top: 25, left: 35 }}></Text>
-                <Text style={{ fontSize: 40, position: 'absolute', top: 40, left: 62 }}></Text>
-                <Text style={{ fontSize: 38, position: 'absolute', top: 55, left: 40 }}></Text>
-              </View>
-
-              {/* Dots indicador */}
-              <View className="absolute bottom-2 left-0 right-0 flex-row justify-center">
-                {[].map((i) => (
-                  <View
-                    key={i}
-                    style={{
-                      width: 8,
-                      height: 8,
-                      borderRadius: 4,
-                      marginHorizontal: 4,
-                      backgroundColor: i === bannerIndex ? '#FFFFFF' : 'rgba(255,255,255,0.4)',
-                    }}
-                  />
-                ))}
-              </View>
-            </View>
+          {/* Carrusel vertical */}
+<View style={{ height: 220, overflow: 'hidden' }}>
+  <ScrollView
+    ref={scrollViewRef}
+    pagingEnabled
+    showsVerticalScrollIndicator={false}
+    scrollEventThrottle={16}
+    onMomentumScrollEnd={(event) => {
+      const slideIndex = Math.round(event.nativeEvent.contentOffset.y / 220);
+      setBannerIndex(slideIndex);
+    }}
+  >
+    {BANNERS.map((banner) => (
+      <View key={banner.id} className="px-4 pb-6" style={{ height: 220 }}>
+        <View className="flex-1 relative">
+          {/* Texto */}
+          <View className="absolute left-2 top-4 z-10">
+            <Text className="text-white text-3xl font-bold mb-2" style={{ lineHeight: 36 }}>
+              {banner.title}
+            </Text>
+            <Text className="text-white text-sm leading-5 opacity-95">
+              {banner.subtitle}
+            </Text>
           </View>
+
+          {/* Emoji */}
+          <View className="absolute right-0 bottom-0">
+            <Text style={{ fontSize: 140 }}>{banner.emoji}</Text>
+          </View>
+
+          {/* Indicadores */}
+          <View className="absolute bottom-2 left-0 right-0 flex-row justify-center">
+            {BANNERS.map((_, index) => (
+              <View
+                key={index}
+                style={{
+                  width: 8,
+                  height: 8,
+                  borderRadius: 4,
+                  marginHorizontal: 4,
+                  backgroundColor: index === bannerIndex ? '#FFFFFF' : 'rgba(255,255,255,0.4)',
+                }}
+              />
+            ))}
+          </View>
+        </View>
+      </View>
+    ))}
+  </ScrollView>
+</View>
         </LinearGradient>
 
         {/* Categorías */}

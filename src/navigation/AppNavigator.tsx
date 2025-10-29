@@ -34,11 +34,12 @@ import CreateProductScreen from '../screens/seller/CreateProductScreen';
 import EditProductScreen from '../screens/seller/EditProductScreen';
 import SellerDashboardScreen from '../screens/seller/SellerDashboardScreen';
 import SellerAnalyticsScreen from '../screens/seller/SellerAnalyticsScreen';
-import OrderDetailScreen from '../screens/orders/OrderDetailScreen';
 import SellerOrdersScreen from '../screens/seller/SellerOrdersScreen';
+import SellerOrderDetailScreen from '../screens/seller/SellerOrderDetailScreen';
 
 // Screens - Orders
 import CheckoutScreen from '../screens/orders/CheckoutScreen';
+import OrderDetailScreen from '../screens/orders/OrderDetailScreen';
 
 // Screens - Chat
 import ConversationsScreen from '../screens/chat/ConversationsScreen';
@@ -63,7 +64,7 @@ function HomeStack() {
   );
 }
 
-// Favorites Stack Navigator (NUEVO)
+// Favorites Stack Navigator
 function FavoritesStack() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
@@ -73,7 +74,7 @@ function FavoritesStack() {
   );
 }
 
-// Cart Stack Navigator (NUEVO)
+// Cart Stack Navigator
 function CartStack() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
@@ -99,7 +100,7 @@ function ProfileStack() {
       <Stack.Screen name="SellerDashboard" component={SellerDashboardScreen} />
       <Stack.Screen name="SellerAnalytics" component={SellerAnalyticsScreen} />
       <Stack.Screen name="SellerOrders" component={SellerOrdersScreen} />
-      <Stack.Screen name="SellerOrderDetail" component={OrderDetailScreen} />
+      <Stack.Screen name="SellerOrderDetail" component={SellerOrderDetailScreen} />
       <Stack.Screen name="Notifications" component={NotificationsScreen} />
       <Stack.Screen name="DeleteAccount" component={DeleteAccountScreen} />
       <Stack.Screen name="Help" component={HelpScreen} />
@@ -219,6 +220,16 @@ function TabNavigator() {
   );
 }
 
+// Auth Stack Navigator
+function AuthStack() {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="Login" component={LoginScreen} />
+      <Stack.Screen name="Register" component={RegisterScreen} />
+    </Stack.Navigator>
+  );
+}
+
 // Main Stack Navigator
 export default function AppNavigator() {
   const { session, loading } = useAuth();
@@ -236,11 +247,7 @@ export default function AppNavigator() {
             <Stack.Screen name="Chat" component={ChatScreen} />
           </>
         ) : (
-          <>
-            <Stack.Screen name="Login" component={LoginScreen} />
-            <Stack.Screen name="Register" component={RegisterScreen} />
-            <Stack.Screen name="MainTabs" component={TabNavigator} />
-          </>
+          <Stack.Screen name="Auth" component={AuthStack} />
         )}
       </Stack.Navigator>
     </NavigationContainer>
