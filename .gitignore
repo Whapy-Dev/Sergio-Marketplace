@@ -16,3 +16,6 @@ web-build/
 .idea/
 ios/
 android/
+ios/
+android/
+apps/mobile/.env
