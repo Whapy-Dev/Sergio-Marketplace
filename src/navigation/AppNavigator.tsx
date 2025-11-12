@@ -1,0 +1,283 @@
+import React from 'react';
+import { NavigationContainer } from '@react-navigation/native';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { View, Text } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { COLORS } from '../constants/theme';
+import { useAuth } from '../contexts/AuthContext';
+import { useCart } from '../contexts/CartContext';
+import { useFavorites } from '../contexts/FavoritesContext';
+
+// Screens - Home
+import HomeScreen from '../screens/home/HomeScreen';
+import ProductDetailScreen from '../screens/products/ProductDetailScreen';
+import SearchScreen from '../screens/search/SearchScreen';
+
+// Screens - Cart & Favorites
+import CartScreen from '../screens/cart/CartScreen';
+import FavoritesScreen from '../screens/favorites/FavoritesScreen';
+import ListDetailScreen from '../screens/favorites/ListDetailScreen';
+
+// Screens - Chat
+import ConversationsScreen from '../screens/chat/ConversationsScreen';
+import ChatScreen from '../screens/chat/ChatScreen';
+
+// Screens - Profile
+import ProfileScreen from '../screens/profile/ProfileScreen';
+import EditProfileScreen from '../screens/profile/EditProfileScreen';
+import ChangePasswordScreen from '../screens/profile/ChangePasswordScreen';
+import MyOrdersScreen from '../screens/profile/MyOrdersScreen';
+import NotificationsScreen from '../screens/profile/NotificationsScreen';
+import DeleteAccountScreen from '../screens/profile/DeleteAccountScreen';
+import HelpScreen from '../screens/profile/HelpScreen';
+import TermsScreen from '../screens/profile/TermsScreen';
+import LanguageScreen from '../screens/profile/LanguageScreen';
+
+// Screens - Seller
+import MyProductsScreen from '../screens/seller/MyProductsScreen';
+import CreateProductScreen from '../screens/seller/CreateProductScreen';
+import EditProductScreen from '../screens/seller/EditProductScreen';
+import SellerDashboardScreen from '../screens/seller/SellerDashboardScreen';
+import SellerAnalyticsScreen from '../screens/seller/SellerAnalyticsScreen';
+import OrderDetailScreen from '../screens/orders/OrderDetailScreen';
+import SellerOrdersScreen from '../screens/seller/SellerOrdersScreen';
+
+// Screens - Orders
+import CheckoutScreen from '../screens/orders/CheckoutScreen';
+
+// Screens - Auth
+import LoginScreen from '../screens/auth/LoginScreen';
+import RegisterScreen from '../screens/auth/RegisterScreen';
+import SplashScreen from '../screens/SplashScreen';
+
+const Tab = createBottomTabNavigator();
+const Stack = createNativeStackNavigator();
+
+// Home Stack Navigator
+function HomeStack() {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="HomeMain" component={HomeScreen} />
+      <Stack.Screen name="ProductDetail" component={ProductDetailScreen} />
+      <Stack.Screen name="Search" component={SearchScreen} />
+      <Stack.Screen name="Chat" component={ChatScreen} />
+    </Stack.Navigator>
+  );
+}
+
+// Chat Stack Navigator
+function ChatStack() {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="ConversationsMain" component={ConversationsScreen} />
+      <Stack.Screen name="Chat" component={ChatScreen} />
+    </Stack.Navigator>
+  );
+}
+
+// Favorites Stack Navigator
+function FavoritesStack() {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="FavoritesMain" component={FavoritesScreen} />
+      <Stack.Screen name="ListDetail" component={ListDetailScreen} />
+      <Stack.Screen name="ProductDetail" component={ProductDetailScreen} />
+    </Stack.Navigator>
+  );
+}
+
+// En ProfileStack:
+function ProfileStack() {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="ProfileMain" component={ProfileScreen} />
+      <Stack.Screen name="EditProfile" component={EditProfileScreen} />
+      <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} />
+      <Stack.Screen name="MyOrders" component={MyOrdersScreen} />
+      <Stack.Screen name="OrderDetail" component={OrderDetailScreen} />
+      <Stack.Screen name="MyProducts" component={MyProductsScreen} />
+      <Stack.Screen name="CreateProduct" component={CreateProductScreen} />
+      <Stack.Screen name="EditProduct" component={EditProductScreen} />
+      <Stack.Screen name="SellerDashboard" component={SellerDashboardScreen} />
+      <Stack.Screen name="SellerAnalytics" component={SellerAnalyticsScreen} />
+      <Stack.Screen name="SellerOrders" component={SellerOrdersScreen} />
+      <Stack.Screen name="SellerOrderDetail" component={OrderDetailScreen} />
+      <Stack.Screen name="Notifications" component={NotificationsScreen} />
+      <Stack.Screen name="DeleteAccount" component={DeleteAccountScreen} />
+      <Stack.Screen name="Help" component={HelpScreen} />
+      <Stack.Screen name="Terms" component={TermsScreen} />
+      <Stack.Screen name="Language" component={LanguageScreen} />
+    </Stack.Navigator>
+  );
+}
+
+// Bottom Tabs Navigator
+function TabNavigator() {
+  const { totalItems } = useCart();
+  const { favorites } = useFavorites();
+
+  return (
+    <Tab.Navigator
+      screenOptions={{
+        tabBarActiveTintColor: COLORS.primary,
+        tabBarInactiveTintColor: '#9CA3AF',
+        tabBarStyle: {
+          backgroundColor: 'white',
+          borderTopLeftRadius: 32,
+          borderTopRightRadius: 32,
+          borderTopWidth: 0,
+          height: 70,
+          paddingBottom: 10,
+          paddingTop: 10,
+          position: 'absolute',
+          elevation: 10,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: -5 },
+          shadowOpacity: 0.1,
+          shadowRadius: 4,
+        },
+        tabBarShowLabel: false,
+        headerShown: false,
+      }}
+    >
+      <Tab.Screen
+        name="Home"
+        component={HomeStack}
+        options={{
+          tabBarIcon: ({ focused, color }) => (
+            <Ionicons
+              name={focused ? 'home' : 'home-outline'}
+              size={28}
+              color={color}
+            />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="Favorites"
+        component={FavoritesStack}
+        options={{
+          tabBarIcon: ({ focused, color }) => (
+            <View style={{ width: 28, height: 28, position: 'relative' }}>
+              <Ionicons
+                name={focused ? 'heart' : 'heart-outline'}
+                size={28}
+                color={color}
+              />
+              {favorites.length > 0 && (
+                <View
+                  style={{
+                    position: 'absolute',
+                    right: -8,
+                    top: -4,
+                    backgroundColor: COLORS.primary,
+                    borderRadius: 10,
+                    minWidth: 18,
+                    height: 18,
+                    paddingHorizontal: 4,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                  }}
+                >
+                  <Text style={{ color: 'white', fontSize: 10, fontWeight: 'bold' }}>
+                    {favorites.length > 9 ? '9+' : favorites.length}
+                  </Text>
+                </View>
+              )}
+            </View>
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="Conversations"
+        component={ChatStack}
+        options={{
+          tabBarIcon: ({ focused, color }) => (
+            <Ionicons
+              name={focused ? 'chatbubble' : 'chatbubble-outline'}
+              size={28}
+              color={color}
+            />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="Cart"
+        component={CartScreen}
+        options={{
+          tabBarIcon: ({ focused, color }) => (
+            <View style={{ width: 28, height: 28, position: 'relative' }}>
+              <Ionicons
+                name={focused ? 'basket' : 'basket-outline'}
+                size={28}
+                color={color}
+              />
+              {totalItems > 0 && (
+                <View
+                  style={{
+                    position: 'absolute',
+                    right: -8,
+                    top: -4,
+                    backgroundColor: COLORS.primary,
+                    borderRadius: 10,
+                    minWidth: 18,
+                    height: 18,
+                    paddingHorizontal: 4,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                  }}
+                >
+                  <Text style={{ color: 'white', fontSize: 10, fontWeight: 'bold' }}>
+                    {totalItems > 9 ? '9+' : totalItems}
+                  </Text>
+                </View>
+              )}
+            </View>
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="Profile"
+        component={ProfileStack}
+        options={{
+          tabBarIcon: ({ focused, color }) => (
+            <Ionicons
+              name={focused ? 'person' : 'person-outline'}
+              size={28}
+              color={color}
+            />
+          ),
+        }}
+      />
+    </Tab.Navigator>
+  );
+}
+
+// Main Stack Navigator
+export default function AppNavigator() {
+  const { session, loading } = useAuth();
+
+  if (loading) {
+    return <SplashScreen />;
+  }
+
+  return (
+    <NavigationContainer>
+      <Stack.Navigator screenOptions={{ headerShown: false }}>
+        {session ? (
+          <>
+            <Stack.Screen name="MainTabs" component={TabNavigator} />
+            <Stack.Screen name="Checkout" component={CheckoutScreen} />
+          </>
+        ) : (
+          <>
+            <Stack.Screen name="Login" component={LoginScreen} />
+            <Stack.Screen name="Register" component={RegisterScreen} />
+            <Stack.Screen name="MainTabs" component={TabNavigator} />
+          </>
+        )}
+      </Stack.Navigator>
+    </NavigationContainer>
+  );
+}
