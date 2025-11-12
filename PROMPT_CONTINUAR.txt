@@ -1,0 +1,33 @@
+Hola! Estoy continuando con el proyecto marketplace de React Native.
+
+ESTADO ACTUAL:
+- App marketplace estilo MercadoLibre
+- React Native + Expo + TypeScript + Supabase + NativeWind
+- Todas las funcionalidades básicas implementadas
+- Sistema de Listas de Favoritos 100% funcional
+- UI profesional con Ionicons (sin emojis)
+- Header sticky animado en HomeScreen
+- Logos de marcas funcionales en SearchScreen
+
+ÚLTIMO TRABAJO:
+- Implementé header sticky con animación tipo MercadoLibre
+- Reemplacé todos los emojis por Ionicons profesionales
+- Sistema completo de Listas de Favoritos (CRUD + UI)
+- Optimización de espacios en SearchScreen
+
+UBICACIÓN DEL PROYECTO:
+C:\Users\marti\Desktop\Sergio-Marketplace-main
+
+COMANDOS:
+- Desarrollo: npm start
+- Base de datos: node setup-lists-tables.js
+
+GIT:
+- Último commit: "Agregado documento de resumen del proyecto y prompt de continuación"
+- No hay remote configurado (solo local)
+- Para hacer push: necesito configurar remote a GitHub/GitLab
+
+SIGUIENTE:
+Lee el archivo RESUMEN_PROYECTO.md para ver todos los detalles técnicos completos del estado actual del proyecto.
+
+¿Qué sigue para el desarrollo?
