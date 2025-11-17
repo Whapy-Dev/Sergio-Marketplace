@@ -3,18 +3,21 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { View, Text } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Ionicons, Feather } from '@expo/vector-icons';
 import { COLORS } from '../constants/theme';
 import { useAuth } from '../contexts/AuthContext';
 import { useCart } from '../contexts/CartContext';
 import { useFavorites } from '../contexts/FavoritesContext';
 
-// Screens
+// Screens - Home
 import HomeScreen from '../screens/home/HomeScreen';
+import ProductDetailScreen from '../screens/products/ProductDetailScreen';
 import SearchScreen from '../screens/search/SearchScreen';
+
+// Screens - Cart & Favorites
 import CartScreen from '../screens/cart/CartScreen';
 import FavoritesScreen from '../screens/favorites/FavoritesScreen';
+
+// Screens - Profile
 import ProfileScreen from '../screens/profile/ProfileScreen';
 import EditProfileScreen from '../screens/profile/EditProfileScreen';
 import ChangePasswordScreen from '../screens/profile/ChangePasswordScreen';
@@ -24,6 +27,8 @@ import DeleteAccountScreen from '../screens/profile/DeleteAccountScreen';
 import HelpScreen from '../screens/profile/HelpScreen';
 import TermsScreen from '../screens/profile/TermsScreen';
 import LanguageScreen from '../screens/profile/LanguageScreen';
+
+// Screens - Seller
 import MyProductsScreen from '../screens/seller/MyProductsScreen';
 import CreateProductScreen from '../screens/seller/CreateProductScreen';
 import EditProductScreen from '../screens/seller/EditProductScreen';
@@ -31,13 +36,16 @@ import SellerDashboardScreen from '../screens/seller/SellerDashboardScreen';
 import SellerAnalyticsScreen from '../screens/seller/SellerAnalyticsScreen';
 import SellerOrdersScreen from '../screens/seller/SellerOrdersScreen';
 import SellerOrderDetailScreen from '../screens/seller/SellerOrderDetailScreen';
+
+// Screens - Orders
 import CheckoutScreen from '../screens/orders/CheckoutScreen';
 import OrderDetailScreen from '../screens/orders/OrderDetailScreen';
+
+// Screens - Chat
 import ConversationsScreen from '../screens/chat/ConversationsScreen';
 import ChatScreen from '../screens/chat/ChatScreen';
-import ProductDetailScreen from '../screens/products/ProductDetailScreen';
-import CreateReviewScreen from '../screens/reviews/CreateReviewScreen';
-import ReviewsScreen from '../screens/reviews/ReviewsScreen';
+
+// Screens - Auth
 import LoginScreen from '../screens/auth/LoginScreen';
 import RegisterScreen from '../screens/auth/RegisterScreen';
 import SplashScreen from '../screens/SplashScreen';
@@ -45,12 +53,12 @@ import SplashScreen from '../screens/SplashScreen';
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
-
 // Home Stack Navigator
 function HomeStack() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="HomeMain" component={HomeScreen} />
+      <Stack.Screen name="ProductDetail" component={ProductDetailScreen} />
       <Stack.Screen name="Search" component={SearchScreen} />
     </Stack.Navigator>
   );
@@ -61,6 +69,7 @@ function FavoritesStack() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="FavoritesMain" component={FavoritesScreen} />
+      <Stack.Screen name="ProductDetail" component={ProductDetailScreen} />
     </Stack.Navigator>
   );
 }
@@ -71,6 +80,7 @@ function CartStack() {
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="CartMain" component={CartScreen} />
       <Stack.Screen name="Checkout" component={CheckoutScreen} />
+      <Stack.Screen name="ProductDetail" component={ProductDetailScreen} />
     </Stack.Navigator>
   );
 }
@@ -104,24 +114,18 @@ function ProfileStack() {
 function TabNavigator() {
   const { totalItems } = useCart();
   const { favorites } = useFavorites();
-  const insets = useSafeAreaInsets();
 
   return (
     <Tab.Navigator
       screenOptions={{
         tabBarActiveTintColor: COLORS.primary,
-        tabBarInactiveTintColor: '#9CA3AF',
+        tabBarInactiveTintColor: COLORS.textGray,
         tabBarStyle: {
           borderTopWidth: 1,
-          borderTopColor: '#E5E7EB',
+          borderTopColor: COLORS.border,
           paddingTop: 8,
-          paddingBottom: insets.bottom > 0 ? insets.bottom : 8,  // ← CAMBIAR ESTO
-          height: 60 + (insets.bottom > 0 ? insets.bottom : 0),  // ← CAMBIAR ESTO
-          backgroundColor: '#FFFFFF',
-        },
-        tabBarLabelStyle: {
-          fontSize: 12,
-          fontWeight: '600',
+          paddingBottom: 8,
+          height: 60,
         },
         headerShown: false,
       }}
@@ -131,13 +135,7 @@ function TabNavigator() {
         component={HomeStack}
         options={{
           tabBarLabel: 'Inicio',
-          tabBarIcon: ({ color, focused }) => (
-            <Ionicons 
-              name={focused ? 'home' : 'home-outline'} 
-              size={24} 
-              color={color} 
-            />
-          ),
+          tabBarIcon: () => <Text style={{ fontSize: 24 }}>🏠</Text>,
         }}
       />
       <Tab.Screen
@@ -145,29 +143,24 @@ function TabNavigator() {
         component={FavoritesStack}
         options={{
           tabBarLabel: 'Favoritos',
-          tabBarIcon: ({ color, focused }) => (
+          tabBarIcon: () => (
             <View>
-              <Ionicons 
-                name={focused ? 'heart' : 'heart-outline'} 
-                size={24} 
-                color={color} 
-              />
+              <Text style={{ fontSize: 24 }}>❤️</Text>
               {favorites.length > 0 && (
                 <View
                   style={{
                     position: 'absolute',
-                    right: -8,
+                    right: -6,
                     top: -4,
                     backgroundColor: COLORS.primary,
                     borderRadius: 10,
-                    minWidth: 18,
-                    height: 18,
+                    width: 20,
+                    height: 20,
                     justifyContent: 'center',
                     alignItems: 'center',
-                    paddingHorizontal: 4,
                   }}
                 >
-                  <Text style={{ color: 'white', fontSize: 10, fontWeight: 'bold' }}>
+                  <Text style={{ color: 'white', fontSize: 12, fontWeight: 'bold' }}>
                     {favorites.length > 9 ? '9+' : favorites.length}
                   </Text>
                 </View>
@@ -181,13 +174,7 @@ function TabNavigator() {
         component={ConversationsScreen}
         options={{
           tabBarLabel: 'Mensajes',
-          tabBarIcon: ({ color, focused }) => (
-            <Ionicons 
-              name={focused ? 'chatbubbles' : 'chatbubbles-outline'} 
-              size={24} 
-              color={color} 
-            />
-          ),
+          tabBarIcon: () => <Text style={{ fontSize: 24 }}>💬</Text>,
         }}
       />
       <Tab.Screen
@@ -195,29 +182,24 @@ function TabNavigator() {
         component={CartStack}
         options={{
           tabBarLabel: 'Carrito',
-          tabBarIcon: ({ color, focused }) => (
+          tabBarIcon: () => (
             <View>
-              <Ionicons 
-                name={focused ? 'cart' : 'cart-outline'} 
-                size={24} 
-                color={color} 
-              />
+              <Text style={{ fontSize: 24 }}>🛒</Text>
               {totalItems > 0 && (
                 <View
                   style={{
                     position: 'absolute',
-                    right: -8,
+                    right: -6,
                     top: -4,
                     backgroundColor: COLORS.primary,
                     borderRadius: 10,
-                    minWidth: 18,
-                    height: 18,
+                    width: 20,
+                    height: 20,
                     justifyContent: 'center',
                     alignItems: 'center',
-                    paddingHorizontal: 4,
                   }}
                 >
-                  <Text style={{ color: 'white', fontSize: 10, fontWeight: 'bold' }}>
+                  <Text style={{ color: 'white', fontSize: 12, fontWeight: 'bold' }}>
                     {totalItems > 9 ? '9+' : totalItems}
                   </Text>
                 </View>
@@ -231,13 +213,7 @@ function TabNavigator() {
         component={ProfileStack}
         options={{
           tabBarLabel: 'Perfil',
-          tabBarIcon: ({ color, focused }) => (
-            <Ionicons 
-              name={focused ? 'person' : 'person-outline'} 
-              size={24} 
-              color={color} 
-            />
-          ),
+          tabBarIcon: () => <Text style={{ fontSize: 24 }}>👤</Text>,
         }}
       />
     </Tab.Navigator>
@@ -268,10 +244,7 @@ export default function AppNavigator() {
         {session ? (
           <>
             <Stack.Screen name="MainTabs" component={TabNavigator} />
-            <Stack.Screen name="ProductDetail" component={ProductDetailScreen} />
             <Stack.Screen name="Chat" component={ChatScreen} />
-            <Stack.Screen name="CreateReview" component={CreateReviewScreen} />
-            <Stack.Screen name="Reviews" component={ReviewsScreen} />
           </>
         ) : (
           <Stack.Screen name="Auth" component={AuthStack} />

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export interface CartItem {
@@ -7,49 +7,38 @@ export interface CartItem {
   price: number;
   quantity: number;
   imageUrl?: string;
+  sellerId: string;
   stock: number;
 }
 
 interface CartContextType {
   items: CartItem[];
-  addItem: (product: Omit<CartItem, 'quantity'>) => void;
-  removeItem: (productId: string) => void;
-  updateQuantity: (productId: string, quantity: number) => void;
-  clearCart: () => void;
   totalItems: number;
   totalPrice: number;
+  addItem: (item: CartItem) => void;
+  removeItem: (id: string) => void;
+  updateQuantity: (id: string, quantity: number) => void;
+  clearCart: () => void;
 }
 
-const CartContext = createContext<CartContextType>({
-  items: [],
-  addItem: () => {},
-  removeItem: () => {},
-  updateQuantity: () => {},
-  clearCart: () => {},
-  totalItems: 0,
-  totalPrice: 0,
-});
+const CartContext = createContext<CartContextType | undefined>(undefined);
 
-const CART_STORAGE_KEY = '@Yo Compro_cart';
-
-export function CartProvider({ children }: { children: ReactNode }) {
+export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
 
-  // Cargar carrito al inicio
   useEffect(() => {
     loadCart();
   }, []);
 
-  // Guardar carrito cuando cambie
   useEffect(() => {
     saveCart();
   }, [items]);
 
   async function loadCart() {
     try {
-      const cartData = await AsyncStorage.getItem(CART_STORAGE_KEY);
-      if (cartData) {
-        setItems(JSON.parse(cartData));
+      const savedCart = await AsyncStorage.getItem('cart');
+      if (savedCart) {
+        setItems(JSON.parse(savedCart));
       }
     } catch (error) {
       console.error('Error loading cart:', error);
@@ -58,43 +47,41 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   async function saveCart() {
     try {
-      await AsyncStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
+      await AsyncStorage.setItem('cart', JSON.stringify(items));
     } catch (error) {
       console.error('Error saving cart:', error);
     }
   }
 
-  function addItem(product: Omit<CartItem, 'quantity'>) {
+  function addItem(item: CartItem) {
     setItems((currentItems) => {
-      const existingItem = currentItems.find((item) => item.id === product.id);
-
+      const existingItem = currentItems.find((i) => i.id === item.id);
+      
       if (existingItem) {
-        // Si ya existe, aumentar cantidad (respetando stock)
-        return currentItems.map((item) =>
-          item.id === product.id
-            ? { ...item, quantity: Math.min(item.quantity + 1, product.stock) }
-            : item
+        return currentItems.map((i) =>
+          i.id === item.id
+            ? { ...i, quantity: Math.min(i.quantity + item.quantity, item.stock) }
+            : i
         );
-      } else {
-        // Si no existe, agregar nuevo
-        return [...currentItems, { ...product, quantity: 1 }];
       }
+      
+      return [...currentItems, item];
     });
   }
 
-  function removeItem(productId: string) {
-    setItems((currentItems) => currentItems.filter((item) => item.id !== productId));
+  function removeItem(id: string) {
+    setItems((currentItems) => currentItems.filter((item) => item.id !== id));
   }
 
-  function updateQuantity(productId: string, quantity: number) {
+  function updateQuantity(id: string, quantity: number) {
     if (quantity <= 0) {
-      removeItem(productId);
+      removeItem(id);
       return;
     }
 
     setItems((currentItems) =>
       currentItems.map((item) =>
-        item.id === productId
+        item.id === id
           ? { ...item, quantity: Math.min(quantity, item.stock) }
           : item
       )
@@ -112,12 +99,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
     <CartContext.Provider
       value={{
         items,
+        totalItems,
+        totalPrice,
         addItem,
         removeItem,
         updateQuantity,
         clearCart,
-        totalItems,
-        totalPrice,
       }}
     >
       {children}
@@ -125,10 +112,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
   );
 }
 
-export const useCart = () => {
+export function useCart() {
   const context = useContext(CartContext);
   if (!context) {
     throw new Error('useCart must be used within CartProvider');
   }
   return context;
-};
+}

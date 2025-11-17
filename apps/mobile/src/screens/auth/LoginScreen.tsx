@@ -54,7 +54,7 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
           <View className="flex-1 px-6 pt-12">
             <View className="mb-10">
               <Text className="text-4xl font-bold text-primary mb-2">
-                🛍️ Yo Compro
+                YoCompro
               </Text>
               <Text className="text-2xl font-bold text-gray-900 mb-2">
                 ¡Bienvenido!

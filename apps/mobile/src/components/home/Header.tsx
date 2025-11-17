@@ -1,32 +1,26 @@
 import React from 'react';
-import { View, Text, TextInput, TouchableOpacity, SafeAreaView } from 'react-native';
-import { COLORS } from '../../constants/theme';
+import { View, Text, TouchableOpacity, Platform } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 
 export default function Header() {
   return (
-    <SafeAreaView className="bg-white border-b border-gray-200">
-      <View className="px-4 py-3">
-        {/* Logo y Avatar */}
-        <View className="flex-row items-center justify-between mb-3">
-          <Text className="text-2xl font-bold text-primary">
-            Yo Compro
-          </Text>
-          
-          {/* Avatar - Por ahora un círculo simple */}
-          <TouchableOpacity className="w-10 h-10 rounded-full bg-primary items-center justify-center">
-            <Text className="text-white text-lg">👤</Text>
-          </TouchableOpacity>
-        </View>
-        
-        {/* Barra de búsqueda */}
-        <TouchableOpacity 
-          className="bg-gray-100 rounded-lg px-4 py-3 flex-row items-center"
-          activeOpacity={0.7}
-        >
-          <Text className="text-lg mr-2">🔍</Text>
-          <Text className="text-gray-500">Buscar productos...</Text>
+    <LinearGradient
+      colors={['#11CCEE', '#0EA5C9']}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 0 }}
+      style={{
+        paddingTop: Platform.OS === 'ios' ? 50 : 40,
+        paddingBottom: 12,
+        paddingHorizontal: 16,
+      }}
+    >
+      {/* Logo y notificaciones */}
+      <View className="flex-row items-center justify-between">
+        <Text className="text-white text-2xl font-bold">tofit</Text>
+        <TouchableOpacity>
+          <Text className="text-white text-2xl">🔔</Text>
         </TouchableOpacity>
       </View>
-    </SafeAreaView>
+    </LinearGradient>
   );
 }
