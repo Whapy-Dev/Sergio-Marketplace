@@ -17,6 +17,7 @@ interface Product {
   image_url: string | null;
   seller_id: string;
   free_shipping?: boolean;
+  official_store_id?: string | null;
 }
 
 interface Brand {
@@ -32,6 +33,7 @@ export default function SearchScreen({ navigation }: any) {
   const [selectedBrand, setSelectedBrand] = useState<string | null>(null);
   const [filtersVisible, setFiltersVisible] = useState(false);
   const [activeFilters, setActiveFilters] = useState<FilterState | null>(null);
+  const [showOnlyOfficialStores, setShowOnlyOfficialStores] = useState(false);
 
   // Mock brands - en producción vendrían de la base de datos
   const brands: Brand[] = [
@@ -55,7 +57,7 @@ export default function SearchScreen({ navigation }: any) {
     } else {
       loadProducts();
     }
-  }, [searchQuery, selectedBrand, activeFilters]);
+  }, [searchQuery, selectedBrand, activeFilters, showOnlyOfficialStores]);
 
   async function loadProducts() {
     try {
@@ -65,6 +67,11 @@ export default function SearchScreen({ navigation }: any) {
         .select('*')
         .eq('status', 'active');
 
+      // Filtrar solo tiendas oficiales si está activado
+      if (showOnlyOfficialStores) {
+        query = query.not('official_store_id', 'is', null);
+      }
+
       // Aplicar filtros si existen
       if (activeFilters) {
         if (activeFilters.freeShipping) {
@@ -72,15 +79,23 @@ export default function SearchScreen({ navigation }: any) {
         }
       }
 
+      // Ordenar: tiendas oficiales primero, luego por fecha
       const { data, error } = await query.order('created_at', { ascending: false }).limit(50);
 
       if (!error && data) {
+        // Priorizar productos de tiendas oficiales
+        const sorted = [...data].sort((a, b) => {
+          if (a.official_store_id && !b.official_store_id) return -1;
+          if (!a.official_store_id && b.official_store_id) return 1;
+          return 0;
+        });
+
         // Filtrar por marca si hay una seleccionada
-        let filteredData = data;
+        let filteredData = sorted;
         if (selectedBrand) {
-          const brand = brands.find(b => b.id === selectedBrand);
+          const brand = brands.find(br => br.id === selectedBrand);
           if (brand) {
-            filteredData = data.filter(product =>
+            filteredData = sorted.filter(product =>
               product.name.toLowerCase().includes(brand.name.toLowerCase())
             );
           }
@@ -119,12 +134,19 @@ export default function SearchScreen({ navigation }: any) {
       const { data, error } = await query.order('created_at', { ascending: false }).limit(50);
 
       if (!error && data) {
+        // Priorizar productos de tiendas oficiales
+        const sorted = [...data].sort((a, b) => {
+          if (a.official_store_id && !b.official_store_id) return -1;
+          if (!a.official_store_id && b.official_store_id) return 1;
+          return 0;
+        });
+
         // Filtrar por marca si hay una seleccionada
-        let filteredData = data;
+        let filteredData = sorted;
         if (selectedBrand) {
           const brand = brands.find(b => b.id === selectedBrand);
           if (brand) {
-            filteredData = data.filter(product =>
+            filteredData = sorted.filter(product =>
               product.name.toLowerCase().includes(brand.name.toLowerCase())
             );
           }
@@ -207,6 +229,14 @@ export default function SearchScreen({ navigation }: any) {
                 <Text className="text-white text-[9px] font-light">sin interés</Text>
               </LinearGradient>
             </View>
+
+            {/* Badge de Tienda Oficial */}
+            {item.official_store_id && (
+              <View className="absolute top-1 right-1 bg-blue-600 rounded-full px-2 py-1 flex-row items-center">
+                <Ionicons name="checkmark-circle" size={10} color="white" />
+                <Text className="text-white text-[8px] font-bold ml-0.5">OFICIAL</Text>
+              </View>
+            )}
           </View>
 
           {/* Información del producto */}
@@ -379,6 +409,32 @@ export default function SearchScreen({ navigation }: any) {
           )}
           keyExtractor={(item) => item.id}
         />
+      </View>
+
+      {/* Filtro de Tiendas Oficiales */}
+      <View className="px-4 pb-2">
+        <TouchableOpacity
+          onPress={() => {
+            setShowOnlyOfficialStores(!showOnlyOfficialStores);
+            loadProducts();
+          }}
+          className={`flex-row items-center justify-center py-2 px-3 rounded-full border ${
+            showOnlyOfficialStores
+              ? 'bg-blue-600 border-blue-600'
+              : 'bg-white border-gray-300'
+          }`}
+        >
+          <Ionicons
+            name={showOnlyOfficialStores ? "checkmark-circle" : "storefront-outline"}
+            size={16}
+            color={showOnlyOfficialStores ? "white" : "#3B82F6"}
+          />
+          <Text className={`text-xs font-semibold ml-1.5 ${
+            showOnlyOfficialStores ? 'text-white' : 'text-blue-600'
+          }`}>
+            {showOnlyOfficialStores ? 'Mostrando solo Tiendas Oficiales' : 'Ver solo Tiendas Oficiales'}
+          </Text>
+        </TouchableOpacity>
       </View>
 
       {/* Lista de productos */}
