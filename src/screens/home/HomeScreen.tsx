@@ -7,6 +7,8 @@ import { useCategories } from '../../hooks/useCategories';
 import { useProducts } from '../../hooks/useProducts';
 import { getOfficialStores } from '../../services/officialStores';
 import type { OfficialStore } from '../../types/officialStore';
+import { getActiveBanners, type Banner } from '../../services/banners';
+import BannerCarousel from '../../components/BannerCarousel';
 import { COLORS } from '../../constants/theme';
 
 export default function HomeScreen({ navigation }: any) {
@@ -16,9 +18,12 @@ export default function HomeScreen({ navigation }: any) {
   const [email, setEmail] = useState('');
   const [officialStores, setOfficialStores] = useState<OfficialStore[]>([]);
   const [loadingStores, setLoadingStores] = useState(true);
+  const [banners, setBanners] = useState<Banner[]>([]);
+  const [loadingBanners, setLoadingBanners] = useState(true);
 
   useEffect(() => {
     loadOfficialStores();
+    loadBanners();
   }, []);
 
   async function loadOfficialStores() {
@@ -26,6 +31,13 @@ export default function HomeScreen({ navigation }: any) {
     const stores = await getOfficialStores(10);
     setOfficialStores(stores);
     setLoadingStores(false);
+  }
+
+  async function loadBanners() {
+    setLoadingBanners(true);
+    const activeBanners = await getActiveBanners();
+    setBanners(activeBanners);
+    setLoadingBanners(false);
   }
 
   // Animación del header
@@ -48,11 +60,31 @@ export default function HomeScreen({ navigation }: any) {
   async function handleRefresh() {
     setRefreshing(true);
     try {
-      await Promise.all([refreshCategories(), refetchProducts(), loadOfficialStores()]);
+      await Promise.all([refreshCategories(), refetchProducts(), loadOfficialStores(), loadBanners()]);
     } catch (error) {
       console.error('Error refreshing:', error);
     } finally {
       setRefreshing(false);
+    }
+  }
+
+  function handleBannerPress(banner: Banner) {
+    if (banner.link_type === 'none' || !banner.link_value) return;
+
+    switch (banner.link_type) {
+      case 'product':
+        navigation.navigate('ProductDetail', { productId: banner.link_value });
+        break;
+      case 'store':
+        navigation.navigate('StoreDetail', { storeId: banner.link_value });
+        break;
+      case 'category':
+        navigation.navigate('Search', { category: banner.link_value });
+        break;
+      case 'external':
+        // For external links, you could open with Linking.openURL
+        console.log('External link:', banner.link_value);
+        break;
     }
   }
 
@@ -166,28 +198,28 @@ export default function HomeScreen({ navigation }: any) {
             </TouchableOpacity>
           </View>
 
-          {/* Banner "Hasta 40% OFF" */}
-          <View className="px-4">
-            <View className="relative" style={{ height: 160 }}>
-              <View className="absolute left-0 top-3 z-10" style={{ maxWidth: '55%' }}>
-                <Text className="text-white text-xl font-bold mb-1">
-                  Hasta 40% OFF
-                </Text>
-                <Text className="text-white text-xs leading-4">
-                  La manera más práctica de hacer tus compras del súper
-                </Text>
-              </View>
-              <View className="absolute right-0 bottom-0" style={{ opacity: 0.3 }}>
-                <Ionicons name="cart" size={110} color="white" />
-              </View>
-              {/* Indicadores de scroll */}
-              <View className="absolute bottom-2 left-0 right-0 flex-row justify-center">
-                <View style={{ width: 24, height: 3, backgroundColor: 'rgba(255,255,255,0.5)', borderRadius: 2, marginHorizontal: 2 }} />
-                <View style={{ width: 10, height: 3, backgroundColor: '#FFFFFF', borderRadius: 2, marginHorizontal: 2 }} />
-                <View style={{ width: 24, height: 3, backgroundColor: 'rgba(255,255,255,0.5)', borderRadius: 2, marginHorizontal: 2 }} />
+          {/* Banner Carousel Dinámico */}
+          {!loadingBanners && banners.length > 0 ? (
+            <View style={{ marginTop: -16 }}>
+              <BannerCarousel banners={banners} onBannerPress={handleBannerPress} />
+            </View>
+          ) : !loadingBanners && banners.length === 0 ? (
+            <View className="px-4">
+              <View className="relative" style={{ height: 160 }}>
+                <View className="absolute left-0 top-3 z-10" style={{ maxWidth: '55%' }}>
+                  <Text className="text-white text-xl font-bold mb-1">
+                    Hasta 40% OFF
+                  </Text>
+                  <Text className="text-white text-xs leading-4">
+                    La manera más práctica de hacer tus compras del súper
+                  </Text>
+                </View>
+                <View className="absolute right-0 bottom-0" style={{ opacity: 0.3 }}>
+                  <Ionicons name="cart" size={110} color="white" />
+                </View>
               </View>
             </View>
-          </View>
+          ) : null}
         </LinearGradient>
         </Animated.View>
 
