@@ -1,10 +1,12 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { View, ScrollView, Text, ActivityIndicator, TouchableOpacity, RefreshControl, Image, TextInput, Animated } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useCategories } from '../../hooks/useCategories';
 import { useProducts } from '../../hooks/useProducts';
+import { getOfficialStores } from '../../services/officialStores';
+import type { OfficialStore } from '../../types/officialStore';
 import { COLORS } from '../../constants/theme';
 
 export default function HomeScreen({ navigation }: any) {
@@ -12,6 +14,19 @@ export default function HomeScreen({ navigation }: any) {
   const { products, loading: loadingProducts, refetch: refetchProducts } = useProducts();
   const [refreshing, setRefreshing] = useState(false);
   const [email, setEmail] = useState('');
+  const [officialStores, setOfficialStores] = useState<OfficialStore[]>([]);
+  const [loadingStores, setLoadingStores] = useState(true);
+
+  useEffect(() => {
+    loadOfficialStores();
+  }, []);
+
+  async function loadOfficialStores() {
+    setLoadingStores(true);
+    const stores = await getOfficialStores(10);
+    setOfficialStores(stores);
+    setLoadingStores(false);
+  }
 
   // Animación del header
   const scrollY = useRef(new Animated.Value(0)).current;
@@ -33,7 +48,7 @@ export default function HomeScreen({ navigation }: any) {
   async function handleRefresh() {
     setRefreshing(true);
     try {
-      await Promise.all([refreshCategories(), refetchProducts()]);
+      await Promise.all([refreshCategories(), refetchProducts(), loadOfficialStores()]);
     } catch (error) {
       console.error('Error refreshing:', error);
     } finally {
@@ -225,6 +240,99 @@ export default function HomeScreen({ navigation }: any) {
                 <Text className="text-xs text-gray-900 mt-1">Ver más</Text>
               </TouchableOpacity>
             </ScrollView>
+          )}
+        </View>
+
+        {/* TIENDAS OFICIALES */}
+        <View className="bg-white py-5 mb-1">
+          <View className="flex-row items-center justify-between px-4 mb-4">
+            <View>
+              <Text className="text-lg font-bold text-gray-900">Tiendas Oficiales</Text>
+              <Text className="text-xs text-gray-500 mt-0.5">Verificadas y de confianza</Text>
+            </View>
+            <TouchableOpacity onPress={() => navigation.navigate('OfficialStores')}>
+              <Text className="text-blue-600 font-semibold text-sm">Ver todas</Text>
+            </TouchableOpacity>
+          </View>
+
+          {loadingStores ? (
+            <ActivityIndicator size="small" color={COLORS.primary} />
+          ) : officialStores.length > 0 ? (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ paddingHorizontal: 16 }}
+            >
+              {officialStores.map((store) => (
+                <TouchableOpacity
+                  key={store.id}
+                  onPress={() => navigation.navigate('StoreDetail', { storeId: store.id })}
+                  className="mr-4"
+                  style={{ width: 160 }}
+                >
+                  <View className="bg-gray-50 rounded-2xl overflow-hidden border border-gray-200">
+                    {/* Store Logo */}
+                    <View className="bg-white items-center justify-center p-4" style={{ height: 120 }}>
+                      {store.logo_url ? (
+                        <Image
+                          source={{ uri: store.logo_url }}
+                          className="w-full h-full"
+                          resizeMode="contain"
+                        />
+                      ) : (
+                        <Ionicons name="storefront" size={48} color="#9CA3AF" />
+                      )}
+                    </View>
+
+                    {/* Store Info */}
+                    <View className="p-3">
+                      <View className="flex-row items-center mb-1">
+                        <Text className="text-sm font-bold text-gray-900 flex-1" numberOfLines={1}>
+                          {store.store_name}
+                        </Text>
+                        <View className="bg-blue-100 rounded-full w-5 h-5 items-center justify-center">
+                          <Ionicons name="checkmark" size={12} color="#3B82F6" />
+                        </View>
+                      </View>
+
+                      {/* Rating */}
+                      <View className="flex-row items-center mb-2">
+                        <Ionicons name="star" size={12} color="#FBBF24" />
+                        <Text className="text-xs font-semibold text-gray-900 ml-1">
+                          {store.rating.toFixed(1)}
+                        </Text>
+                        <Text className="text-xs text-gray-500 ml-1">
+                          ({store.total_products})
+                        </Text>
+                      </View>
+
+                      {/* Followers */}
+                      <View className="flex-row items-center">
+                        <Ionicons name="people-outline" size={12} color="#6B7280" />
+                        <Text className="text-xs text-gray-600 ml-1">
+                          {store.followers_count} seguidores
+                        </Text>
+                      </View>
+                    </View>
+                  </View>
+                </TouchableOpacity>
+              ))}
+
+              {/* Ver más card */}
+              <TouchableOpacity
+                onPress={() => navigation.navigate('OfficialStores')}
+                className="items-center justify-center bg-gray-50 rounded-2xl border-2 border-dashed border-gray-300"
+                style={{ width: 160, height: 205 }}
+              >
+                <Ionicons name="add-circle-outline" size={48} color="#9CA3AF" />
+                <Text className="text-sm font-semibold text-gray-600 mt-2">Ver más tiendas</Text>
+              </TouchableOpacity>
+            </ScrollView>
+          ) : (
+            <View className="px-4 py-8 items-center">
+              <Ionicons name="storefront-outline" size={48} color="#D1D5DB" />
+              <Text className="text-gray-500 mt-2">No hay tiendas oficiales disponibles</Text>
+            </View>
           )}
         </View>
 

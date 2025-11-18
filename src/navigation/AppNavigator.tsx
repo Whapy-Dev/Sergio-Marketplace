@@ -51,6 +51,11 @@ import LoginScreen from '../screens/auth/LoginScreen';
 import RegisterScreen from '../screens/auth/RegisterScreen';
 import SplashScreen from '../screens/SplashScreen';
 
+// Screens - Official Stores
+import OfficialStoresScreen from '../screens/stores/OfficialStoresScreen';
+import StoreDetailScreen from '../screens/stores/StoreDetailScreen';
+import RegisterOfficialStoreScreen from '../screens/stores/RegisterOfficialStoreScreen';
+
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
@@ -62,6 +67,8 @@ function HomeStack() {
       <Stack.Screen name="ProductDetail" component={ProductDetailScreen} />
       <Stack.Screen name="Search" component={SearchScreen} />
       <Stack.Screen name="Chat" component={ChatScreen} />
+      <Stack.Screen name="OfficialStores" component={OfficialStoresScreen} />
+      <Stack.Screen name="StoreDetail" component={StoreDetailScreen} />
     </Stack.Navigator>
   );
 }
@@ -108,6 +115,7 @@ function ProfileStack() {
       <Stack.Screen name="Help" component={HelpScreen} />
       <Stack.Screen name="Terms" component={TermsScreen} />
       <Stack.Screen name="Language" component={LanguageScreen} />
+      <Stack.Screen name="RegisterOfficialStore" component={RegisterOfficialStoreScreen} />
     </Stack.Navigator>
   );
 }
