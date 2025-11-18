@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Image, Alert, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../contexts/AuthContext';
 import { getUserProfile, UserProfile } from '../../services/profile';
+import { getUserOfficialStore, getUserStoreApplication } from '../../services/officialStores';
+import type { OfficialStore, StoreApplication } from '../../types/officialStore';
 import { supabase } from '../../services/supabase';
 import { COLORS } from '../../constants/theme';
 
@@ -10,20 +13,37 @@ export default function ProfileScreen({ navigation }: any) {
   const { user, signOut } = useAuth();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [officialStore, setOfficialStore] = useState<OfficialStore | null>(null);
+  const [storeApplication, setStoreApplication] = useState<StoreApplication | null>(null);
 
   useEffect(() => {
     if (user) {
       loadProfile();
+      loadStoreData();
     }
   }, [user]);
 
   async function loadProfile() {
     if (!user) return;
-    
+
     setLoading(true);
     const data = await getUserProfile(user.id);
     setProfile(data);
     setLoading(false);
+  }
+
+  async function loadStoreData() {
+    if (!user) return;
+
+    // Check if user already has an official store
+    const store = await getUserOfficialStore(user.id);
+    setOfficialStore(store);
+
+    // If no store, check if there's a pending application
+    if (!store) {
+      const application = await getUserStoreApplication(user.id);
+      setStoreApplication(application);
+    }
   }
 
   function handleSignOut() {
@@ -177,7 +197,7 @@ export default function ProfileScreen({ navigation }: any) {
           </TouchableOpacity>
 
           {profile?.role === 'seller_individual' && (
-            <TouchableOpacity 
+            <TouchableOpacity
               onPress={() => navigation.navigate('MyProducts')}
               className="flex-row items-center justify-between py-3"
             >
@@ -190,6 +210,74 @@ export default function ProfileScreen({ navigation }: any) {
               </View>
               <Text className="text-gray-400">→</Text>
             </TouchableOpacity>
+          )}
+
+          {/* Tienda Oficial */}
+          {profile?.role === 'seller_individual' && (
+            <>
+              {officialStore ? (
+                // Ya tiene tienda oficial aprobada
+                <TouchableOpacity
+                  onPress={() => navigation.navigate('StoreDetail', { storeId: officialStore.id })}
+                  className="flex-row items-center justify-between py-3 bg-blue-50 rounded-xl px-3 mb-2"
+                >
+                  <View className="flex-row items-center flex-1">
+                    <View className="bg-blue-600 rounded-full p-2 mr-3">
+                      <Ionicons name="storefront" size={20} color="white" />
+                    </View>
+                    <View className="flex-1">
+                      <View className="flex-row items-center">
+                        <Text className="text-base font-bold text-gray-900">Mi Tienda Oficial</Text>
+                        <View className="bg-blue-600 rounded-full ml-2 px-2 py-0.5">
+                          <Text className="text-white text-xs font-bold">OFICIAL</Text>
+                        </View>
+                      </View>
+                      <Text className="text-sm text-gray-600">{officialStore.store_name}</Text>
+                    </View>
+                  </View>
+                  <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
+                </TouchableOpacity>
+              ) : storeApplication ? (
+                // Tiene aplicación pendiente
+                <TouchableOpacity
+                  onPress={() => navigation.navigate('RegisterOfficialStore')}
+                  className="flex-row items-center justify-between py-3 bg-yellow-50 rounded-xl px-3 mb-2"
+                >
+                  <View className="flex-row items-center flex-1">
+                    <View className="bg-yellow-500 rounded-full p-2 mr-3">
+                      <Ionicons name="time" size={20} color="white" />
+                    </View>
+                    <View className="flex-1">
+                      <Text className="text-base font-bold text-gray-900">Solicitud Enviada</Text>
+                      <Text className="text-sm text-gray-600">
+                        {storeApplication.status === 'pending' && 'Pendiente de revisión'}
+                        {storeApplication.status === 'under_review' && 'En revisión'}
+                        {storeApplication.status === 'approved' && 'Aprobada'}
+                        {storeApplication.status === 'rejected' && 'Rechazada'}
+                      </Text>
+                    </View>
+                  </View>
+                  <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
+                </TouchableOpacity>
+              ) : (
+                // Puede aplicar
+                <TouchableOpacity
+                  onPress={() => navigation.navigate('RegisterOfficialStore')}
+                  className="flex-row items-center justify-between py-3 border-2 border-blue-200 border-dashed rounded-xl px-3 mb-2"
+                >
+                  <View className="flex-row items-center flex-1">
+                    <View className="bg-blue-100 rounded-full p-2 mr-3">
+                      <Ionicons name="star" size={20} color="#2563EB" />
+                    </View>
+                    <View className="flex-1">
+                      <Text className="text-base font-bold text-blue-900">Convertirse en Tienda Oficial</Text>
+                      <Text className="text-sm text-blue-700">Badge verificado + más beneficios</Text>
+                    </View>
+                  </View>
+                  <Ionicons name="chevron-forward" size={20} color="#2563EB" />
+                </TouchableOpacity>
+              )}
+            </>
           )}
 
           {/* COMENTADO: Pendiente de implementar
