@@ -14,12 +14,15 @@ export default function Layout({ user, children }: LayoutProps) {
 
   const navigation = [
     { name: 'Dashboard', href: '/', icon: '📊' },
+    { name: 'Retiros', href: '/withdrawals', icon: '💰' },
+    { name: 'Categorías', href: '/categories', icon: '🏷️' },
     { name: 'Aplicaciones', href: '/applications', icon: '📝' },
     { name: 'Tiendas Oficiales', href: '/stores', icon: '🏪' },
     { name: 'Productos', href: '/products', icon: '📦' },
     { name: 'Destacados', href: '/featured-products', icon: '⭐' },
     { name: 'Banners', href: '/banners', icon: '🎨' },
     { name: 'Usuarios', href: '/users', icon: '👥' },
+    { name: 'Configuración', href: '/settings', icon: '⚙️' },
   ];
 
   async function handleSignOut() {
