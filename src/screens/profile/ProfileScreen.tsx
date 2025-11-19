@@ -167,7 +167,7 @@ export default function ProfileScreen({ navigation }: any) {
           
           {/* Dashboard Vendedor - SOLO SI ES VENDEDOR */}
           {profile?.role === 'seller_individual' && (
-            <TouchableOpacity 
+            <TouchableOpacity
               onPress={() => navigation.navigate('SellerDashboard')}
               className="flex-row items-center justify-between py-3"
             >
@@ -181,7 +181,24 @@ export default function ProfileScreen({ navigation }: any) {
               <Text className="text-gray-400">→</Text>
             </TouchableOpacity>
           )}
-          
+
+          {/* Mi Billetera - SOLO SI ES VENDEDOR */}
+          {profile?.role === 'seller_individual' && (
+            <TouchableOpacity
+              onPress={() => navigation.navigate('Wallet')}
+              className="flex-row items-center justify-between py-3"
+            >
+              <View className="flex-row items-center flex-1">
+                <Text className="text-2xl mr-3">💰</Text>
+                <View className="flex-1">
+                  <Text className="text-base font-medium text-gray-900">Mi Billetera</Text>
+                  <Text className="text-sm text-gray-500">Saldo y retiros</Text>
+                </View>
+              </View>
+              <Text className="text-gray-400">→</Text>
+            </TouchableOpacity>
+          )}
+
           <TouchableOpacity 
             onPress={() => navigation.navigate('MyOrders')}
             className="flex-row items-center justify-between py-3"

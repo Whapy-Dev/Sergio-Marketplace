@@ -49,6 +49,12 @@ import PaymentPendingScreen from '../screens/checkout/PaymentPendingScreen';
 import PaymentSuccessScreen from '../screens/checkout/PaymentSuccessScreen';
 import PaymentFailureScreen from '../screens/checkout/PaymentFailureScreen';
 
+// Screens - Wallet
+import WalletScreen from '../screens/wallet/WalletScreen';
+import BankingDetailsScreen from '../screens/wallet/BankingDetailsScreen';
+import RequestWithdrawalScreen from '../screens/wallet/RequestWithdrawalScreen';
+import WithdrawalHistoryScreen from '../screens/wallet/WithdrawalHistoryScreen';
+
 // Screens - Auth
 import LoginScreen from '../screens/auth/LoginScreen';
 import RegisterScreen from '../screens/auth/RegisterScreen';
@@ -113,6 +119,10 @@ function ProfileStack() {
       <Stack.Screen name="SellerAnalytics" component={SellerAnalyticsScreen} />
       <Stack.Screen name="SellerOrders" component={SellerOrdersScreen} />
       <Stack.Screen name="SellerOrderDetail" component={OrderDetailScreen} />
+      <Stack.Screen name="Wallet" component={WalletScreen} />
+      <Stack.Screen name="BankingDetails" component={BankingDetailsScreen} />
+      <Stack.Screen name="RequestWithdrawal" component={RequestWithdrawalScreen} />
+      <Stack.Screen name="WithdrawalHistory" component={WithdrawalHistoryScreen} />
       <Stack.Screen name="Notifications" component={NotificationsScreen} />
       <Stack.Screen name="DeleteAccount" component={DeleteAccountScreen} />
       <Stack.Screen name="Help" component={HelpScreen} />

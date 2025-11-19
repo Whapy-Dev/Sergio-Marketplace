@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import { calculateCommission } from './wallet';
 
 export interface Order {
   id: string;
@@ -56,6 +57,7 @@ export interface CreateOrderData {
     quantity: number;
     unit_price: number;
     seller_id?: string;
+    category_id?: string; // For commission calculation
     shipping_address?: string; // Each item can have its own shipping address
   }[];
   payment_method?: string;
@@ -63,7 +65,7 @@ export interface CreateOrderData {
 }
 
 /**
- * Create a new order
+ * Create a new order with automatic commission calculation
  */
 export async function createOrder(data: CreateOrderData): Promise<Order | null> {
   try {
@@ -94,23 +96,50 @@ export async function createOrder(data: CreateOrderData): Promise<Order | null> 
 
     if (orderError) throw orderError;
 
-    // Create order items
-    const items = data.items.map(item => ({
-      order_id: order.id,
-      seller_id: item.seller_id,
-      product_id: item.product_id,
-      product_name: item.product_name,
-      product_image_url: item.product_image_url,
-      quantity: item.quantity,
-      unit_price: item.unit_price,
-      subtotal: item.unit_price * item.quantity,
-      shipping_address: item.shipping_address,
-      shipping_status: 'pending',
-    }));
+    // Create order items with commission calculation
+    const itemsWithCommissions = await Promise.all(
+      data.items.map(async (item) => {
+        // If no category_id provided, fetch from product
+        let categoryId = item.category_id;
+        if (!categoryId && item.product_id) {
+          const { data: product } = await supabase
+            .from('products')
+            .select('category_id')
+            .eq('id', item.product_id)
+            .single();
+          categoryId = product?.category_id;
+        }
+
+        // Calculate commission
+        const commission = await calculateCommission(
+          item.product_id,
+          item.seller_id || '',
+          categoryId || '',
+          item.unit_price,
+          item.quantity
+        );
+
+        return {
+          order_id: order.id,
+          seller_id: item.seller_id,
+          product_id: item.product_id,
+          product_name: item.product_name,
+          product_image_url: item.product_image_url,
+          quantity: item.quantity,
+          unit_price: item.unit_price,
+          subtotal: commission?.subtotal || item.unit_price * item.quantity,
+          commission_rate: commission?.commission_rate || 0,
+          commission_amount: commission?.commission_amount || 0,
+          seller_payout: commission?.seller_payout || item.unit_price * item.quantity,
+          shipping_address: item.shipping_address,
+          shipping_status: 'pending',
+        };
+      })
+    );
 
     const { error: itemsError } = await supabase
       .from('order_items')
-      .insert(items);
+      .insert(itemsWithCommissions);
 
     if (itemsError) throw itemsError;
 
