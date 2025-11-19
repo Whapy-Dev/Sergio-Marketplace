@@ -4,21 +4,33 @@ export interface Order {
   id: string;
   order_number: string;
   buyer_id: string;
-  total: number;
+  seller_id?: string;
+  status: 'pending' | 'paid' | 'processing' | 'shipped' | 'delivered' | 'cancelled' | 'refunded';
+  payment_method: 'mercadopago' | 'cash' | 'transfer' | 'other';
   subtotal: number;
-  shipping_total: number;
-  discount_total: number;
-  tax_total: number;
-  status: 'pending' | 'confirmed' | 'shipped' | 'delivered' | 'cancelled';
-  payment_method: string;
-  payment_status: 'pending' | 'paid' | 'failed';
-  payment_id?: string;
-  invoice_number?: string;
-  invoice_url?: string;
+  shipping_cost: number;
+  tax: number;
+  discount: number;
+  total: number;
+  buyer_name?: string;
+  buyer_email?: string;
+  buyer_phone?: string;
+  shipping_address?: string;
+  shipping_city?: string;
+  shipping_state?: string;
+  shipping_postal_code?: string;
+  shipping_country?: string;
+  mercadopago_payment_id?: string;
+  mercadopago_preference_id?: string;
+  mercadopago_status?: string;
+  tracking_number?: string;
+  carrier?: string;
   buyer_notes?: string;
-  admin_notes?: string;
-  payment_metadata?: any;
-  fiscal_data?: any;
+  seller_notes?: string;
+  paid_at?: string;
+  shipped_at?: string;
+  delivered_at?: string;
+  cancelled_at?: string;
   created_at: string;
   updated_at: string;
 }
@@ -26,329 +38,250 @@ export interface Order {
 export interface OrderItem {
   id: string;
   order_id: string;
-  product_id: string;
-  seller_id: string;
+  product_id?: string;
+  product_name: string;
+  product_description?: string;
+  product_image_url?: string;
   quantity: number;
   unit_price: number;
   subtotal: number;
-  product_name: string;
-  product_image_url?: string;
-  variant_id?: string;
-  variant_name?: string;
-  commission_rate: number;
-  commission_amount: number;
-  seller_payout: number;
-  shipping_cost: number;
-  shipping_status?: string;
-  tracking_number?: string;
-  carrier?: string;
-  shipping_address?: any;
+  seller_id?: string;
+  created_at: string;
 }
 
 export interface CreateOrderData {
   buyer_id: string;
   items: {
     product_id: string;
-    seller_id: string;
     product_name: string;
+    product_description?: string;
     product_image_url?: string;
     quantity: number;
     unit_price: number;
+    seller_id?: string;
   }[];
-  payment_method: 'cash' | 'transfer' | 'mercadopago';
+  buyer_name?: string;
+  buyer_email?: string;
+  buyer_phone?: string;
+  shipping_address?: string;
+  shipping_city?: string;
+  shipping_state?: string;
+  shipping_postal_code?: string;
   buyer_notes?: string;
 }
 
-// Generar número de orden único
-function generateOrderNumber(): string {
-  const timestamp = Date.now().toString().slice(-8);
-  const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-  return `ORD-${timestamp}-${random}`;
-}
-
-// Crear orden
-export async function createOrder(orderData: CreateOrderData) {
+/**
+ * Create a new order
+ */
+export async function createOrder(data: CreateOrderData): Promise<Order | null> {
   try {
-    // 1. Calcular totales
-    const subtotal = orderData.items.reduce((sum, item) => sum + (item.unit_price * item.quantity), 0);
-    const shipping_total = 0; // Envío gratis
-    const discount_total = 0;
-    const tax_total = 0;
-    const total = subtotal + shipping_total - discount_total + tax_total;
+    // Calculate totals
+    const subtotal = data.items.reduce((sum, item) => sum + (item.unit_price * item.quantity), 0);
+    const shipping_cost = 0; // TODO: Calculate based on location
+    const tax = 0; // TODO: Calculate tax if needed
+    const discount = 0; // TODO: Apply discount if any
+    const total = subtotal + shipping_cost + tax - discount;
 
-    // 2. Crear orden
+    // Get seller_id from first item (assuming all items from same seller for now)
+    const seller_id = data.items[0]?.seller_id;
+
+    // Create order
     const { data: order, error: orderError } = await supabase
       .from('orders')
-      .insert([{
-        order_number: generateOrderNumber(),
-        buyer_id: orderData.buyer_id,
-        total,
-        subtotal,
-        shipping_total,
-        discount_total,
-        tax_total,
+      .insert({
+        buyer_id: data.buyer_id,
+        seller_id,
         status: 'pending',
-        payment_method: orderData.payment_method,
-        payment_status: 'pending',
-        buyer_notes: orderData.buyer_notes || null,
-      }])
+        payment_method: 'mercadopago',
+        subtotal,
+        shipping_cost,
+        tax,
+        discount,
+        total,
+        buyer_name: data.buyer_name,
+        buyer_email: data.buyer_email,
+        buyer_phone: data.buyer_phone,
+        shipping_address: data.shipping_address,
+        shipping_city: data.shipping_city,
+        shipping_state: data.shipping_state,
+        shipping_postal_code: data.shipping_postal_code,
+        buyer_notes: data.buyer_notes,
+      })
       .select()
       .single();
 
-    if (orderError) {
-      console.error('Error creating order:', orderError);
-      return { success: false, error: orderError.message };
-    }
+    if (orderError) throw orderError;
 
-    // 3. Crear items de la orden
-    const commission_rate = 0.10; // 10% de comisión
-    
-    const orderItems = orderData.items.map(item => {
-      const item_subtotal = item.unit_price * item.quantity;
-      const commission = item_subtotal * commission_rate;
-      const seller_payout = item_subtotal - commission;
-
-      return {
-        order_id: order.id,
-        product_id: item.product_id,
-        seller_id: item.seller_id,
-        product_name: item.product_name,
-        product_image_url: item.product_image_url || null,
-        quantity: item.quantity,
-        unit_price: item.unit_price,
-        subtotal: item_subtotal,
-        commission_rate,
-        commission_amount: commission,
-        seller_payout,
-        shipping_cost: 0,
-        shipping_status: 'pending',
-        shipping_address: null, // ← NULL porque es opcional
-      };
-    });
+    // Create order items
+    const items = data.items.map(item => ({
+      order_id: order.id,
+      product_id: item.product_id,
+      product_name: item.product_name,
+      product_description: item.product_description,
+      product_image_url: item.product_image_url,
+      quantity: item.quantity,
+      unit_price: item.unit_price,
+      subtotal: item.unit_price * item.quantity,
+      seller_id: item.seller_id,
+    }));
 
     const { error: itemsError } = await supabase
       .from('order_items')
-      .insert(orderItems);
+      .insert(items);
 
-    if (itemsError) {
-      console.error('Error creating order items:', itemsError);
-      // Revertir orden
-      await supabase.from('orders').delete().eq('id', order.id);
-      return { success: false, error: itemsError.message };
-    }
+    if (itemsError) throw itemsError;
 
-    // 4. Actualizar stock de productos
-    for (const item of orderData.items) {
-      const { data: product } = await supabase
-        .from('products')
-        .select('stock')
-        .eq('id', item.product_id)
-        .single();
-
-      if (product) {
-        await supabase
-          .from('products')
-          .update({ stock: product.stock - item.quantity })
-          .eq('id', item.product_id);
-      }
-    }
-
-    return { success: true, data: order };
-  } catch (error: any) {
-    console.error('Error:', error);
-    return { success: false, error: error.message };
-  }
-}
-
-// Obtener órdenes del usuario
-export async function getUserOrders(userId: string) {
-  try {
-    const { data, error } = await supabase
-      .from('orders')
-      .select(`
-        *,
-        order_items(
-          id,
-          quantity,
-          unit_price,
-          subtotal,
-          product_name,
-          product_image_url
-        )
-      `)
-      .eq('buyer_id', userId)
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      console.error('Error fetching orders:', error);
-      return [];
-    }
-
-    return data as Order[];
+    return order;
   } catch (error) {
-    console.error('Error:', error);
-    return [];
-  }
-}
-
-// Obtener orden por ID
-export async function getOrderById(orderId: string) {
-  try {
-    const { data, error } = await supabase
-      .from('orders')
-      .select(`
-        *,
-        order_items(
-          id,
-          quantity,
-          unit_price,
-          subtotal,
-          product_name,
-          product_image_url,
-          shipping_status,
-          tracking_number
-        ),
-        profiles!orders_buyer_id_fkey(
-          full_name,
-          phone,
-          email
-        )
-      `)
-      .eq('id', orderId)
-      .single();
-
-    if (error) {
-      console.error('Error fetching order:', error);
-      return null;
-    }
-
-    return data;
-  } catch (error) {
-    console.error('Error:', error);
+    console.error('Error creating order:', error);
     return null;
   }
 }
 
-// Actualizar estado de orden
-export async function updateOrderStatus(orderId: string, status: Order['status']) {
+/**
+ * Get order by ID with items
+ */
+export async function getOrderById(orderId: string): Promise<(Order & { items: OrderItem[] }) | null> {
   try {
-    const { data, error } = await supabase
+    const { data: order, error: orderError } = await supabase
       .from('orders')
-      .update({ 
-        status,
-        updated_at: new Date().toISOString()
-      })
+      .select('*')
       .eq('id', orderId)
-      .select()
       .single();
 
-    if (error) {
-      console.error('Error updating order status:', error);
-      return { success: false, error: error.message };
-    }
+    if (orderError) throw orderError;
 
-    return { success: true, data };
-  } catch (error: any) {
-    console.error('Error:', error);
-    return { success: false, error: error.message };
-  }
-}
-
-// Cancelar orden
-export async function cancelOrder(orderId: string) {
-  try {
-    // Obtener items de la orden para restaurar stock
-    const { data: orderItems } = await supabase
+    const { data: items, error: itemsError } = await supabase
       .from('order_items')
-      .select('product_id, quantity')
+      .select('*')
       .eq('order_id', orderId);
 
-    // Restaurar stock
-    if (orderItems) {
-      for (const item of orderItems) {
-        const { data: product } = await supabase
-          .from('products')
-          .select('stock')
-          .eq('id', item.product_id)
-          .single();
+    if (itemsError) throw itemsError;
 
-        if (product) {
-          await supabase
-            .from('products')
-            .update({ stock: product.stock + item.quantity })
-            .eq('id', item.product_id);
-        }
-      }
-    }
-
-    // Actualizar estado
-    const { data, error } = await supabase
-      .from('orders')
-      .update({ 
-        status: 'cancelled',
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', orderId)
-      .select()
-      .single();
-
-    if (error) {
-      console.error('Error cancelling order:', error);
-      return { success: false, error: error.message };
-    }
-
-    return { success: true, data };
-  } catch (error: any) {
-    console.error('Error:', error);
-    return { success: false, error: error.message };
+    return { ...order, items: items || [] };
+  } catch (error) {
+    console.error('Error fetching order:', error);
+    return null;
   }
 }
 
-// Obtener órdenes del vendedor
-export async function getSellerOrders(sellerId: string) {
+/**
+ * Get user's orders (as buyer)
+ */
+export async function getUserOrders(userId: string): Promise<Order[]> {
   try {
     const { data, error } = await supabase
-      .from('order_items')
-      .select(`
-        *,
-        orders!inner(
-          id,
-          order_number,
-          buyer_id,
-          total,
-          status,
-          payment_status,
-          created_at,
-          profiles!orders_buyer_id_fkey(
-            full_name,
-            phone
-          )
-        )
-      `)
-      .eq('seller_id', sellerId)
+      .from('orders')
+      .select('*')
+      .eq('buyer_id', userId)
       .order('created_at', { ascending: false });
 
-    if (error) {
-      console.error('Error fetching seller orders:', error);
-      return [];
-    }
+    if (error) throw error;
 
-    // Agrupar items por orden
-    const ordersMap = new Map();
-    data?.forEach((item: any) => {
-      const orderId = item.orders.id;
-      if (!ordersMap.has(orderId)) {
-        ordersMap.set(orderId, {
-          ...item.orders,
-          order_items: []
-        });
-      }
-      ordersMap.get(orderId).order_items.push(item);
-    });
-
-    return Array.from(ordersMap.values());
+    return data || [];
   } catch (error) {
-    console.error('Error:', error);
+    console.error('Error fetching user orders:', error);
+    return [];
+  }
+}
+
+/**
+ * Get seller's orders
+ */
+export async function getSellerOrders(sellerId: string): Promise<Order[]> {
+  try {
+    const { data, error } = await supabase
+      .from('orders')
+      .select('*')
+      .eq('seller_id', sellerId)
+      .order('created_at', { ascending: false});
+
+    if (error) throw error;
+
+    return data || [];
+  } catch (error) {
+    console.error('Error fetching seller orders:', error);
+    return [];
+  }
+}
+
+/**
+ * Update order status
+ */
+export async function updateOrderStatus(
+  orderId: string,
+  status: Order['status'],
+  notes?: string
+): Promise<boolean> {
+  try {
+    const updateData: any = { status };
+
+    // Set timestamp based on status
+    if (status === 'paid') updateData.paid_at = new Date().toISOString();
+    if (status === 'shipped') updateData.shipped_at = new Date().toISOString();
+    if (status === 'delivered') updateData.delivered_at = new Date().toISOString();
+    if (status === 'cancelled') updateData.cancelled_at = new Date().toISOString();
+
+    if (notes) updateData.seller_notes = notes;
+
+    const { error } = await supabase
+      .from('orders')
+      .update(updateData)
+      .eq('id', orderId);
+
+    if (error) throw error;
+
+    return true;
+  } catch (error) {
+    console.error('Error updating order status:', error);
+    return false;
+  }
+}
+
+/**
+ * Update order with MercadoPago info
+ */
+export async function updateOrderPayment(
+  orderId: string,
+  paymentData: {
+    mercadopago_payment_id?: string;
+    mercadopago_preference_id?: string;
+    mercadopago_status?: string;
+    mercadopago_status_detail?: string;
+    status?: Order['status'];
+  }
+): Promise<boolean> {
+  try {
+    const { error } = await supabase
+      .from('orders')
+      .update(paymentData)
+      .eq('id', orderId);
+
+    if (error) throw error;
+
+    return true;
+  } catch (error) {
+    console.error('Error updating order payment:', error);
+    return false;
+  }
+}
+
+/**
+ * Get all orders (for admin/CRM)
+ */
+export async function getAllOrders(limit: number = 100): Promise<Order[]> {
+  try {
+    const { data, error } = await supabase
+      .from('orders')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(limit);
+
+    if (error) throw error;
+
+    return data || [];
+  } catch (error) {
+    console.error('Error fetching all orders:', error);
     return [];
   }
 }
