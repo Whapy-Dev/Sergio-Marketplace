@@ -102,10 +102,44 @@ export interface Banner {
 }
 
 export interface DashboardStats {
+  // Users & Stores
   totalUsers: number;
-  totalProducts: number;
-  totalOrders: number;
-  totalRevenue: number;
+  totalSellers: number;
+  totalBuyers: number;
   activeStores: number;
   pendingApplications: number;
+
+  // Products
+  totalProducts: number;
+  activeProducts: number;
+  pausedProducts: number;
+  outOfStockProducts: number;
+
+  // Orders
+  totalOrders: number;
+  completedOrders: number;
+  processingOrders: number;
+  cancelledOrders: number;
+
+  // Financial - Marketplace Revenue (Comisiones)
+  totalMarketplaceRevenue: number; // Total comisiones acumuladas
+  monthlyMarketplaceRevenue: number; // Comisiones del mes actual
+  pendingCommissions: number; // Comisiones de órdenes en proceso
+
+  // Financial - Sellers
+  totalAvailableBalance: number; // Total disponible para retiros
+  totalPendingBalance: number; // Total en proceso (órdenes)
+  totalWithdrawn: number; // Total retirado históricamente
+
+  // Withdrawals
+  pendingWithdrawals: number;
+  pendingWithdrawalsAmount: number;
+  processingWithdrawals: number;
+  processingWithdrawalsAmount: number;
+  completedWithdrawalsThisMonth: number;
+  completedWithdrawalsAmountThisMonth: number;
+
+  // Revenue
+  totalRevenue: number; // Total de todas las ventas
+  monthlyRevenue: number; // Ventas del mes actual
 }
