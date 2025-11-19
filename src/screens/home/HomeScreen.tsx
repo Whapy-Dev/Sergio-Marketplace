@@ -40,11 +40,14 @@ export default function HomeScreen({ navigation }: any) {
     setLoadingBanners(false);
   }
 
-  // Separar banners para diferentes secciones
-  const carouselBanners = banners.slice(0, 3); // Primeros 3 para carrusel
-  const intermediateBanners = banners.slice(3, 6); // Siguientes 3 para secciones intermedias
-  const banner1 = intermediateBanners[0]; // Después de Tiendas Oficiales
-  const banner2 = intermediateBanners[1]; // Después de Nuestros elegidos
+  // Banners solo en posiciones intermedias (configurables desde CRM)
+  // Todos los banners activos se distribuyen entre las secciones
+  const banner1 = banners[0]; // Después de Tiendas Oficiales
+  const banner2 = banners[1]; // Después de Nuestros elegidos
+  const banner3 = banners[2]; // Después de productos
+  const banner4 = banners[3]; // Otro más si existe
+  const banner5 = banners[4]; // Otro más si existe
+  const banner6 = banners[5]; // Otro más si existe
 
   // Animación del header
   const scrollY = useRef(new Animated.Value(0)).current;
@@ -204,40 +207,22 @@ export default function HomeScreen({ navigation }: any) {
             </TouchableOpacity>
           </View>
 
-          {/* Banners Dinámicos - Carrusel */}
-          {!loadingBanners && carouselBanners.length > 0 ? (
-            <View style={{ marginTop: -16 }}>
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                snapToInterval={320}
-                decelerationRate="fast"
-                contentContainerStyle={{ paddingHorizontal: 16 }}
-              >
-                {carouselBanners.map((banner) => (
-                  <View key={banner.id} style={{ width: 320, paddingRight: 16 }}>
-                    <BannerCard banner={banner} onPress={handleBannerPress} />
-                  </View>
-                ))}
-              </ScrollView>
-            </View>
-          ) : !loadingBanners && carouselBanners.length === 0 ? (
-            <View className="px-4">
-              <View className="relative" style={{ height: 160 }}>
-                <View className="absolute left-0 top-3 z-10" style={{ maxWidth: '55%' }}>
-                  <Text className="text-white text-xl font-bold mb-1">
-                    Hasta 40% OFF
-                  </Text>
-                  <Text className="text-white text-xs leading-4">
-                    La manera más práctica de hacer tus compras del súper
-                  </Text>
-                </View>
-                <View className="absolute right-0 bottom-0" style={{ opacity: 0.3 }}>
-                  <Ionicons name="cart" size={110} color="white" />
-                </View>
+          {/* Hero estático - sin banners */}
+          <View className="px-4">
+            <View className="relative" style={{ height: 160 }}>
+              <View className="absolute left-0 top-3 z-10" style={{ maxWidth: '55%' }}>
+                <Text className="text-white text-xl font-bold mb-1">
+                  Hasta 40% OFF
+                </Text>
+                <Text className="text-white text-xs leading-4">
+                  La manera más práctica de hacer tus compras del súper
+                </Text>
+              </View>
+              <View className="absolute right-0 bottom-0" style={{ opacity: 0.3 }}>
+                <Ionicons name="cart" size={110} color="white" />
               </View>
             </View>
-          ) : null}
+          </View>
         </LinearGradient>
         </Animated.View>
 
@@ -676,6 +661,13 @@ export default function HomeScreen({ navigation }: any) {
           </View>
         )}
 
+        {/* BANNER DINÁMICO 3 - Después de Nuestros Productos */}
+        {banner3 && (
+          <View className="px-4 mb-1">
+            <BannerCard banner={banner3} onPress={handleBannerPress} />
+          </View>
+        )}
+
         {/* NUESTROS PRODUCTOS */}
         <View className="bg-white py-4 mb-1">
           <Text className="text-lg font-bold text-gray-900 px-4 mb-3">Nuestros Productos</Text>
@@ -760,6 +752,13 @@ export default function HomeScreen({ navigation }: any) {
           ) : null}
         </View>
 
+        {/* BANNER DINÁMICO 4 - Antes de Marketplace */}
+        {banner4 && (
+          <View className="px-4 mb-1">
+            <BannerCard banner={banner4} onPress={handleBannerPress} />
+          </View>
+        )}
+
         {/* MARKETPLACE */}
         <View className="bg-white py-4 mb-1">
           <Text className="text-lg font-bold text-gray-900 px-4 mb-3">Marketplace</Text>
@@ -801,6 +800,13 @@ export default function HomeScreen({ navigation }: any) {
             </ScrollView>
           ) : null}
         </View>
+
+        {/* BANNER DINÁMICO 5 - Antes de También puede interesarte */}
+        {banner5 && (
+          <View className="px-4 mb-1">
+            <BannerCard banner={banner5} onPress={handleBannerPress} />
+          </View>
+        )}
 
         {/* TAMBIÉN PUEDE INTERESARTE */}
         <View className="bg-white py-4 mb-1">
@@ -855,6 +861,13 @@ export default function HomeScreen({ navigation }: any) {
             </ScrollView>
           ) : null}
         </View>
+
+        {/* BANNER DINÁMICO 6 - Antes del Footer */}
+        {banner6 && (
+          <View className="px-4 mt-1 mb-4">
+            <BannerCard banner={banner6} onPress={handleBannerPress} />
+          </View>
+        )}
 
         {/* FOOTER */}
         <View className="bg-gray-100 mt-4" style={{ borderTopLeftRadius: 70, borderTopRightRadius: 70, paddingBottom: 90 }}>

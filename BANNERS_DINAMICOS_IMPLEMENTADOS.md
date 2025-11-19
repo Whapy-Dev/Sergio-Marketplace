@@ -1,27 +1,26 @@
-# Banners Dinámicos - Implementación Completa
+# Banners Dinámicos - Implementación Completa ✅
 
-## ✅ Implementación Finalizada
+## 🎯 Configuración Actual
 
-Los banners dinámicos están **100% funcionales** con diseños adaptativos según el tipo de banner.
-
----
-
-## 📍 Configuración Actual
+**TODOS los banners son configurables desde el CRM** - No hay banners estáticos en posiciones intermedias.
 
 ### Ubicaciones de Banners
 
-1. **Carrusel Superior** (debajo de barra de búsqueda)
-   - **Cantidad**: Primeros 3 banners
-   - **Tipo**: Horizontal scrolleable
-   - **Diseño**: Adaptativo según `link_type`
+Los banners se distribuyen automáticamente en **6 posiciones estratégicas** a lo largo del home:
 
-2. **Banner Intermedio 1** (después de "Tiendas Oficiales")
-   - **Posición**: Banner #4 de la BD
-   - **Diseño**: Adaptativo según `link_type`
+1. **Banner 1** - Después de "Tiendas Oficiales"
+2. **Banner 2** - Después de "Nuestros elegidos del momento"
+3. **Banner 3** - Después de "Nuestros Productos"
+4. **Banner 4** - Antes de "Marketplace"
+5. **Banner 5** - Antes de "También puede interesarte"
+6. **Banner 6** - Antes del Footer
 
-3. **Banner Intermedio 2** (después de "Nuestros elegidos del momento")
-   - **Posición**: Banner #5 de la BD
-   - **Diseño**: Adaptativo según `link_type`
+### Carrusel Superior (Header)
+
+**NO hay banners** en el carrusel superior para:
+- ✅ No interferir con la barra de búsqueda
+- ✅ Mantener armonía con el gradiente del header
+- ✅ Vista más profesional y limpia
 
 ### Filtrado y Límites
 
@@ -255,48 +254,56 @@ VALUES (
 
 ## 📱 Vista en la App Mobile
 
-### Carrusel Superior
-- ScrollView horizontal con 3 banners
-- Snap automático a cada banner
-- Diseño adaptado al tipo
+### Hero del Header
+- **Card estática** con mensaje "Hasta 40% OFF"
+- **Sin banners** para mantener diseño limpio
+- Integrado con gradiente del header
 
-### Banners Intermedios
-- Después de Tiendas Oficiales: Banner #4
-- Después de Nuestros elegidos: Banner #5
+### Banners Intermedios (100% Configurables desde CRM)
+- **6 posiciones** distribuidas estratégicamente
+- Aparecen **solo si existen** en la BD
+- **Diseños adaptativos** según `link_type`
 - Padding horizontal de 16px
+- **Ordenamiento**: Por `display_order` de la BD
 
 ---
 
 ## ⚙️ Configuración Avanzada
 
-### Cambiar Número de Banners
+### Cambiar Número Máximo de Banners
 Edita `src/screens/home/HomeScreen.tsx`:
 ```typescript
 // Línea ~38
 const activeBanners = await getActiveBanners(6); // Cambiar 6 por otro número
 ```
 
-### Cambiar Posiciones de Banners Intermedios
-Edita `src/screens/home/HomeScreen.tsx`:
+### Distribución de Banners
+Los banners se asignan automáticamente:
 ```typescript
-// Línea ~44-47
-const carouselBanners = banners.slice(0, 3); // Primeros 3
-const intermediateBanners = banners.slice(3, 6); // Del 4 al 6
-const banner1 = intermediateBanners[0]; // Banner #4
-const banner2 = intermediateBanners[1]; // Banner #5
+// Línea ~43-50
+const banner1 = banners[0]; // Posición 1
+const banner2 = banners[1]; // Posición 2
+const banner3 = banners[2]; // Posición 3
+const banner4 = banners[3]; // Posición 4
+const banner5 = banners[4]; // Posición 5
+const banner6 = banners[5]; // Posición 6
 ```
 
-### Agregar Más Posiciones Intermedias
+**Ejemplo**: Si solo hay 3 banners activos en la BD:
+- Solo aparecerán `banner1`, `banner2` y `banner3`
+- Los demás NO se mostrarán
+
+### Agregar Más Posiciones
 1. Definir nuevo banner:
 ```typescript
-const banner3 = intermediateBanners[2]; // Banner #6
+const banner7 = banners[6]; // Banner #7
 ```
 
-2. Insertar en la posición deseada:
+2. Insertar en la posición deseada del ScrollView:
 ```jsx
-{banner3 && (
-  <View className="px-4">
-    <BannerCard banner={banner3} onPress={handleBannerPress} />
+{banner7 && (
+  <View className="px-4 mb-1">
+    <BannerCard banner={banner7} onPress={handleBannerPress} />
   </View>
 )}
 ```
@@ -331,11 +338,26 @@ ORDER BY display_order;
 
 ## 🚀 Estado Final
 
-- ✅ Carrusel superior dinámico
-- ✅ 2 banners intermedios en posiciones específicas
+- ✅ **6 posiciones** de banners configurables desde CRM
+- ✅ **Hero del header estático** (sin banners)
 - ✅ Diseños adaptativos (4 variantes)
 - ✅ Filtrado por fechas funcionando
-- ✅ Límite de 6 banners
+- ✅ Límite de 6 banners activos
+- ✅ Aparición condicional (solo si existen)
 - ✅ Todo pusheado a GitHub
 
-**¡Banners dinámicos listos para producción!** 🎉
+**¡Banners dinámicos 100% configurables desde CRM!** 🎉
+
+---
+
+## 📝 Notas Importantes
+
+1. **NO hay banners en el header** - El carrusel superior fue removido para mantener diseño profesional
+
+2. **Todos los banners son opcionales** - Si no hay banners en la BD, el home funciona perfectamente sin ellos
+
+3. **Máximo 6 banners simultáneos** - Puedes tener más en la BD, pero solo se mostrarán los primeros 6 por `display_order`
+
+4. **Gestión desde CRM** - Página `/banners` del CRM para crear, editar y eliminar banners
+
+5. **Fechas opcionales** - Si no configuras `starts_at` y `ends_at`, el banner estará siempre activo
