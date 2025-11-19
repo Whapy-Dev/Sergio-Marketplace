@@ -16,8 +16,12 @@ export interface Banner {
 
 /**
  * Get active banners for display in the home screen
+ * Filters by:
+ * - is_active = true
+ * - Current date between starts_at and ends_at (or null dates)
+ * Limits to first 6 banners ordered by display_order
  */
-export async function getActiveBanners(): Promise<Banner[]> {
+export async function getActiveBanners(limit: number = 6): Promise<Banner[]> {
   try {
     const now = new Date().toISOString();
 
@@ -28,11 +32,29 @@ export async function getActiveBanners(): Promise<Banner[]> {
       .or(`starts_at.is.null,starts_at.lte.${now}`)
       .or(`ends_at.is.null,ends_at.gte.${now}`)
       .order('display_order', { ascending: true })
-      .order('created_at', { ascending: false });
+      .limit(limit);
 
-    if (error) throw error;
+    if (error) {
+      console.error('Error fetching active banners:', error);
+      return [];
+    }
 
-    return data || [];
+    // Additional client-side filtering to ensure date ranges are correct
+    const filteredData = (data || []).filter(banner => {
+      const startsAt = banner.starts_at ? new Date(banner.starts_at) : null;
+      const endsAt = banner.ends_at ? new Date(banner.ends_at) : null;
+      const currentDate = new Date();
+
+      // If starts_at exists, check if we're past that date
+      if (startsAt && currentDate < startsAt) return false;
+
+      // If ends_at exists, check if we haven't passed that date
+      if (endsAt && currentDate > endsAt) return false;
+
+      return true;
+    });
+
+    return filteredData;
   } catch (error) {
     console.error('Error fetching active banners:', error);
     return [];

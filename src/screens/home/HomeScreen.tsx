@@ -8,7 +8,7 @@ import { useProducts } from '../../hooks/useProducts';
 import { getOfficialStores } from '../../services/officialStores';
 import type { OfficialStore } from '../../types/officialStore';
 import { getActiveBanners, type Banner } from '../../services/banners';
-import BannerCarousel from '../../components/BannerCarousel';
+import BannerCard from '../../components/BannerCard';
 import { COLORS } from '../../constants/theme';
 
 export default function HomeScreen({ navigation }: any) {
@@ -35,10 +35,16 @@ export default function HomeScreen({ navigation }: any) {
 
   async function loadBanners() {
     setLoadingBanners(true);
-    const activeBanners = await getActiveBanners();
+    const activeBanners = await getActiveBanners(6); // Máximo 6 banners
     setBanners(activeBanners);
     setLoadingBanners(false);
   }
+
+  // Separar banners para diferentes secciones
+  const carouselBanners = banners.slice(0, 3); // Primeros 3 para carrusel
+  const intermediateBanners = banners.slice(3, 6); // Siguientes 3 para secciones intermedias
+  const banner1 = intermediateBanners[0]; // Después de Tiendas Oficiales
+  const banner2 = intermediateBanners[1]; // Después de Nuestros elegidos
 
   // Animación del header
   const scrollY = useRef(new Animated.Value(0)).current;
@@ -198,12 +204,24 @@ export default function HomeScreen({ navigation }: any) {
             </TouchableOpacity>
           </View>
 
-          {/* Banner Carousel Dinámico */}
-          {!loadingBanners && banners.length > 0 ? (
+          {/* Banners Dinámicos - Carrusel */}
+          {!loadingBanners && carouselBanners.length > 0 ? (
             <View style={{ marginTop: -16 }}>
-              <BannerCarousel banners={banners} onBannerPress={handleBannerPress} />
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                snapToInterval={320}
+                decelerationRate="fast"
+                contentContainerStyle={{ paddingHorizontal: 16 }}
+              >
+                {carouselBanners.map((banner) => (
+                  <View key={banner.id} style={{ width: 320, paddingRight: 16 }}>
+                    <BannerCard banner={banner} onPress={handleBannerPress} />
+                  </View>
+                ))}
+              </ScrollView>
             </View>
-          ) : !loadingBanners && banners.length === 0 ? (
+          ) : !loadingBanners && carouselBanners.length === 0 ? (
             <View className="px-4">
               <View className="relative" style={{ height: 160 }}>
                 <View className="absolute left-0 top-3 z-10" style={{ maxWidth: '55%' }}>
@@ -368,38 +386,12 @@ export default function HomeScreen({ navigation }: any) {
           )}
         </View>
 
-        {/* BANNER PUBLICITARIO 1 */}
-        <View className="px-4 mb-1">
-          <LinearGradient
-            colors={['#FF6B6B', '#FF8E8E']}
-            className="rounded-3xl p-5 relative overflow-hidden"
-            style={{ height: 150 }}
-          >
-            <View style={{ maxWidth: '60%' }}>
-              <Text className="text-white text-xs font-semibold mb-1 uppercase">
-                HASTA EL 15 DE NOVIEMBRE
-              </Text>
-              <Text className="text-white text-lg font-bold leading-6">
-                Grandes ofertas en electrodomésticos
-              </Text>
-            </View>
-            <View className="absolute bottom-3 right-5" style={{
-              backgroundColor: 'rgba(255,255,255,0.95)',
-              paddingHorizontal: 20,
-              paddingVertical: 10,
-              borderRadius: 20
-            }}>
-              <Text className="font-bold" style={{ color: '#FF6B6B', fontSize: 24 }}>
-                50%
-              </Text>
-            </View>
-            {/* Indicadores de scroll */}
-            <View className="absolute bottom-3 left-5 flex-row">
-              <View style={{ width: 14, height: 3, backgroundColor: '#FFFFFF', borderRadius: 2, marginRight: 4 }} />
-              <View style={{ width: 10, height: 3, backgroundColor: 'rgba(255,255,255,0.5)', borderRadius: 2, marginRight: 4 }} />
-            </View>
-          </LinearGradient>
-        </View>
+        {/* BANNER DINÁMICO 1 - Después de Tiendas Oficiales */}
+        {banner1 && (
+          <View className="px-4">
+            <BannerCard banner={banner1} onPress={handleBannerPress} />
+          </View>
+        )}
 
         {/* SELECCIONADOS PARA TI - Lista vertical */}
         <View className="bg-white py-4 mb-1">
@@ -483,34 +475,6 @@ export default function HomeScreen({ navigation }: any) {
           ) : (
             <Text className="text-center text-gray-500 py-8">No hay productos disponibles</Text>
           )}
-        </View>
-
-        {/* BANNER PUBLICITARIO 2 */}
-        <View className="px-4 mb-1">
-          <LinearGradient
-            colors={['#1E5EBE', '#2563EB']}
-            className="rounded-3xl p-5 relative overflow-hidden"
-            style={{ height: 150 }}
-          >
-            <View style={{ maxWidth: '65%' }}>
-              <Text className="text-white text-xs font-semibold mb-1 uppercase">
-                Special Offer
-              </Text>
-              <Text className="text-white text-lg font-bold leading-6">
-                We make your life easier with our service
-              </Text>
-            </View>
-            <View className="absolute bottom-3 right-5" style={{
-              backgroundColor: 'rgba(255,255,255,0.95)',
-              paddingHorizontal: 20,
-              paddingVertical: 10,
-              borderRadius: 20
-            }}>
-              <Text className="font-bold" style={{ color: '#1E5EBE', fontSize: 24 }}>
-                30%
-              </Text>
-            </View>
-          </LinearGradient>
         </View>
 
         {/* NUESTRAS TIENDAS - Categorías de marcas */}
@@ -705,33 +669,12 @@ export default function HomeScreen({ navigation }: any) {
           ) : null}
         </View>
 
-        {/* BANNER PUBLICITARIO 3 */}
-        <View className="px-4 mb-1">
-          <LinearGradient
-            colors={['#10B981', '#34D399']}
-            className="rounded-3xl p-5 relative overflow-hidden"
-            style={{ height: 150 }}
-          >
-            <View style={{ maxWidth: '65%' }}>
-              <Text className="text-white text-xs font-semibold mb-1 uppercase">
-                Cyber Monday
-              </Text>
-              <Text className="text-white text-lg font-bold leading-6">
-                Las mejores ofertas del año
-              </Text>
-            </View>
-            <View className="absolute bottom-3 right-5" style={{
-              backgroundColor: 'rgba(255,255,255,0.95)',
-              paddingHorizontal: 20,
-              paddingVertical: 10,
-              borderRadius: 20
-            }}>
-              <Text className="font-bold" style={{ color: '#10B981', fontSize: 24 }}>
-                40%
-              </Text>
-            </View>
-          </LinearGradient>
-        </View>
+        {/* BANNER DINÁMICO 2 - Después de Nuestros elegidos del momento */}
+        {banner2 && (
+          <View className="px-4">
+            <BannerCard banner={banner2} onPress={handleBannerPress} />
+          </View>
+        )}
 
         {/* NUESTROS PRODUCTOS */}
         <View className="bg-white py-4 mb-1">
@@ -815,34 +758,6 @@ export default function HomeScreen({ navigation }: any) {
               ))}
             </ScrollView>
           ) : null}
-        </View>
-
-        {/* BANNER PUBLICITARIO 4 */}
-        <View className="px-4 mb-1">
-          <LinearGradient
-            colors={['#F59E0B', '#FBBF24']}
-            className="rounded-3xl p-5 relative overflow-hidden"
-            style={{ height: 150 }}
-          >
-            <View style={{ maxWidth: '65%' }}>
-              <Text className="text-white text-xs font-semibold mb-1 uppercase">
-                Último día
-              </Text>
-              <Text className="text-white text-lg font-bold leading-6">
-                No te pierdas estas ofertas increíbles
-              </Text>
-            </View>
-            <View className="absolute bottom-3 right-5" style={{
-              backgroundColor: 'rgba(255,255,255,0.95)',
-              paddingHorizontal: 20,
-              paddingVertical: 10,
-              borderRadius: 20
-            }}>
-              <Text className="font-bold" style={{ color: '#F59E0B', fontSize: 24 }}>
-                60%
-              </Text>
-            </View>
-          </LinearGradient>
         </View>
 
         {/* MARKETPLACE */}
