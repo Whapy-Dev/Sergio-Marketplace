@@ -43,8 +43,11 @@ import SellerAnalyticsScreen from '../screens/seller/SellerAnalyticsScreen';
 import OrderDetailScreen from '../screens/orders/OrderDetailScreen';
 import SellerOrdersScreen from '../screens/seller/SellerOrdersScreen';
 
-// Screens - Orders
-import CheckoutScreen from '../screens/orders/CheckoutScreen';
+// Screens - Checkout & Payments
+import CheckoutScreen from '../screens/checkout/CheckoutScreen';
+import PaymentPendingScreen from '../screens/checkout/PaymentPendingScreen';
+import PaymentSuccessScreen from '../screens/checkout/PaymentSuccessScreen';
+import PaymentFailureScreen from '../screens/checkout/PaymentFailureScreen';
 
 // Screens - Auth
 import LoginScreen from '../screens/auth/LoginScreen';
@@ -262,6 +265,43 @@ function TabNavigator() {
   );
 }
 
+// Linking configuration for deep links
+const linking = {
+  prefixes: ['sergiomarketplace://'],
+  config: {
+    screens: {
+      MainTabs: {
+        screens: {
+          Home: 'home',
+          Favorites: 'favorites',
+          Conversations: 'conversations',
+          Cart: 'cart',
+          Profile: 'profile',
+        },
+      },
+      Checkout: 'checkout',
+      PaymentPending: {
+        path: 'payment/pending',
+        parse: {
+          orderId: (order_id: string) => order_id,
+        },
+      },
+      PaymentSuccess: {
+        path: 'payment/success',
+        parse: {
+          orderId: (order_id: string) => order_id,
+        },
+      },
+      PaymentFailure: {
+        path: 'payment/failure',
+        parse: {
+          orderId: (order_id: string) => order_id,
+        },
+      },
+    },
+  },
+};
+
 // Main Stack Navigator
 export default function AppNavigator() {
   const { session, loading } = useAuth();
@@ -271,12 +311,15 @@ export default function AppNavigator() {
   }
 
   return (
-    <NavigationContainer>
+    <NavigationContainer linking={linking}>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         {session ? (
           <>
             <Stack.Screen name="MainTabs" component={TabNavigator} />
             <Stack.Screen name="Checkout" component={CheckoutScreen} />
+            <Stack.Screen name="PaymentPending" component={PaymentPendingScreen} />
+            <Stack.Screen name="PaymentSuccess" component={PaymentSuccessScreen} />
+            <Stack.Screen name="PaymentFailure" component={PaymentFailureScreen} />
           </>
         ) : (
           <>

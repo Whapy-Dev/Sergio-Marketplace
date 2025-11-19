@@ -4,33 +4,21 @@ export interface Order {
   id: string;
   order_number: string;
   buyer_id: string;
-  seller_id?: string;
-  status: 'pending' | 'paid' | 'processing' | 'shipped' | 'delivered' | 'cancelled' | 'refunded';
-  payment_method: 'mercadopago' | 'cash' | 'transfer' | 'other';
+  status: string;
+  payment_method: string;
+  payment_status?: string;
   subtotal: number;
-  shipping_cost: number;
-  tax: number;
-  discount: number;
+  shipping_total: number;
+  tax_total: number;
+  discount_total: number;
   total: number;
-  buyer_name?: string;
-  buyer_email?: string;
-  buyer_phone?: string;
-  shipping_address?: string;
-  shipping_city?: string;
-  shipping_state?: string;
-  shipping_postal_code?: string;
-  shipping_country?: string;
-  mercadopago_payment_id?: string;
-  mercadopago_preference_id?: string;
-  mercadopago_status?: string;
-  tracking_number?: string;
-  carrier?: string;
+  payment_id?: string;
+  payment_metadata?: any;
+  fiscal_data?: any;
+  invoice_number?: string;
+  invoice_url?: string;
   buyer_notes?: string;
-  seller_notes?: string;
-  paid_at?: string;
-  shipped_at?: string;
-  delivered_at?: string;
-  cancelled_at?: string;
+  admin_notes?: string;
   created_at: string;
   updated_at: string;
 }
@@ -38,15 +26,25 @@ export interface Order {
 export interface OrderItem {
   id: string;
   order_id: string;
-  product_id?: string;
-  product_name: string;
-  product_description?: string;
-  product_image_url?: string;
-  quantity: number;
-  unit_price: number;
-  subtotal: number;
   seller_id?: string;
+  product_id?: string;
+  variant_id?: string;
+  product_name: string;
+  product_image_url?: string;
+  variant_name?: string;
+  unit_price: number;
+  quantity: number;
+  subtotal: number;
+  commission_rate?: number;
+  commission_amount?: number;
+  seller_payout?: number;
+  shipping_cost?: number;
+  shipping_status?: string;
+  tracking_number?: string;
+  carrier?: string;
+  shipping_address?: string;
   created_at: string;
+  updated_at: string;
 }
 
 export interface CreateOrderData {
@@ -54,19 +52,13 @@ export interface CreateOrderData {
   items: {
     product_id: string;
     product_name: string;
-    product_description?: string;
     product_image_url?: string;
     quantity: number;
     unit_price: number;
     seller_id?: string;
+    shipping_address?: string; // Each item can have its own shipping address
   }[];
-  buyer_name?: string;
-  buyer_email?: string;
-  buyer_phone?: string;
-  shipping_address?: string;
-  shipping_city?: string;
-  shipping_state?: string;
-  shipping_postal_code?: string;
+  payment_method?: string;
   buyer_notes?: string;
 }
 
@@ -77,34 +69,24 @@ export async function createOrder(data: CreateOrderData): Promise<Order | null> 
   try {
     // Calculate totals
     const subtotal = data.items.reduce((sum, item) => sum + (item.unit_price * item.quantity), 0);
-    const shipping_cost = 0; // TODO: Calculate based on location
-    const tax = 0; // TODO: Calculate tax if needed
-    const discount = 0; // TODO: Apply discount if any
-    const total = subtotal + shipping_cost + tax - discount;
-
-    // Get seller_id from first item (assuming all items from same seller for now)
-    const seller_id = data.items[0]?.seller_id;
+    const shipping_total = 0; // TODO: Calculate based on location
+    const tax_total = 0; // TODO: Calculate tax if needed
+    const discount_total = 0; // TODO: Apply discount if any
+    const total = subtotal + shipping_total + tax_total - discount_total;
 
     // Create order
     const { data: order, error: orderError } = await supabase
       .from('orders')
       .insert({
         buyer_id: data.buyer_id,
-        seller_id,
         status: 'pending',
-        payment_method: 'mercadopago',
+        payment_method: data.payment_method || 'mercadopago',
+        payment_status: 'pending',
         subtotal,
-        shipping_cost,
-        tax,
-        discount,
+        shipping_total,
+        tax_total,
+        discount_total,
         total,
-        buyer_name: data.buyer_name,
-        buyer_email: data.buyer_email,
-        buyer_phone: data.buyer_phone,
-        shipping_address: data.shipping_address,
-        shipping_city: data.shipping_city,
-        shipping_state: data.shipping_state,
-        shipping_postal_code: data.shipping_postal_code,
         buyer_notes: data.buyer_notes,
       })
       .select()
@@ -115,14 +97,15 @@ export async function createOrder(data: CreateOrderData): Promise<Order | null> 
     // Create order items
     const items = data.items.map(item => ({
       order_id: order.id,
+      seller_id: item.seller_id,
       product_id: item.product_id,
       product_name: item.product_name,
-      product_description: item.product_description,
       product_image_url: item.product_image_url,
       quantity: item.quantity,
       unit_price: item.unit_price,
       subtotal: item.unit_price * item.quantity,
-      seller_id: item.seller_id,
+      shipping_address: item.shipping_address,
+      shipping_status: 'pending',
     }));
 
     const { error: itemsError } = await supabase
@@ -210,19 +193,13 @@ export async function getSellerOrders(sellerId: string): Promise<Order[]> {
  */
 export async function updateOrderStatus(
   orderId: string,
-  status: Order['status'],
+  status: string,
   notes?: string
 ): Promise<boolean> {
   try {
     const updateData: any = { status };
 
-    // Set timestamp based on status
-    if (status === 'paid') updateData.paid_at = new Date().toISOString();
-    if (status === 'shipped') updateData.shipped_at = new Date().toISOString();
-    if (status === 'delivered') updateData.delivered_at = new Date().toISOString();
-    if (status === 'cancelled') updateData.cancelled_at = new Date().toISOString();
-
-    if (notes) updateData.seller_notes = notes;
+    if (notes) updateData.admin_notes = notes;
 
     const { error } = await supabase
       .from('orders')
@@ -244,11 +221,10 @@ export async function updateOrderStatus(
 export async function updateOrderPayment(
   orderId: string,
   paymentData: {
-    mercadopago_payment_id?: string;
-    mercadopago_preference_id?: string;
-    mercadopago_status?: string;
-    mercadopago_status_detail?: string;
-    status?: Order['status'];
+    payment_id?: string;
+    payment_status?: string;
+    payment_metadata?: any;
+    status?: string;
   }
 ): Promise<boolean> {
   try {
