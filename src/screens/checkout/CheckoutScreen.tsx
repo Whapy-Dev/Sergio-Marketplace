@@ -3,22 +3,25 @@ import { View, Text, ScrollView, TouchableOpacity, TextInput, Alert, Linking } f
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../contexts/AuthContext';
+import { useCart } from '../../contexts/CartContext';
 import { createOrder } from '../../services/orders';
 import { createPaymentPreference } from '../../services/mercadopago';
 import { getUserProfile } from '../../services/profile';
 import { COLORS } from '../../constants/theme';
 
+interface ProductParam {
+  id: string;
+  name: string;
+  price: number;
+  image_url?: string;
+  seller_id?: string;
+  description?: string;
+}
+
 interface CheckoutScreenProps {
   route: {
-    params: {
-      product: {
-        id: string;
-        name: string;
-        price: number;
-        image_url?: string;
-        seller_id?: string;
-        description?: string;
-      };
+    params?: {
+      product?: ProductParam;
       quantity?: number;
     };
   };
@@ -26,8 +29,25 @@ interface CheckoutScreenProps {
 }
 
 export default function CheckoutScreen({ route, navigation }: CheckoutScreenProps) {
-  const { product, quantity = 1 } = route.params;
   const { user } = useAuth();
+  const { items: cartItems, totalAmount: cartTotal, clearCart } = useCart();
+
+  // Check if coming from direct buy or cart
+  const product = route.params?.product;
+  const quantity = route.params?.quantity || 1;
+  const isCartCheckout = !product;
+
+  // Items to checkout
+  const checkoutItems = isCartCheckout
+    ? cartItems.map(item => ({
+        id: item.id,
+        name: item.name,
+        price: item.price,
+        image_url: item.imageUrl,
+        seller_id: item.sellerId,
+        quantity: item.quantity,
+      }))
+    : [{ ...product, quantity }];
   const [loading, setLoading] = useState(false);
 
   // Form state
@@ -78,15 +98,15 @@ export default function CheckoutScreen({ route, navigation }: CheckoutScreenProp
 
       const orderData = {
         buyer_id: user.id,
-        items: [{
-          product_id: product.id,
-          product_name: product.name,
-          product_image_url: product.image_url,
-          quantity,
-          unit_price: product.price,
-          seller_id: product.seller_id,
+        items: checkoutItems.map(item => ({
+          product_id: item.id,
+          product_name: item.name,
+          product_image_url: item.image_url,
+          quantity: item.quantity,
+          unit_price: item.price,
+          seller_id: item.seller_id,
           shipping_address: shippingAddress,
-        }],
+        })),
         payment_method: 'mercadopago',
         buyer_notes: notes,
       };
@@ -99,14 +119,14 @@ export default function CheckoutScreen({ route, navigation }: CheckoutScreenProp
 
       // 2. Create MercadoPago preference
       const preference = await createPaymentPreference({
-        items: [{
-          title: product.name,
-          description: product.description,
-          picture_url: product.image_url,
-          quantity,
+        items: checkoutItems.map(item => ({
+          title: item.name,
+          description: '',
+          picture_url: item.image_url,
+          quantity: item.quantity,
           currency_id: 'ARS',
-          unit_price: product.price,
-        }],
+          unit_price: item.price,
+        })),
         payer: {
           name: fullName.split(' ')[0],
           surname: fullName.split(' ').slice(1).join(' '),
@@ -123,6 +143,11 @@ export default function CheckoutScreen({ route, navigation }: CheckoutScreenProp
         auto_return: 'approved',
         external_reference: order.id,
       });
+
+      // Clear cart if checkout from cart
+      if (isCartCheckout) {
+        clearCart();
+      }
 
       if (!preference) {
         throw new Error('Failed to create payment preference');
@@ -152,7 +177,9 @@ export default function CheckoutScreen({ route, navigation }: CheckoutScreenProp
     }
   }
 
-  const subtotal = product.price * quantity;
+  const subtotal = isCartCheckout
+    ? cartTotal
+    : (product?.price || 0) * quantity;
   const shipping = 0; // Free shipping for now
   const total = subtotal + shipping;
 
@@ -169,16 +196,20 @@ export default function CheckoutScreen({ route, navigation }: CheckoutScreenProp
       <ScrollView className="flex-1">
         {/* Order Summary */}
         <View className="bg-gray-50 p-4 border-b border-gray-200">
-          <Text className="text-sm font-semibold text-gray-700 mb-2">Resumen del pedido</Text>
-          <View className="bg-white rounded-lg p-3">
-            <Text className="font-semibold text-gray-900">{product.name}</Text>
-            <View className="flex-row justify-between mt-2">
-              <Text className="text-gray-600">Cantidad: {quantity}</Text>
-              <Text className="font-semibold text-gray-900">
-                ${(product.price * quantity).toLocaleString('es-AR')}
-              </Text>
+          <Text className="text-sm font-semibold text-gray-700 mb-2">
+            Resumen del pedido ({checkoutItems.length} {checkoutItems.length === 1 ? 'producto' : 'productos'})
+          </Text>
+          {checkoutItems.map((item, index) => (
+            <View key={item.id || index} className="bg-white rounded-lg p-3 mb-2">
+              <Text className="font-semibold text-gray-900" numberOfLines={2}>{item.name}</Text>
+              <View className="flex-row justify-between mt-2">
+                <Text className="text-gray-600">Cantidad: {item.quantity}</Text>
+                <Text className="font-semibold text-gray-900">
+                  ${(item.price * item.quantity).toLocaleString('es-AR')}
+                </Text>
+              </View>
             </View>
-          </View>
+          ))}
 
           {/* Totals */}
           <View className="mt-3 space-y-2">

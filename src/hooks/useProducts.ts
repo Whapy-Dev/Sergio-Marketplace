@@ -23,5 +23,5 @@ export function useProducts(limit: number = 10) {
     }
   }
 
-  return { products, loading, error, refresh: loadProducts };
+  return { products, loading, error, refresh: loadProducts, refetch: loadProducts };
 }

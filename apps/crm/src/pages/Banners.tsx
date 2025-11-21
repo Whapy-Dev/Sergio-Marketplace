@@ -9,11 +9,23 @@ export default function Banners() {
   const [editingBanner, setEditingBanner] = useState<Banner | null>(null);
   const [uploading, setUploading] = useState(false);
 
+  // Banner locations
+  const BANNER_LOCATIONS = [
+    { value: 'home_carousel', label: 'Home - Carrusel Principal' },
+    { value: 'home_middle', label: 'Home - Sección Media' },
+    { value: 'home_bottom', label: 'Home - Sección Inferior' },
+    { value: 'category_top', label: 'Categorías - Superior' },
+    { value: 'product_related', label: 'Producto - Relacionados' },
+    { value: 'checkout', label: 'Checkout - Promociones' },
+    { value: 'profile', label: 'Perfil - Ofertas' },
+  ];
+
   // Form state
   const [formData, setFormData] = useState({
     title: '',
     description: '',
     image_url: '',
+    location: 'home_carousel',
     link_type: 'none' as 'product' | 'category' | 'store' | 'external' | 'none',
     link_value: '',
     display_order: 0,
@@ -92,6 +104,7 @@ export default function Banners() {
             title: formData.title,
             description: formData.description,
             image_url: formData.image_url,
+            location: formData.location,
             link_type: formData.link_type,
             link_value: formData.link_value || null,
             display_order: formData.display_order,
@@ -111,6 +124,7 @@ export default function Banners() {
             title: formData.title,
             description: formData.description,
             image_url: formData.image_url,
+            location: formData.location,
             link_type: formData.link_type,
             link_value: formData.link_value || null,
             display_order: formData.display_order,
@@ -135,6 +149,7 @@ export default function Banners() {
       title: '',
       description: '',
       image_url: '',
+      location: 'home_carousel',
       link_type: 'none',
       link_value: '',
       display_order: 0,
@@ -152,6 +167,7 @@ export default function Banners() {
       title: banner.title,
       description: banner.description || '',
       image_url: banner.image_url,
+      location: (banner as any).location || 'home_carousel',
       link_type: banner.link_type,
       link_value: banner.link_value || '',
       display_order: banner.display_order,
@@ -367,6 +383,22 @@ export default function Banners() {
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                     rows={3}
                   />
+                </div>
+
+                {/* Location */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Ubicación en la App *
+                  </label>
+                  <select
+                    value={formData.location}
+                    onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  >
+                    {BANNER_LOCATIONS.map((loc) => (
+                      <option key={loc.value} value={loc.value}>{loc.label}</option>
+                    ))}
+                  </select>
                 </div>
 
                 {/* Image Upload */}

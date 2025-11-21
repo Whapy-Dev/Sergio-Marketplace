@@ -77,10 +77,27 @@ export default function SearchScreen({ navigation }: any) {
         if (activeFilters.freeShipping) {
           query = query.eq('free_shipping', true);
         }
+        if (activeFilters.minPrice) {
+          query = query.gte('price', activeFilters.minPrice);
+        }
+        if (activeFilters.maxPrice) {
+          query = query.lte('price', activeFilters.maxPrice);
+        }
       }
 
-      // Ordenar: tiendas oficiales primero, luego por fecha
-      const { data, error } = await query.order('created_at', { ascending: false }).limit(50);
+      // Determinar ordenamiento
+      let orderColumn = 'created_at';
+      let ascending = false;
+
+      if (activeFilters?.sortBy === 'Menor precio') {
+        orderColumn = 'price';
+        ascending = true;
+      } else if (activeFilters?.sortBy === 'Mayor precio') {
+        orderColumn = 'price';
+        ascending = false;
+      }
+
+      const { data, error } = await query.order(orderColumn, { ascending }).limit(50);
 
       if (!error && data) {
         // Priorizar productos de tiendas oficiales
@@ -129,9 +146,27 @@ export default function SearchScreen({ navigation }: any) {
         if (activeFilters.freeShipping) {
           query = query.eq('free_shipping', true);
         }
+        if (activeFilters.minPrice) {
+          query = query.gte('price', activeFilters.minPrice);
+        }
+        if (activeFilters.maxPrice) {
+          query = query.lte('price', activeFilters.maxPrice);
+        }
       }
 
-      const { data, error } = await query.order('created_at', { ascending: false }).limit(50);
+      // Determinar ordenamiento
+      let orderColumn = 'created_at';
+      let ascending = false;
+
+      if (activeFilters?.sortBy === 'Menor precio') {
+        orderColumn = 'price';
+        ascending = true;
+      } else if (activeFilters?.sortBy === 'Mayor precio') {
+        orderColumn = 'price';
+        ascending = false;
+      }
+
+      const { data, error } = await query.order(orderColumn, { ascending }).limit(50);
 
       if (!error && data) {
         // Priorizar productos de tiendas oficiales

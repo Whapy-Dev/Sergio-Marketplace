@@ -136,7 +136,7 @@ export default function WalletScreen({ navigation }: any) {
         {/* Balance Cards */}
         <View className="p-4 space-y-3">
           {/* Available Balance */}
-          <View className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-6 shadow-lg">
+          <View className="bg-emerald-600 rounded-2xl p-6 shadow-lg">
             <Text className="text-white text-sm font-medium mb-2">Disponible para Retirar</Text>
             <Text className="text-white text-4xl font-bold mb-4">
               ${balance?.available_balance.toLocaleString('es-AR') || '0'}
@@ -148,7 +148,7 @@ export default function WalletScreen({ navigation }: any) {
             >
               <Text
                 className={`text-center font-semibold ${
-                  canWithdraw ? 'text-blue-600' : 'text-white'
+                  canWithdraw ? 'text-emerald-600' : 'text-white'
                 }`}
               >
                 {canWithdraw ? 'Solicitar Retiro' : `Mínimo: $${minimumAmount.toLocaleString('es-AR')}`}

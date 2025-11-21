@@ -57,7 +57,7 @@ export default function PaymentFailureScreen({ route, navigation }: any) {
         </TouchableOpacity>
 
         <TouchableOpacity
-          onPress={() => navigation.navigate('Home')}
+          onPress={() => navigation.navigate('MainTabs', { screen: 'Home' })}
           className="py-3 px-8 w-full"
         >
           <Text className="text-center font-semibold" style={{ color: COLORS.primary }}>

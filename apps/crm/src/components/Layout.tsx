@@ -19,9 +19,12 @@ export default function Layout({ user, children }: LayoutProps) {
     { name: 'Aplicaciones', href: '/applications', icon: '📝' },
     { name: 'Tiendas Oficiales', href: '/stores', icon: '🏪' },
     { name: 'Productos', href: '/products', icon: '📦' },
-    { name: 'Destacados', href: '/featured-products', icon: '⭐' },
+    { name: 'Secciones Home', href: '/home-sections', icon: '🏠' },
     { name: 'Banners', href: '/banners', icon: '🎨' },
     { name: 'Usuarios', href: '/users', icon: '👥' },
+    { name: 'Facturación', href: '/invoicing', icon: '🧾' },
+    { name: 'Cupones', href: '/coupons', icon: '🎟️' },
+    { name: 'Envíos', href: '/shipping', icon: '🚚' },
     { name: 'Configuración', href: '/settings', icon: '⚙️' },
   ];
 

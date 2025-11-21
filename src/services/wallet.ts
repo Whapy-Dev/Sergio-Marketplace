@@ -68,18 +68,29 @@ export interface CommissionCalculation {
 export async function getSellerBalance(sellerId: string): Promise<SellerBalance | null> {
   try {
     const { data, error } = await supabase
-      .from('profiles')
-      .select('available_balance, pending_balance, total_withdrawn')
-      .eq('id', sellerId)
+      .from('seller_balances')
+      .select('available_balance, pending_balance, total_earned')
+      .eq('seller_id', sellerId)
       .single();
 
-    if (error) throw error;
+    if (error) {
+      // If no balance record exists, return zeros
+      if (error.code === 'PGRST116') {
+        return {
+          available_balance: 0,
+          pending_balance: 0,
+          total_withdrawn: 0,
+          total_earned: 0,
+        };
+      }
+      throw error;
+    }
 
     return {
       available_balance: data.available_balance || 0,
       pending_balance: data.pending_balance || 0,
-      total_withdrawn: data.total_withdrawn || 0,
-      total_earned: (data.available_balance || 0) + (data.pending_balance || 0) + (data.total_withdrawn || 0),
+      total_withdrawn: 0,
+      total_earned: data.total_earned || 0,
     };
   } catch (error) {
     console.error('Error fetching seller balance:', error);
@@ -98,7 +109,7 @@ export async function getBalanceTransactions(
     const { data, error } = await supabase
       .from('balance_transactions')
       .select('*')
-      .eq('user_id', userId)
+      .eq('seller_id', userId)
       .order('created_at', { ascending: false })
       .limit(limit);
 
@@ -217,10 +228,10 @@ export async function createWithdrawalRequest(
     const { data, error } = await supabase
       .from('withdrawal_requests')
       .insert({
-        seller_id: sellerId,
+        user_id: sellerId,
         amount,
         payment_method: paymentMethod,
-        payment_details: paymentDetails,
+        bank_account_info: paymentDetails,
         status: 'pending',
       })
       .select()
@@ -243,7 +254,7 @@ export async function getSellerWithdrawalRequests(sellerId: string): Promise<Wit
     const { data, error } = await supabase
       .from('withdrawal_requests')
       .select('*')
-      .eq('seller_id', sellerId)
+      .eq('user_id', sellerId)
       .order('requested_at', { ascending: false });
 
     if (error) throw error;

@@ -8,7 +8,9 @@ import { useProducts } from '../../hooks/useProducts';
 import { getOfficialStores } from '../../services/officialStores';
 import type { OfficialStore } from '../../types/officialStore';
 import { getActiveBanners, type Banner } from '../../services/banners';
+import { getHomeSections, HomeSection } from '../../services/homeSections';
 import BannerCard from '../../components/BannerCard';
+import DynamicSection from '../../components/home/DynamicSection';
 import { COLORS } from '../../constants/theme';
 
 export default function HomeScreen({ navigation }: any) {
@@ -20,11 +22,21 @@ export default function HomeScreen({ navigation }: any) {
   const [loadingStores, setLoadingStores] = useState(true);
   const [banners, setBanners] = useState<Banner[]>([]);
   const [loadingBanners, setLoadingBanners] = useState(true);
+  const [homeSections, setHomeSections] = useState<HomeSection[]>([]);
+  const [loadingSections, setLoadingSections] = useState(true);
 
   useEffect(() => {
     loadOfficialStores();
     loadBanners();
+    loadHomeSections();
   }, []);
+
+  async function loadHomeSections() {
+    setLoadingSections(true);
+    const sections = await getHomeSections();
+    setHomeSections(sections);
+    setLoadingSections(false);
+  }
 
   async function loadOfficialStores() {
     setLoadingStores(true);
@@ -69,12 +81,16 @@ export default function HomeScreen({ navigation }: any) {
   async function handleRefresh() {
     setRefreshing(true);
     try {
-      await Promise.all([refreshCategories(), refetchProducts(), loadOfficialStores(), loadBanners()]);
+      await Promise.all([refreshCategories(), refetchProducts(), loadOfficialStores(), loadBanners(), loadHomeSections()]);
     } catch (error) {
       console.error('Error refreshing:', error);
     } finally {
       setRefreshing(false);
     }
+  }
+
+  function handleProductPress(productId: string) {
+    navigation.navigate('ProductDetail', { productId });
   }
 
   function handleBannerPress(banner: Banner) {
@@ -141,6 +157,7 @@ export default function HomeScreen({ navigation }: any) {
         className="flex-1"
         showsVerticalScrollIndicator={false}
         scrollEventThrottle={16}
+        contentContainerStyle={{ paddingBottom: 80 }}
         onScroll={Animated.event(
           [{ nativeEvent: { contentOffset: { y: scrollY } } }],
           { useNativeDriver: false }
@@ -378,491 +395,84 @@ export default function HomeScreen({ navigation }: any) {
           </View>
         )}
 
-        {/* SELECCIONADOS PARA TI - Lista vertical */}
-        <View className="bg-white py-4 mb-1">
-          <Text className="text-lg font-bold text-gray-900 px-4 mb-3">Seleccionados para ti</Text>
-
-          {loadingProducts ? (
+        {/* SECCIONES DINÁMICAS DESDE CRM */}
+        {loadingSections ? (
+          <View className="py-8">
             <ActivityIndicator size="large" color={COLORS.primary} />
-          ) : products.length > 0 ? (
-            <View className="px-4">
-              {products.slice(0, 4).map((product: any, index: number) => (
-                <TouchableOpacity
-                  key={product.id}
-                  onPress={() => navigation.navigate('ProductDetail', { productId: product.id })}
-                  className="flex-row bg-white rounded-xl mb-3 border border-gray-200 overflow-hidden"
-                  style={{ height: 151 }}
-                >
-                  {/* Imagen */}
-                  <View className="bg-gray-100 items-center justify-center relative" style={{ width: 151 }}>
-                    {product.image_url ? (
-                      <Image
-                        source={{ uri: product.image_url }}
-                        style={{ width: 151, height: 151 }}
-                        resizeMode="cover"
-                      />
-                    ) : (
-                      <Ionicons name="image-outline" size={50} color="#9CA3AF" />
-                    )}
-                    {index % 2 === 0 && (
-                      <View
-                        className="absolute top-2 left-2 rounded px-2 py-1"
-                        style={{ backgroundColor: '#FF3B30' }}
-                      >
-                        <Text className="text-white text-xs font-bold">-20%</Text>
-                      </View>
-                    )}
+          </View>
+        ) : homeSections.length > 0 ? (
+          <>
+            {homeSections.map((section, index) => (
+              <React.Fragment key={section.id}>
+                <DynamicSection
+                  section={section}
+                  onProductPress={handleProductPress}
+                />
+                {/* Insertar banners entre secciones */}
+                {index === 0 && banner2 && (
+                  <View className="px-4">
+                    <BannerCard banner={banner2} onPress={handleBannerPress} />
                   </View>
-
-                  {/* Info */}
-                  <View className="flex-1 p-3 justify-between">
-                    <View>
-                      <Text className="text-sm font-semibold text-gray-900 mb-1" numberOfLines={2}>
-                        {product.name}
-                      </Text>
-
-                      {/* Precio */}
-                      <View className="mb-2">
-                        <Text className="text-xl font-bold" style={{ color: COLORS.primary }}>
-                          ${product.price.toLocaleString('es-AR')}
-                        </Text>
-                        {index % 2 === 0 && (
-                          <Text className="text-xs text-gray-500 line-through">
-                            ${Math.round(product.price * 1.25).toLocaleString('es-AR')}
-                          </Text>
-                        )}
-                      </View>
-
-                      {/* Rating */}
-                      <View className="flex-row items-center mb-2">
-                        <View className="flex-row">
-                          {[1, 2, 3, 4, 5].map((star) => (
-                            <Ionicons key={star} name="star" size={12} color="#FBBF24" />
-                          ))}
-                        </View>
-                        <Text className="text-xs text-gray-600 ml-2">
-                          ({Math.floor(Math.random() * 500) + 100})
-                        </Text>
-                      </View>
-                    </View>
-
-                    {/* Envío gratis */}
-                    {index % 3 !== 2 && (
-                      <View className="bg-green-50 rounded px-2 py-1 self-start flex-row items-center">
-                        <Ionicons name="checkmark-circle" size={12} color="#16A34A" />
-                        <Text className="text-green-600 text-xs font-semibold ml-1">Envío GRATIS</Text>
-                      </View>
-                    )}
+                )}
+                {index === 2 && banner3 && (
+                  <View className="px-4">
+                    <BannerCard banner={banner3} onPress={handleBannerPress} />
                   </View>
-                </TouchableOpacity>
-              ))}
-            </View>
-          ) : (
-            <Text className="text-center text-gray-500 py-8">No hay productos disponibles</Text>
-          )}
-        </View>
-
-        {/* NUESTRAS TIENDAS - Categorías de marcas */}
-        <View className="bg-white py-4 mb-1">
-          <Text className="text-lg font-bold text-gray-900 px-4 mb-3">Nuestras tiendas</Text>
-
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ paddingHorizontal: 16 }}
-          >
-            {/* Philco */}
-            <TouchableOpacity className="items-center mr-4">
-              <View className="bg-red-100 rounded-full items-center justify-center" style={{ width: 55, height: 55 }}>
-                <Text className="text-xl font-bold text-red-600">P</Text>
-              </View>
-              <Text className="text-xs text-gray-900 mt-1">Philco</Text>
-            </TouchableOpacity>
-
-            {/* Samsung */}
-            <TouchableOpacity className="items-center mr-4">
-              <View className="bg-blue-100 rounded-full items-center justify-center" style={{ width: 55, height: 55 }}>
-                <Text className="text-xl font-bold text-blue-600">S</Text>
-              </View>
-              <Text className="text-xs text-gray-900 mt-1">Samsung</Text>
-            </TouchableOpacity>
-
-            {/* Sony */}
-            <TouchableOpacity className="items-center mr-4">
-              <View className="bg-gray-200 rounded-full items-center justify-center" style={{ width: 55, height: 55 }}>
-                <Text className="text-xl font-bold text-gray-700">S</Text>
-              </View>
-              <Text className="text-xs text-gray-900 mt-1">Sony</Text>
-            </TouchableOpacity>
-
-            {/* Philips */}
-            <TouchableOpacity className="items-center mr-4">
-              <View className="bg-blue-100 rounded-full items-center justify-center" style={{ width: 55, height: 55 }}>
-                <Text className="text-xl font-bold text-blue-700">P</Text>
-              </View>
-              <Text className="text-xs text-gray-900 mt-1">Philips</Text>
-            </TouchableOpacity>
-
-            {/* Hitachi */}
-            <TouchableOpacity className="items-center">
-              <View className="bg-red-100 rounded-full items-center justify-center" style={{ width: 55, height: 55 }}>
-                <Text className="text-xl font-bold text-red-600">H</Text>
-              </View>
-              <Text className="text-xs text-gray-900 mt-1">Hitachi</Text>
-            </TouchableOpacity>
-          </ScrollView>
-        </View>
-
-        {/* PRODUCTOS CARRUSEL HORIZONTAL */}
-        <View className="bg-white py-4 mb-1">
-          {loadingProducts ? (
-            <ActivityIndicator size="large" color={COLORS.primary} />
-          ) : products.length > 0 ? (
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{ paddingHorizontal: 16 }}
-            >
-              {products.slice(0, 3).map((product: any, index: number) => (
-                <TouchableOpacity
-                  key={product.id}
-                  onPress={() => navigation.navigate('ProductDetail', { productId: product.id })}
-                  className="mr-3"
-                  style={{ width: 133 }}
-                >
-                  <View className="bg-white rounded-xl overflow-hidden border border-gray-200">
-                    {/* Imagen */}
-                    <View className="bg-gray-100 items-center justify-center relative" style={{ height: 133 }}>
+                )}
+                {index === 4 && banner4 && (
+                  <View className="px-4">
+                    <BannerCard banner={banner4} onPress={handleBannerPress} />
+                  </View>
+                )}
+              </React.Fragment>
+            ))}
+          </>
+        ) : (
+          /* FALLBACK - Secciones estáticas si no hay configuración */
+          <View className="bg-white py-4 mb-1">
+            <Text className="text-lg font-bold text-gray-900 px-4 mb-3">Seleccionados para ti</Text>
+            {loadingProducts ? (
+              <ActivityIndicator size="large" color={COLORS.primary} />
+            ) : products.length > 0 ? (
+              <View className="px-4">
+                {products.slice(0, 4).map((product: any, index: number) => (
+                  <TouchableOpacity
+                    key={product.id}
+                    onPress={() => handleProductPress(product.id)}
+                    className="flex-row bg-white rounded-xl mb-3 border border-gray-200 overflow-hidden"
+                    style={{ height: 151 }}
+                  >
+                    <View className="bg-gray-100 items-center justify-center relative" style={{ width: 151 }}>
                       {product.image_url ? (
                         <Image
                           source={{ uri: product.image_url }}
-                          style={{ width: 133, height: 133 }}
+                          style={{ width: 151, height: 151 }}
                           resizeMode="cover"
                         />
                       ) : (
-                        <Ionicons name="image-outline" size={40} color="#9CA3AF" />
-                      )}
-                      {index === 0 && (
-                        <View
-                          className="absolute top-2 right-2 rounded px-2 py-1"
-                          style={{ backgroundColor: '#FF3B30' }}
-                        >
-                          <Text className="text-white text-xs font-bold">-15%</Text>
-                        </View>
+                        <Ionicons name="image-outline" size={50} color="#9CA3AF" />
                       )}
                     </View>
-
-                    {/* Info */}
-                    <View className="p-2">
-                      <Text className="text-xs font-medium text-gray-900 mb-1" numberOfLines={2}>
-                        {product.name}
-                      </Text>
-
-                      {/* Precio */}
-                      <View className="mb-1">
-                        <Text className="text-sm font-bold" style={{ color: COLORS.primary }}>
+                    <View className="flex-1 p-3 justify-between">
+                      <View>
+                        <Text className="text-sm font-semibold text-gray-900 mb-1" numberOfLines={2}>
+                          {product.name}
+                        </Text>
+                        <Text className="text-xl font-bold" style={{ color: COLORS.primary }}>
                           ${product.price.toLocaleString('es-AR')}
                         </Text>
-                        {index === 0 && (
-                          <Text className="text-xs text-gray-500 line-through">
-                            ${Math.round(product.price * 1.18).toLocaleString('es-AR')}
-                          </Text>
-                        )}
                       </View>
-
-                      {/* Rating */}
-                      <View className="flex-row items-center">
-                        {[1, 2, 3, 4, 5].map((star) => (
-                          <Ionicons key={star} name="star" size={10} color="#FBBF24" />
-                        ))}
-                      </View>
-
-                      {/* Botón comprar */}
-                      <TouchableOpacity
-                        className="mt-2 rounded-full py-2"
-                        style={{ backgroundColor: COLORS.primary }}
-                      >
-                        <Text className="text-white text-xs font-semibold text-center">
-                          Comprar
-                        </Text>
-                      </TouchableOpacity>
                     </View>
-                  </View>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-          ) : null}
-        </View>
-
-        {/* NUESTROS ELEGIDOS DEL MOMENTO */}
-        <View className="bg-white py-4 mb-1">
-          <Text className="text-lg font-bold text-gray-900 px-4 mb-3">Nuestros elegidos del momento</Text>
-
-          {loadingProducts ? (
-            <ActivityIndicator size="large" color={COLORS.primary} />
-          ) : products.length > 0 ? (
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{ paddingHorizontal: 16 }}
-            >
-              {products.slice(0, 3).map((product: any, index: number) => (
-                <TouchableOpacity
-                  key={product.id}
-                  onPress={() => navigation.navigate('ProductDetail', { productId: product.id })}
-                  className="mr-3"
-                  style={{ width: 133 }}
-                >
-                  <View className="bg-white rounded-xl overflow-hidden border border-gray-200">
-                    <View className="bg-gray-100 items-center justify-center relative" style={{ height: 133 }}>
-                      {product.image_url ? (
-                        <Image source={{ uri: product.image_url }} style={{ width: 133, height: 133 }} resizeMode="cover" />
-                      ) : (
-                        <Ionicons name="image-outline" size={40} color="#9CA3AF" />
-                      )}
-                      {index === 0 && (
-                        <View className="absolute top-2 right-2 rounded px-2 py-1" style={{ backgroundColor: '#FF3B30' }}>
-                          <Text className="text-white text-xs font-bold">-15%</Text>
-                        </View>
-                      )}
-                    </View>
-                    <View className="p-2">
-                      <Text className="text-xs font-medium text-gray-900 mb-1" numberOfLines={2}>{product.name}</Text>
-                      <View className="mb-1">
-                        <Text className="text-sm font-bold" style={{ color: COLORS.primary }}>
-                          ${product.price.toLocaleString('es-AR')}
-                        </Text>
-                        {index === 0 && (
-                          <Text className="text-xs text-gray-500 line-through">
-                            ${Math.round(product.price * 1.18).toLocaleString('es-AR')}
-                          </Text>
-                        )}
-                      </View>
-                      <View className="flex-row items-center">
-                        {[1, 2, 3, 4, 5].map((star) => (
-                          <Ionicons key={star} name="star" size={10} color="#FBBF24" />
-                        ))}
-                      </View>
-                      <TouchableOpacity className="mt-2 rounded-full py-2" style={{ backgroundColor: COLORS.primary }}>
-                        <Text className="text-white text-xs font-semibold text-center">Comprar</Text>
-                      </TouchableOpacity>
-                    </View>
-                  </View>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-          ) : null}
-        </View>
-
-        {/* BANNER DINÁMICO 2 - Después de Nuestros elegidos del momento */}
-        {banner2 && (
-          <View className="px-4">
-            <BannerCard banner={banner2} onPress={handleBannerPress} />
+                  </TouchableOpacity>
+                ))}
+              </View>
+            ) : (
+              <Text className="text-center text-gray-500 py-8">No hay productos disponibles</Text>
+            )}
           </View>
         )}
 
-        {/* BANNER DINÁMICO 3 - Después de Nuestros Productos */}
-        {banner3 && (
-          <View className="px-4 mb-1">
-            <BannerCard banner={banner3} onPress={handleBannerPress} />
-          </View>
-        )}
-
-        {/* NUESTROS PRODUCTOS */}
-        <View className="bg-white py-4 mb-1">
-          <Text className="text-lg font-bold text-gray-900 px-4 mb-3">Nuestros Productos</Text>
-
-          {loadingProducts && products.length > 0 ? (
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16 }}>
-              {products.slice(0, 3).map((product: any, index: number) => (
-                <TouchableOpacity
-                  key={product.id}
-                  onPress={() => navigation.navigate('ProductDetail', { productId: product.id })}
-                  className="mr-3"
-                  style={{ width: 133 }}
-                >
-                  <View className="bg-white rounded-xl overflow-hidden border border-gray-200">
-                    <View className="bg-gray-100 items-center justify-center relative" style={{ height: 133 }}>
-                      {product.image_url ? (
-                        <Image source={{ uri: product.image_url }} style={{ width: 133, height: 133 }} resizeMode="cover" />
-                      ) : (
-                        <Ionicons name="image-outline" size={40} color="#9CA3AF" />
-                      )}
-                    </View>
-                    <View className="p-2">
-                      <Text className="text-xs font-medium text-gray-900 mb-1" numberOfLines={2}>{product.name}</Text>
-                      <Text className="text-sm font-bold mb-1" style={{ color: COLORS.primary }}>
-                        ${product.price.toLocaleString('es-AR')}
-                      </Text>
-                      <View className="flex-row items-center">
-                        {[1, 2, 3, 4, 5].map((star) => (
-                          <Ionicons key={star} name="star" size={10} color="#FBBF24" />
-                        ))}
-                      </View>
-                      <TouchableOpacity className="mt-2 rounded-full py-2" style={{ backgroundColor: COLORS.primary }}>
-                        <Text className="text-white text-xs font-semibold text-center">Comprar</Text>
-                      </TouchableOpacity>
-                    </View>
-                  </View>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-          ) : null}
-        </View>
-
-        {/* LO MEJOR PARA EL HOGAR */}
-        <View className="bg-white py-4 mb-1">
-          <Text className="text-lg font-bold text-gray-900 px-4 mb-3">Lo mejor para el hogar</Text>
-
-          {loadingProducts && products.length > 0 ? (
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16 }}>
-              {products.slice(3, 6).map((product: any, index: number) => (
-                <TouchableOpacity
-                  key={product.id}
-                  onPress={() => navigation.navigate('ProductDetail', { productId: product.id })}
-                  className="mr-3"
-                  style={{ width: 133 }}
-                >
-                  <View className="bg-white rounded-xl overflow-hidden border border-gray-200">
-                    <View className="bg-gray-100 items-center justify-center" style={{ height: 133 }}>
-                      {product.image_url ? (
-                        <Image source={{ uri: product.image_url }} style={{ width: 133, height: 133 }} resizeMode="cover" />
-                      ) : (
-                        <Ionicons name="home-outline" size={40} color="#9CA3AF" />
-                      )}
-                    </View>
-                    <View className="p-2">
-                      <Text className="text-xs font-medium text-gray-900 mb-1" numberOfLines={2}>{product.name}</Text>
-                      <Text className="text-sm font-bold mb-1" style={{ color: COLORS.primary }}>
-                        ${product.price.toLocaleString('es-AR')}
-                      </Text>
-                      <View className="flex-row items-center">
-                        {[1, 2, 3, 4, 5].map((star) => (
-                          <Ionicons key={star} name="star" size={10} color="#FBBF24" />
-                        ))}
-                      </View>
-                      <TouchableOpacity className="mt-2 rounded-full py-2" style={{ backgroundColor: COLORS.primary }}>
-                        <Text className="text-white text-xs font-semibold text-center">Comprar</Text>
-                      </TouchableOpacity>
-                    </View>
-                  </View>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-          ) : null}
-        </View>
-
-        {/* BANNER DINÁMICO 4 - Antes de Marketplace */}
-        {banner4 && (
-          <View className="px-4 mb-1">
-            <BannerCard banner={banner4} onPress={handleBannerPress} />
-          </View>
-        )}
-
-        {/* MARKETPLACE */}
-        <View className="bg-white py-4 mb-1">
-          <Text className="text-lg font-bold text-gray-900 px-4 mb-3">Marketplace</Text>
-
-          {loadingProducts && products.length > 0 ? (
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16 }}>
-              {products.slice(0, 3).map((product: any) => (
-                <TouchableOpacity
-                  key={product.id}
-                  onPress={() => navigation.navigate('ProductDetail', { productId: product.id })}
-                  className="mr-3"
-                  style={{ width: 133 }}
-                >
-                  <View className="bg-white rounded-xl overflow-hidden border border-gray-200">
-                    <View className="bg-gray-100 items-center justify-center" style={{ height: 133 }}>
-                      {product.image_url ? (
-                        <Image source={{ uri: product.image_url }} style={{ width: 133, height: 133 }} resizeMode="cover" />
-                      ) : (
-                        <Ionicons name="storefront-outline" size={40} color="#9CA3AF" />
-                      )}
-                    </View>
-                    <View className="p-2">
-                      <Text className="text-xs font-medium text-gray-900 mb-1" numberOfLines={2}>{product.name}</Text>
-                      <Text className="text-sm font-bold mb-1" style={{ color: COLORS.primary }}>
-                        ${product.price.toLocaleString('es-AR')}
-                      </Text>
-                      <View className="flex-row items-center">
-                        {[1, 2, 3, 4, 5].map((star) => (
-                          <Ionicons key={star} name="star" size={10} color="#FBBF24" />
-                        ))}
-                      </View>
-                      <TouchableOpacity className="mt-2 rounded-full py-2" style={{ backgroundColor: COLORS.primary }}>
-                        <Text className="text-white text-xs font-semibold text-center">Comprar</Text>
-                      </TouchableOpacity>
-                    </View>
-                  </View>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-          ) : null}
-        </View>
-
-        {/* BANNER DINÁMICO 5 - Antes de También puede interesarte */}
-        {banner5 && (
-          <View className="px-4 mb-1">
-            <BannerCard banner={banner5} onPress={handleBannerPress} />
-          </View>
-        )}
-
-        {/* TAMBIÉN PUEDE INTERESARTE */}
-        <View className="bg-white py-4 mb-1">
-          <Text className="text-lg font-bold text-gray-900 px-4 mb-3">También puede interesarte</Text>
-
-          {loadingProducts && products.length > 0 ? (
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16 }}>
-              {products.slice(3, 6).map((product: any, index: number) => (
-                <TouchableOpacity
-                  key={product.id}
-                  onPress={() => navigation.navigate('ProductDetail', { productId: product.id })}
-                  className="mr-3"
-                  style={{ width: 133 }}
-                >
-                  <View className="bg-white rounded-xl overflow-hidden border border-gray-200">
-                    <View className="bg-gray-100 items-center justify-center relative" style={{ height: 133 }}>
-                      {product.image_url ? (
-                        <Image source={{ uri: product.image_url }} style={{ width: 133, height: 133 }} resizeMode="cover" />
-                      ) : (
-                        <Ionicons name="sparkles-outline" size={40} color="#9CA3AF" />
-                      )}
-                      {index === 0 && (
-                        <View className="absolute top-2 right-2 rounded px-2 py-1" style={{ backgroundColor: '#FF3B30' }}>
-                          <Text className="text-white text-xs font-bold">-25%</Text>
-                        </View>
-                      )}
-                    </View>
-                    <View className="p-2">
-                      <Text className="text-xs font-medium text-gray-900 mb-1" numberOfLines={2}>{product.name}</Text>
-                      <View className="mb-1">
-                        <Text className="text-sm font-bold" style={{ color: COLORS.primary }}>
-                          ${product.price.toLocaleString('es-AR')}
-                        </Text>
-                        {index === 0 && (
-                          <Text className="text-xs text-gray-500 line-through">
-                            ${Math.round(product.price * 1.33).toLocaleString('es-AR')}
-                          </Text>
-                        )}
-                      </View>
-                      <View className="flex-row items-center">
-                        {[1, 2, 3, 4, 5].map((star) => (
-                          <Ionicons key={star} name="star" size={10} color="#FBBF24" />
-                        ))}
-                      </View>
-                      <TouchableOpacity className="mt-2 rounded-full py-2" style={{ backgroundColor: COLORS.primary }}>
-                        <Text className="text-white text-xs font-semibold text-center">Comprar</Text>
-                      </TouchableOpacity>
-                    </View>
-                  </View>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-          ) : null}
-        </View>
-
-        {/* BANNER DINÁMICO 6 - Antes del Footer */}
+        {/* BANNER DINÁMICO 5 - Antes del Footer */}
         {banner6 && (
           <View className="px-4 mt-1 mb-4">
             <BannerCard banner={banner6} onPress={handleBannerPress} />

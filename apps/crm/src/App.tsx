@@ -10,11 +10,15 @@ import StoreApplications from './pages/StoreApplications';
 import OfficialStores from './pages/OfficialStores';
 import Products from './pages/Products';
 import FeaturedProducts from './pages/FeaturedProducts';
+import HomeSections from './pages/HomeSections';
 import Banners from './pages/Banners';
 import Users from './pages/Users';
 import Withdrawals from './pages/Withdrawals';
 import Categories from './pages/Categories';
 import Settings from './pages/Settings';
+import Invoicing from './pages/Invoicing';
+import Coupons from './pages/Coupons';
+import Shipping from './pages/Shipping';
 
 // Layout
 import Layout from './components/Layout';
@@ -64,10 +68,14 @@ function App() {
           <Route path="/stores" element={<OfficialStores />} />
           <Route path="/products" element={<Products />} />
           <Route path="/featured-products" element={<FeaturedProducts />} />
+          <Route path="/home-sections" element={<HomeSections />} />
           <Route path="/banners" element={<Banners />} />
           <Route path="/users" element={<Users />} />
           <Route path="/withdrawals" element={<Withdrawals />} />
           <Route path="/categories" element={<Categories />} />
+          <Route path="/invoicing" element={<Invoicing />} />
+          <Route path="/coupons" element={<Coupons />} />
+          <Route path="/shipping" element={<Shipping />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

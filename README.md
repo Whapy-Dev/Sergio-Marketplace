@@ -1,229 +1,315 @@
-Marketplace Formosa - Mobile App
+# Sergio Marketplace
 
-Aplicación móvil de marketplace local construida con React Native, Expo y Supabase.
+Marketplace móvil completo desarrollado con React Native (Expo) y un CRM administrativo en React. Backend con Supabase.
 
-## 📋 **Requisitos Previos**
+## Estructura del Proyecto
 
-- Node.js 18+ 
+```
+sergio-marketplace/
+├── src/                    # App móvil (React Native + Expo)
+│   ├── screens/           # Pantallas de la app
+│   ├── components/        # Componentes reutilizables
+│   ├── services/          # Servicios de API (Supabase)
+│   ├── contexts/          # Contexts de React
+│   ├── hooks/             # Custom hooks
+│   └── navigation/        # Configuración de navegación
+├── apps/crm/              # Panel administrativo (React + Vite)
+│   └── src/
+│       ├── pages/         # Páginas del CRM
+│       └── components/    # Componentes del CRM
+└── supabase/
+    └── migrations/        # Migraciones SQL
+```
+
+## Tecnologías
+
+### App Móvil
+- React Native con Expo
+- NativeWind (Tailwind CSS)
+- React Navigation
+- Supabase Client
+
+### CRM Administrativo
+- React 18 + TypeScript
+- Vite
+- Tailwind CSS
+- Supabase Client
+
+### Backend
+- Supabase (PostgreSQL)
+- Supabase Auth
+- Supabase Storage
+- Row Level Security (RLS)
+
+## Instalación
+
+### Requisitos
+- Node.js 18+
 - npm o yarn
 - Expo CLI
-- iOS Simulator (Mac) o Android Studio
-- Cuenta en Expo (para builds)
+- Cuenta en Supabase
 
-## 🚀 **Instalación**
+### Configuración
 
-### 1. Clonar el repositorio
+1. **Clonar el repositorio**
 ```bash
-git clone https://github.com/Whapy-Dev/Sergio-Marketplace.git
-cd Sergio-Marketplace/apps/mobile
+git clone https://github.com/tu-usuario/sergio-marketplace.git
+cd sergio-marketplace
 ```
 
-### 2. Instalar dependencias
-
-**IMPORTANTE:** Usar flag `--legacy-peer-deps` por compatibilidad de versiones:
+2. **Instalar dependencias de la app móvil**
 ```bash
-npm install --legacy-peer-deps
+npm install
 ```
 
-### 3. Configurar variables de entorno
+3. **Instalar dependencias del CRM**
+```bash
+cd apps/crm
+npm install
+cd ../..
+```
 
-Crea el archivo `.env` en la raíz de `apps/mobile/`:
+4. **Configurar Supabase**
+
+Crear archivo `.env` en la raíz:
 ```env
-EXPO_PUBLIC_SUPABASE_URL=tu_supabase_url
-EXPO_PUBLIC_SUPABASE_ANON_KEY=tu_supabase_anon_key
+EXPO_PUBLIC_SUPABASE_URL=https://tu-proyecto.supabase.co
+EXPO_PUBLIC_SUPABASE_ANON_KEY=tu-anon-key
 ```
 
-### 4. Iniciar el proyecto
+Crear archivo `.env` en `apps/crm/`:
+```env
+VITE_SUPABASE_URL=https://tu-proyecto.supabase.co
+VITE_SUPABASE_ANON_KEY=tu-anon-key
+```
+
+5. **Ejecutar migraciones SQL**
+
+Ir al SQL Editor de Supabase y ejecutar los archivos en `supabase/migrations/` en orden.
+
+### Ejecutar
+
+**App móvil:**
 ```bash
 npx expo start
 ```
 
-Luego presiona:
-- `i` para iOS
-- `a` para Android
-- `w` para Web
-
-## 📱 **Desarrollo Local**
-
-### Limpiar caché (si hay problemas)
+**CRM:**
 ```bash
-npx expo start --clear
+cd apps/crm
+npm run dev
 ```
 
-### Reinstalar dependencias
+## Funcionalidades
+
+### App Móvil
+
+#### Para Compradores
+- **Registro e inicio de sesión** con email
+- **Explorar productos** con categorías y búsqueda
+- **Filtros avanzados**: precio, envío gratis, ordenamiento
+- **Carrito de compras** con gestión de cantidades
+- **Favoritos** con listas personalizadas
+- **Checkout** con múltiples métodos de pago
+- **Historial de pedidos**
+- **Chat** con vendedores
+- **Notificaciones** de pedidos y ofertas
+- **Perfil editable** con foto y dirección
+
+#### Para Vendedores Individuales
+- **Dashboard simple** con métricas:
+  - Ventas del día y mes
+  - Balance disponible
+  - Pedidos pendientes
+  - Productos activos
+- **Gestión de productos**: crear, editar, eliminar
+- **Gestión de pedidos**: ver y actualizar estados
+- **Billetera**: ver balance y solicitar retiros
+- **Datos bancarios**: CBU/CVU, alias MP
+
+#### Para Tiendas Oficiales
+- **Dashboard Pro** con métricas avanzadas:
+  - Selector de período (hoy, 7d, 30d, 90d)
+  - Gráficos de ventas
+  - Comparativas con período anterior
+  - Top productos vendidos
+  - Top productos más vistos
+  - Alertas de inventario bajo
+  - Tasa de conversión
+  - Clientes recurrentes
+- Todo lo de vendedores individuales
+
+### CRM Administrativo
+
+#### Dashboard
+- Resumen de ventas y pedidos
+- Métricas principales
+
+#### Productos
+- CRUD completo de productos
+- Gestión de imágenes
+- Variantes de producto
+- Estados: activo, inactivo, agotado
+
+#### Pedidos
+- Lista de todos los pedidos
+- Filtros por estado
+- Actualización de estados
+- Detalle completo
+
+#### Usuarios
+- Lista de usuarios registrados
+- Cambio de roles
+- Información de perfil
+
+#### Categorías
+- Crear y editar categorías
+- Iconos personalizados
+- Tasas de comisión
+
+#### Tiendas Oficiales
+- Aprobar solicitudes
+- Gestionar tiendas existentes
+- Configurar comisiones especiales
+
+#### Banners
+- Crear banners promocionales
+- Tipos: producto, categoría, tienda, externo
+- Imágenes personalizadas
+- Fechas de vigencia
+
+#### Secciones del Home
+- Configurar secciones dinámicas
+- Seleccionar productos destacados
+- Ordenar secciones
+
+#### Cupones
+- Crear cupones de descuento
+- Tipos: porcentaje o monto fijo
+- Límites de uso
+- Fechas de vigencia
+
+#### Configuración
+- Datos del marketplace
+- Métodos de pago
+- Configuración de envíos
+- Montos mínimos
+
+## Roles de Usuario
+
+| Rol | Descripción |
+|-----|-------------|
+| `customer` | Comprador básico |
+| `seller_individual` | Vendedor individual |
+| `seller_official` | Tienda oficial verificada |
+| `admin` | Administrador del marketplace |
+
+## Base de Datos
+
+### Tablas Principales
+
+- `profiles` - Usuarios y sus datos
+- `products` - Catálogo de productos
+- `product_images` - Imágenes de productos
+- `product_variants` - Variantes (talle, color)
+- `categories` - Categorías de productos
+- `orders` - Pedidos
+- `order_items` - Items de cada pedido
+- `official_stores` - Tiendas oficiales
+- `banners` - Banners promocionales
+- `home_sections` - Secciones del home
+- `home_section_products` - Productos por sección
+- `coupons` - Cupones de descuento
+- `favorites` - Productos favoritos
+- `favorite_lists` - Listas de favoritos
+- `conversations` - Conversaciones de chat
+- `messages` - Mensajes de chat
+- `reviews` - Reseñas de productos
+- `seller_balances` - Balances de vendedores
+- `balance_transactions` - Transacciones de balance
+- `withdrawal_requests` - Solicitudes de retiro
+- `notifications` - Notificaciones
+
+## Flujos Principales
+
+### Flujo de Compra
+1. Usuario navega productos
+2. Agrega al carrito
+3. Procede al checkout
+4. Selecciona método de pago
+5. Confirma pedido
+6. Recibe notificación
+7. Vendedor procesa pedido
+8. Usuario recibe producto
+
+### Flujo de Venta
+1. Vendedor crea producto
+2. Producto aparece en catálogo
+3. Comprador realiza pedido
+4. Vendedor recibe notificación
+5. Vendedor actualiza estado
+6. Balance se acredita al vendedor
+7. Vendedor solicita retiro
+
+### Flujo de Tienda Oficial
+1. Usuario solicita ser tienda oficial
+2. Admin revisa solicitud
+3. Admin aprueba/rechaza
+4. Si aprobado, usuario obtiene rol `seller_official`
+5. Accede a Dashboard Pro
+
+## Configuración de Supabase
+
+### Storage Buckets
+- `avatars` - Fotos de perfil
+- `products` - Imágenes de productos
+- `banners` - Imágenes de banners
+- `stores` - Logos de tiendas
+
+### Políticas RLS
+Todas las tablas tienen Row Level Security habilitado. Ver migraciones para políticas específicas.
+
+## Desarrollo
+
+### Convenciones
+- Componentes en PascalCase
+- Servicios en camelCase
+- Archivos de screen terminan en `Screen.tsx`
+- Servicios en `src/services/`
+
+### Agregar nueva funcionalidad
+
+1. Crear migración SQL en `supabase/migrations/`
+2. Crear servicio en `src/services/`
+3. Crear pantalla en `src/screens/`
+4. Agregar a navegación en `src/navigation/AppNavigator.tsx`
+5. Si es admin, crear página en `apps/crm/src/pages/`
+
+## Despliegue
+
+### App Móvil
 ```bash
-rm -rf node_modules
-npm install --legacy-peer-deps
-npx expo start --clear
+# Build para Android
+npx expo build:android
+
+# Build para iOS
+npx expo build:ios
+
+# O usar EAS Build
+eas build --platform all
 ```
 
-## 🏗️ **Builds para Producción**
-
-### Configurar EAS (primera vez)
+### CRM
 ```bash
-# Instalar EAS CLI
-npm install -g eas-cli
-
-# Login
-eas login
-
-# Configurar proyecto
-eas init
+cd apps/crm
+npm run build
+# Desplegar carpeta dist/ en hosting (Vercel, Netlify, etc.)
 ```
 
-### Crear Build Android (APK de prueba)
-```bash
-eas build --platform android --profile preview
-```
+## Soporte
 
-### Crear Build Android (para Google Play)
-```bash
-eas build --platform android --profile production
-```
+Para reportar bugs o solicitar funcionalidades, crear un issue en el repositorio.
 
-### Crear Build iOS
-```bash
-eas build --platform ios --profile production
-```
+## Licencia
 
-**Nota:** iOS requiere Apple Developer Account ($99/año)
-
-## 📦 **Dependencias Principales**
-```json
-{
-  "expo": "~54.0.19",
-  "react": "19.1.0",
-  "react-native": "0.81.5",
-  "nativewind": "^2.0.11",
-  "tailwindcss": "3.3.2",
-  "@supabase/supabase-js": "^2.76.0",
-  "@react-navigation/native": "^7.1.18",
-  "@react-navigation/bottom-tabs": "^7.4.9",
-  "@react-navigation/native-stack": "^7.3.28"
-}
-```
-
-## ⚙️ **Configuración Importante**
-
-### babel.config.js
-```javascript
-module.exports = function(api) {
-  api.cache(true);
-  return {
-    presets: ['babel-preset-expo'],
-    plugins: ['nativewind/babel'],
-  };
-};
-```
-
-### .npmrc
-```
-legacy-peer-deps=true
-```
-
-### tailwind.config.js
-```javascript
-module.exports = {
-  content: [
-    "./App.{js,jsx,ts,tsx}",
-    "./src/**/*.{js,jsx,ts,tsx}"
-  ],
-  theme: {
-    extend: {
-      colors: {
-        primary: {
-          DEFAULT: '#2563EB',
-          // ... más colores
-        },
-      },
-    },
-  },
-  plugins: [],
-};
-```
-
-## 🔧 **Solución de Problemas**
-
-### Error: "Use process(css).then(cb) to work with async plugins"
-
-**Solución:** Asegurarse de usar TailwindCSS 3.3.2 exactamente:
-```bash
-rm -rf node_modules
-# Verificar que package.json tenga "tailwindcss": "3.3.2"
-npm install --legacy-peer-deps
-npx expo start --clear
-```
-
-### Error: "ERESOLVE unable to resolve dependency tree"
-
-**Solución:** Siempre usar `--legacy-peer-deps`:
-```bash
-npm install --legacy-peer-deps
-```
-
-### Build falla en EAS
-
-**Solución:** Asegurarse de tener `.npmrc` con:
-```
-legacy-peer-deps=true
-```
-
-## 📂 **Estructura del Proyecto**
-```
-apps/mobile/
-├── src/
-│   ├── components/      # Componentes reutilizables
-│   ├── contexts/        # Context API (Auth, Cart, Favorites)
-│   ├── hooks/           # Custom hooks
-│   ├── navigation/      # Configuración de navegación
-│   ├── screens/         # Pantallas de la app
-│   ├── services/        # Servicios (Supabase, API calls)
-│   └── constants/       # Constantes y temas
-├── assets/              # Imágenes, iconos, fonts
-├── App.tsx             # Punto de entrada
-├── app.json            # Configuración de Expo
-├── eas.json            # Configuración de EAS Build
-├── babel.config.js     # Configuración de Babel
-├── tailwind.config.js  # Configuración de TailwindCSS
-└── .npmrc              # Configuración de npm
-```
-
-## 🎨 **Características**
-
-- ✅ Autenticación con Supabase
-- ✅ Carrito de compras
-- ✅ Sistema de favoritos
-- ✅ Búsqueda de productos
-- ✅ Gestión de pedidos
-- ✅ Dashboard de vendedor
-- ✅ Perfil de usuario
-- ✅ Navegación con tabs y stack
-- ✅ Diseño con NativeWind (TailwindCSS)
-
-## 🔐 **Variables de Entorno Requeridas**
-```env
-EXPO_PUBLIC_SUPABASE_URL=https://tu-proyecto.supabase.co
-EXPO_PUBLIC_SUPABASE_ANON_KEY=tu_anon_key_aqui
-```
-
-## 📱 **Plataformas Soportadas**
-
-- ✅ iOS 13+
-- ✅ Android 6.0+ (API 23+)
-- ⚠️ Web (limitado)
-
-## 👨‍💻 **Desarrollo**
-
-### Comandos útiles
-```bash
-# Iniciar con caché limpia
-npx expo start --clear
-
-# Ver en iOS
-npx expo start --ios
-
-# Ver en Android
-npx expo start --android
-
-# Actualizar dependencias de Expo
-npx expo install --fix
+MIT License

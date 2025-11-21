@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../contexts/AuthContext';
 import { getSellerStats, SellerStats } from '../../services/seller';
 import { COLORS } from '../../constants/theme';
@@ -17,7 +18,6 @@ export default function SellerDashboardScreen({ navigation }: any) {
 
   async function loadStats() {
     if (!user) return;
-
     setLoading(true);
     const data = await getSellerStats(user.id);
     setStats(data);
@@ -46,14 +46,14 @@ export default function SellerDashboardScreen({ navigation }: any) {
       <View className="px-4 py-3 bg-white border-b border-gray-200">
         <View className="flex-row items-center justify-between">
           <View>
-            <Text className="text-2xl font-bold text-gray-900">Dashboard</Text>
-            <Text className="text-sm text-gray-600">Resumen de tu tienda</Text>
+            <Text className="text-xl font-bold text-gray-900">Mi Dashboard</Text>
+            <Text className="text-xs text-gray-500">Resumen de ventas</Text>
           </View>
-          <TouchableOpacity 
+          <TouchableOpacity
             onPress={onRefresh}
-            className="w-10 h-10 rounded-full bg-gray-100 items-center justify-center"
+            className="w-9 h-9 rounded-full bg-gray-100 items-center justify-center"
           >
-            <Text className="text-xl">🔄</Text>
+            <Ionicons name="refresh" size={18} color="#6B7280" />
           </TouchableOpacity>
         </View>
       </View>
@@ -64,194 +64,171 @@ export default function SellerDashboardScreen({ navigation }: any) {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[COLORS.primary]} />
         }
       >
-        {/* Tarjetas de estadísticas principales */}
-        <View className="px-4 py-4">
-          {/* Ingresos totales */}
-          <View className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-2xl p-6 mb-4">
-            <View className="flex-row items-center mb-2">
-              <Text className="text-4xl mr-2">💰</Text>
-              <Text className="text-white text-sm font-medium opacity-90">Ingresos Totales</Text>
+        {/* Balance Disponible */}
+        <View className="px-4 pt-4">
+          <TouchableOpacity
+            onPress={() => navigation.navigate('Wallet')}
+            className="bg-primary rounded-2xl p-5 mb-4"
+            style={{ backgroundColor: COLORS.primary }}
+          >
+            <View className="flex-row items-center justify-between mb-2">
+              <Text className="text-white text-sm opacity-90">Balance Disponible</Text>
+              <Ionicons name="wallet-outline" size={20} color="rgba(255,255,255,0.8)" />
             </View>
-            <Text className="text-white text-4xl font-bold mb-1">
-              ${stats?.total_revenue.toLocaleString() || 0}
+            <Text className="text-white text-3xl font-bold mb-1">
+              ${stats?.available_balance.toLocaleString() || 0}
             </Text>
-            <Text className="text-white text-sm opacity-80">
-              {stats?.total_sales || 0} ventas realizadas
+            <Text className="text-white text-xs opacity-80">
+              Toca para retirar →
             </Text>
-          </View>
+          </TouchableOpacity>
+        </View>
 
-          {/* Grid de métricas */}
-          <View className="flex-row flex-wrap justify-between mb-4">
-            {/* Productos */}
+        {/* Métricas principales */}
+        <View className="px-4">
+          <View className="flex-row flex-wrap justify-between">
+            {/* Ventas Hoy */}
             <View className="w-[48%] bg-white rounded-xl p-4 mb-3 border border-gray-100">
-              <View className="flex-row items-center justify-between mb-3">
-                <Text className="text-3xl">📦</Text>
-                <View className="bg-blue-50 px-2 py-1 rounded">
-                  <Text className="text-primary text-xs font-semibold">
-                    {stats?.active_products || 0} activos
-                  </Text>
-                </View>
+              <View className="flex-row items-center justify-between mb-2">
+                <Ionicons name="today-outline" size={20} color="#10B981" />
+                <Text className="text-xs text-gray-500">Hoy</Text>
               </View>
-              <Text className="text-2xl font-bold text-gray-900 mb-1">
-                {stats?.total_products || 0}
+              <Text className="text-xl font-bold text-gray-900">
+                ${stats?.revenue_today.toLocaleString() || 0}
               </Text>
-              <Text className="text-sm text-gray-600">Productos</Text>
+              <Text className="text-xs text-gray-500">
+                {stats?.sales_today || 0} ventas
+              </Text>
             </View>
 
-            {/* Ventas */}
+            {/* Ventas Mes */}
             <View className="w-[48%] bg-white rounded-xl p-4 mb-3 border border-gray-100">
-              <View className="flex-row items-center justify-between mb-3">
-                <Text className="text-3xl">📈</Text>
-                <View className="bg-green-50 px-2 py-1 rounded">
-                  <Text className="text-green-600 text-xs font-semibold">+12%</Text>
-                </View>
+              <View className="flex-row items-center justify-between mb-2">
+                <Ionicons name="calendar-outline" size={20} color="#3B82F6" />
+                <Text className="text-xs text-gray-500">Este mes</Text>
               </View>
-              <Text className="text-2xl font-bold text-gray-900 mb-1">
-                {stats?.total_sales || 0}
+              <Text className="text-xl font-bold text-gray-900">
+                ${stats?.revenue_month.toLocaleString() || 0}
               </Text>
-              <Text className="text-sm text-gray-600">Ventas</Text>
+              <Text className="text-xs text-gray-500">
+                {stats?.sales_month || 0} ventas
+              </Text>
             </View>
 
-            {/* Pedidos pendientes */}
+            {/* Pedidos Pendientes */}
             <View className="w-[48%] bg-white rounded-xl p-4 mb-3 border border-gray-100">
-              <View className="flex-row items-center justify-between mb-3">
-                <Text className="text-3xl">⏳</Text>
+              <View className="flex-row items-center justify-between mb-2">
+                <Ionicons name="time-outline" size={20} color="#F59E0B" />
                 {stats && stats.pending_orders > 0 && (
-                  <View className="bg-yellow-50 px-2 py-1 rounded">
-                    <Text className="text-yellow-600 text-xs font-semibold">Pendientes</Text>
+                  <View className="bg-red-500 rounded-full w-5 h-5 items-center justify-center">
+                    <Text className="text-white text-xs font-bold">{stats.pending_orders}</Text>
                   </View>
                 )}
               </View>
-              <Text className="text-2xl font-bold text-gray-900 mb-1">
+              <Text className="text-xl font-bold text-gray-900">
                 {stats?.pending_orders || 0}
               </Text>
-              <Text className="text-sm text-gray-600">Pedidos</Text>
+              <Text className="text-xs text-gray-500">Pendientes</Text>
             </View>
 
-            {/* Promedio de venta */}
+            {/* Productos Activos */}
             <View className="w-[48%] bg-white rounded-xl p-4 mb-3 border border-gray-100">
-              <View className="flex-row items-center justify-between mb-3">
-                <Text className="text-3xl">💵</Text>
+              <View className="flex-row items-center justify-between mb-2">
+                <Ionicons name="cube-outline" size={20} color="#8B5CF6" />
               </View>
-              <Text className="text-2xl font-bold text-gray-900 mb-1">
-                ${stats && stats.total_sales > 0 
-                  ? Math.round(stats.total_revenue / stats.total_sales).toLocaleString() 
-                  : 0}
+              <Text className="text-xl font-bold text-gray-900">
+                {stats?.active_products || 0}
               </Text>
-              <Text className="text-sm text-gray-600">Promedio venta</Text>
+              <Text className="text-xs text-gray-500">Productos activos</Text>
             </View>
           </View>
         </View>
 
-        {/* Acciones rápidas */}
-        <View className="px-4 pb-4">
-          <Text className="text-lg font-bold text-gray-900 mb-3">Acciones Rápidas</Text>
+        {/* Acciones Rápidas */}
+        <View className="px-4 py-4">
+          <Text className="text-sm font-bold text-gray-700 mb-3">ACCIONES RÁPIDAS</Text>
 
           <TouchableOpacity
             onPress={() => navigation.navigate('CreateProduct')}
-            className="bg-white rounded-xl p-4 mb-3 flex-row items-center border border-gray-100"
+            className="bg-white rounded-xl p-4 mb-2 flex-row items-center border border-gray-100"
           >
-            <View className="w-12 h-12 rounded-full bg-blue-50 items-center justify-center mr-4">
-              <Text className="text-2xl">➕</Text>
+            <View className="w-10 h-10 rounded-full bg-blue-50 items-center justify-center mr-3">
+              <Ionicons name="add" size={22} color="#3B82F6" />
             </View>
             <View className="flex-1">
-              <Text className="text-base font-semibold text-gray-900">Publicar Producto</Text>
-              <Text className="text-sm text-gray-600">Agrega un nuevo producto a tu tienda</Text>
+              <Text className="text-sm font-semibold text-gray-900">Publicar Producto</Text>
             </View>
-            <Text className="text-gray-400 text-xl">→</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={() => navigation.navigate('MyProducts')}
-            className="bg-white rounded-xl p-4 mb-3 flex-row items-center border border-gray-100"
-          >
-            <View className="w-12 h-12 rounded-full bg-green-50 items-center justify-center mr-4">
-              <Text className="text-2xl">📦</Text>
-            </View>
-            <View className="flex-1">
-              <Text className="text-base font-semibold text-gray-900">Mis Productos</Text>
-              <Text className="text-sm text-gray-600">Gestiona tu inventario</Text>
-            </View>
-            <Text className="text-gray-400 text-xl">→</Text>
+            <Ionicons name="chevron-forward" size={18} color="#9CA3AF" />
           </TouchableOpacity>
 
           <TouchableOpacity
             onPress={() => navigation.navigate('SellerOrders')}
-            className="bg-white rounded-xl p-4 mb-3 flex-row items-center border border-gray-100"
+            className="bg-white rounded-xl p-4 mb-2 flex-row items-center border border-gray-100"
           >
-            <View className="w-12 h-12 rounded-full bg-yellow-50 items-center justify-center mr-4">
-              <Text className="text-2xl">📋</Text>
+            <View className="w-10 h-10 rounded-full bg-yellow-50 items-center justify-center mr-3">
+              <Ionicons name="list" size={22} color="#F59E0B" />
             </View>
             <View className="flex-1">
-              <Text className="text-base font-semibold text-gray-900">Pedidos</Text>
-              <Text className="text-sm text-gray-600">Ver y gestionar pedidos</Text>
+              <Text className="text-sm font-semibold text-gray-900">Ver Pedidos</Text>
             </View>
             {stats && stats.pending_orders > 0 && (
-              <View className="bg-red-500 rounded-full w-6 h-6 items-center justify-center mr-2">
+              <View className="bg-red-500 rounded-full px-2 py-0.5 mr-2">
                 <Text className="text-white text-xs font-bold">{stats.pending_orders}</Text>
               </View>
             )}
-            <Text className="text-gray-400 text-xl">→</Text>
+            <Ionicons name="chevron-forward" size={18} color="#9CA3AF" />
           </TouchableOpacity>
 
           <TouchableOpacity
-            onPress={() => navigation.navigate('SellerAnalytics')}
-            className="bg-white rounded-xl p-4 mb-3 flex-row items-center border border-gray-100"
+            onPress={() => navigation.navigate('MyProducts')}
+            className="bg-white rounded-xl p-4 mb-2 flex-row items-center border border-gray-100"
           >
-            <View className="w-12 h-12 rounded-full bg-purple-50 items-center justify-center mr-4">
-              <Text className="text-2xl">📊</Text>
+            <View className="w-10 h-10 rounded-full bg-purple-50 items-center justify-center mr-3">
+              <Ionicons name="cube" size={22} color="#8B5CF6" />
             </View>
             <View className="flex-1">
-              <Text className="text-base font-semibold text-gray-900">Análisis Detallado</Text>
-              <Text className="text-sm text-gray-600">Estadísticas y gráficos</Text>
+              <Text className="text-sm font-semibold text-gray-900">Mis Productos</Text>
             </View>
-            <Text className="text-gray-400 text-xl">→</Text>
+            <Ionicons name="chevron-forward" size={18} color="#9CA3AF" />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={() => navigation.navigate('Wallet')}
+            className="bg-white rounded-xl p-4 flex-row items-center border border-gray-100"
+          >
+            <View className="w-10 h-10 rounded-full bg-green-50 items-center justify-center mr-3">
+              <Ionicons name="wallet" size={22} color="#10B981" />
+            </View>
+            <View className="flex-1">
+              <Text className="text-sm font-semibold text-gray-900">Retirar Dinero</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color="#9CA3AF" />
           </TouchableOpacity>
         </View>
 
-        {/* Tips para vendedores */}
+        {/* Resumen Total */}
         <View className="px-4 pb-6">
-          <Text className="text-lg font-bold text-gray-900 mb-3">💡 Tips para Vender Más</Text>
-
-          <View className="bg-blue-50 rounded-xl p-4 mb-3 border border-blue-100">
-            <View className="flex-row items-start">
-              <Text className="text-2xl mr-3">📸</Text>
-              <View className="flex-1">
-                <Text className="text-base font-semibold text-gray-900 mb-1">
-                  Agrega fotos de calidad
-                </Text>
-                <Text className="text-sm text-gray-600">
-                  Los productos con buenas fotos venden 3x más
-                </Text>
-              </View>
+          <View className="bg-gray-100 rounded-xl p-4">
+            <Text className="text-xs font-bold text-gray-500 mb-3">RESUMEN TOTAL</Text>
+            <View className="flex-row justify-between mb-2">
+              <Text className="text-sm text-gray-600">Total vendido</Text>
+              <Text className="text-sm font-semibold text-gray-900">
+                ${stats?.total_revenue.toLocaleString() || 0}
+              </Text>
             </View>
-          </View>
-
-          <View className="bg-green-50 rounded-xl p-4 mb-3 border border-green-100">
-            <View className="flex-row items-start">
-              <Text className="text-2xl mr-3">🚚</Text>
-              <View className="flex-1">
-                <Text className="text-base font-semibold text-gray-900 mb-1">
-                  Ofrece envío gratis
-                </Text>
-                <Text className="text-sm text-gray-600">
-                  Aumenta tus ventas hasta un 50%
-                </Text>
-              </View>
+            <View className="flex-row justify-between mb-2">
+              <Text className="text-sm text-gray-600">Total ventas</Text>
+              <Text className="text-sm font-semibold text-gray-900">
+                {stats?.total_sales || 0}
+              </Text>
             </View>
-          </View>
-
-          <View className="bg-purple-50 rounded-xl p-4 border border-purple-100">
-            <View className="flex-row items-start">
-              <Text className="text-2xl mr-3">⚡</Text>
-              <View className="flex-1">
-                <Text className="text-base font-semibold text-gray-900 mb-1">
-                  Responde rápido
-                </Text>
-                <Text className="text-sm text-gray-600">
-                  Los vendedores que responden en menos de 1 hora venden 2x más
-                </Text>
-              </View>
+            <View className="flex-row justify-between">
+              <Text className="text-sm text-gray-600">Promedio por venta</Text>
+              <Text className="text-sm font-semibold text-gray-900">
+                ${stats && stats.total_sales > 0
+                  ? Math.round(stats.total_revenue / stats.total_sales).toLocaleString()
+                  : 0}
+              </Text>
             </View>
           </View>
         </View>

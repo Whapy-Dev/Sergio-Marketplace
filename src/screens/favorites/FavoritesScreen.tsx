@@ -281,7 +281,7 @@ export default function FavoritesScreen({ navigation }: any) {
       </View>
 
       {/* Lista de productos o listas */}
-      <ScrollView className="flex-1 px-5 pt-6" showsVerticalScrollIndicator={false}>
+      <ScrollView className="flex-1 px-5 pt-6" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 80 }}>
         {activeTab === 'favorites' ? (
           products.map((product) => (
             <FavoriteProductItem

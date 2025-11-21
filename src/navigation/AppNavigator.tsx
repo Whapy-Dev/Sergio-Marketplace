@@ -39,6 +39,7 @@ import MyProductsScreen from '../screens/seller/MyProductsScreen';
 import CreateProductScreen from '../screens/seller/CreateProductScreen';
 import EditProductScreen from '../screens/seller/EditProductScreen';
 import SellerDashboardScreen from '../screens/seller/SellerDashboardScreen';
+import OfficialStoreDashboardScreen from '../screens/seller/OfficialStoreDashboardScreen';
 import SellerAnalyticsScreen from '../screens/seller/SellerAnalyticsScreen';
 import OrderDetailScreen from '../screens/orders/OrderDetailScreen';
 import SellerOrdersScreen from '../screens/seller/SellerOrdersScreen';
@@ -59,6 +60,10 @@ import WithdrawalHistoryScreen from '../screens/wallet/WithdrawalHistoryScreen';
 import LoginScreen from '../screens/auth/LoginScreen';
 import RegisterScreen from '../screens/auth/RegisterScreen';
 import SplashScreen from '../screens/SplashScreen';
+
+// Screens - Invoices
+import MyInvoicesScreen from '../screens/invoices/MyInvoicesScreen';
+import InvoiceDetailScreen from '../screens/invoices/InvoiceDetailScreen';
 
 // Screens - Official Stores
 import OfficialStoresScreen from '../screens/stores/OfficialStoresScreen';
@@ -116,6 +121,7 @@ function ProfileStack() {
       <Stack.Screen name="CreateProduct" component={CreateProductScreen} />
       <Stack.Screen name="EditProduct" component={EditProductScreen} />
       <Stack.Screen name="SellerDashboard" component={SellerDashboardScreen} />
+      <Stack.Screen name="OfficialStoreDashboard" component={OfficialStoreDashboardScreen} />
       <Stack.Screen name="SellerAnalytics" component={SellerAnalyticsScreen} />
       <Stack.Screen name="SellerOrders" component={SellerOrdersScreen} />
       <Stack.Screen name="SellerOrderDetail" component={OrderDetailScreen} />
@@ -129,6 +135,8 @@ function ProfileStack() {
       <Stack.Screen name="Terms" component={TermsScreen} />
       <Stack.Screen name="Language" component={LanguageScreen} />
       <Stack.Screen name="RegisterOfficialStore" component={RegisterOfficialStoreScreen} />
+      <Stack.Screen name="MyInvoices" component={MyInvoicesScreen} />
+      <Stack.Screen name="InvoiceDetail" component={InvoiceDetailScreen} />
     </Stack.Navigator>
   );
 }

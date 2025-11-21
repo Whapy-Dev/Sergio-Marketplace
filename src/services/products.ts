@@ -25,6 +25,9 @@ export interface Product {
   sales: number;
   created_at: string;
   updated_at: string;
+  is_featured?: boolean;
+  featured_order?: number;
+  featured_until?: string | null;
 }
 
 export interface ProductImage {
@@ -51,6 +54,8 @@ export async function getProducts(limit: number = 10) {
       .from('products')
       .select('*')
       .eq('status', 'active')
+      .order('is_featured', { ascending: false, nullsFirst: false })
+      .order('featured_order', { ascending: true })
       .order('created_at', { ascending: false })
       .limit(limit);
 

@@ -1,5 +1,7 @@
 import { supabase } from './supabase';
 import { calculateCommission } from './wallet';
+import { calculateShipping } from './shipping';
+import { validateCoupon, applyCoupon } from './coupons';
 
 export interface Order {
   id: string;
@@ -59,9 +61,16 @@ export interface CreateOrderData {
     seller_id?: string;
     category_id?: string; // For commission calculation
     shipping_address?: string; // Each item can have its own shipping address
+    weight_kg?: number; // Product weight for shipping calculation
   }[];
   payment_method?: string;
   buyer_notes?: string;
+  // Shipping info
+  shipping_province?: string;
+  shipping_method_id?: string;
+  shipping_address?: string;
+  // Coupon
+  coupon_code?: string;
 }
 
 /**
@@ -69,11 +78,44 @@ export interface CreateOrderData {
  */
 export async function createOrder(data: CreateOrderData): Promise<Order | null> {
   try {
-    // Calculate totals
+    // Calculate subtotal
     const subtotal = data.items.reduce((sum, item) => sum + (item.unit_price * item.quantity), 0);
-    const shipping_total = 0; // TODO: Calculate based on location
-    const tax_total = 0; // TODO: Calculate tax if needed
-    const discount_total = 0; // TODO: Apply discount if any
+
+    // Calculate shipping
+    let shipping_total = 0;
+    if (data.shipping_province && data.shipping_method_id) {
+      const totalWeight = data.items.reduce((sum, item) => sum + (item.weight_kg || 0.5) * item.quantity, 0);
+      const shippingResult = await calculateShipping(
+        data.shipping_province,
+        data.shipping_method_id,
+        subtotal,
+        totalWeight
+      );
+      if (!shippingResult.error_message) {
+        shipping_total = shippingResult.shipping_cost;
+      }
+    }
+
+    // Tax is included in prices (IVA 21%)
+    const tax_total = 0;
+
+    // Apply coupon if provided
+    let discount_total = 0;
+    let couponId: string | undefined;
+    if (data.coupon_code) {
+      const productIds = data.items.map(item => item.product_id);
+      const couponResult = await validateCoupon(
+        data.coupon_code,
+        data.buyer_id,
+        subtotal,
+        productIds
+      );
+      if (couponResult.is_valid && couponResult.coupon_id) {
+        discount_total = couponResult.discount_amount;
+        couponId = couponResult.coupon_id;
+      }
+    }
+
     const total = subtotal + shipping_total + tax_total - discount_total;
 
     // Create order
@@ -143,6 +185,11 @@ export async function createOrder(data: CreateOrderData): Promise<Order | null> 
 
     if (itemsError) throw itemsError;
 
+    // Register coupon usage if applied
+    if (couponId && discount_total > 0) {
+      await applyCoupon(couponId, data.buyer_id, order.id, discount_total);
+    }
+
     return order;
   } catch (error) {
     console.error('Error creating order:', error);
@@ -198,15 +245,34 @@ export async function getUserOrders(userId: string): Promise<Order[]> {
 }
 
 /**
- * Get seller's orders
+ * Get seller's orders (orders containing products from this seller)
  */
 export async function getSellerOrders(sellerId: string): Promise<Order[]> {
   try {
+    // Get orders that have items from this seller
+    const { data: orderItems, error: itemsError } = await supabase
+      .from('order_items')
+      .select(`
+        order_id,
+        products!inner(seller_id)
+      `)
+      .eq('products.seller_id', sellerId);
+
+    if (itemsError) throw itemsError;
+
+    if (!orderItems || orderItems.length === 0) {
+      return [];
+    }
+
+    // Get unique order IDs
+    const orderIds = [...new Set(orderItems.map(item => item.order_id))];
+
+    // Fetch the actual orders
     const { data, error } = await supabase
       .from('orders')
       .select('*')
-      .eq('seller_id', sellerId)
-      .order('created_at', { ascending: false});
+      .in('id', orderIds)
+      .order('created_at', { ascending: false });
 
     if (error) throw error;
 

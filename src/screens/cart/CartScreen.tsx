@@ -42,7 +42,7 @@ export default function CartScreen({ navigation }: any) {
         </Text>
       </View>
 
-      <ScrollView className="flex-1">
+      <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 80 }}>
         {items.map((item) => (
           <View
             key={item.id}
@@ -117,7 +117,7 @@ export default function CartScreen({ navigation }: any) {
       </ScrollView>
 
       {/* Footer con total y botón */}
-      <View className="px-4 py-4 border-t border-gray-200 bg-white">
+      <View className="px-4 pt-4 pb-24 border-t border-gray-200 bg-white">
         <View className="flex-row justify-between items-center mb-3">
           <Text className="text-base text-gray-700">Subtotal</Text>
           <Text className="text-base font-semibold text-gray-900">

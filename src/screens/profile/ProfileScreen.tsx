@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Image, Alert, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
 import { useAuth } from '../../contexts/AuthContext';
 import { getUserProfile, UserProfile } from '../../services/profile';
 import { getUserOfficialStore, getUserStoreApplication } from '../../services/officialStores';
@@ -13,6 +14,7 @@ export default function ProfileScreen({ navigation }: any) {
   const { user, signOut } = useAuth();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [officialStore, setOfficialStore] = useState<OfficialStore | null>(null);
   const [storeApplication, setStoreApplication] = useState<StoreApplication | null>(null);
 
@@ -22,6 +24,84 @@ export default function ProfileScreen({ navigation }: any) {
       loadStoreData();
     }
   }, [user]);
+
+  async function handleAvatarPress() {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+    if (status !== 'granted') {
+      Alert.alert('Permiso requerido', 'Necesitamos acceso a tu galería para cambiar la foto de perfil');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+
+    if (!result.canceled && result.assets[0] && user) {
+      await uploadAvatar(result.assets[0].uri);
+    }
+  }
+
+  async function uploadAvatar(uri: string) {
+    if (!user) return;
+
+    try {
+      setUploadingAvatar(true);
+
+      // Get file extension
+      const ext = uri.split('.').pop()?.toLowerCase() || 'jpg';
+      const fileName = `${user.id}/avatar.${ext}`;
+
+      // Read file as base64 for React Native
+      const response = await fetch(uri);
+      const arrayBuffer = await response.arrayBuffer();
+      const uint8Array = new Uint8Array(arrayBuffer);
+
+      // Upload to Supabase Storage
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(fileName, uint8Array, {
+          cacheControl: '3600',
+          upsert: true,
+          contentType: `image/${ext === 'jpg' ? 'jpeg' : ext}`
+        });
+
+      if (uploadError) {
+        console.error('Upload error:', uploadError);
+        Alert.alert('Error', 'No se pudo subir la imagen. Verifica que el bucket "avatars" exista.');
+        return;
+      }
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(fileName);
+
+      // Update profile with new avatar URL
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ avatar_url: publicUrl + '?t=' + Date.now() })
+        .eq('id', user.id);
+
+      if (updateError) {
+        console.error('Update error:', updateError);
+        Alert.alert('Error', 'No se pudo actualizar el perfil');
+        return;
+      }
+
+      Alert.alert('¡Listo!', 'Tu foto de perfil ha sido actualizada');
+      loadProfile();
+
+    } catch (error) {
+      console.error('Error uploading avatar:', error);
+      Alert.alert('Error', 'Ocurrió un error al subir la imagen');
+    } finally {
+      setUploadingAvatar(false);
+    }
+  }
 
   async function loadProfile() {
     if (!user) return;
@@ -81,19 +161,31 @@ export default function ProfileScreen({ navigation }: any) {
         <Text className="text-2xl font-bold text-gray-900">Mi Perfil</Text>
       </View>
 
-      <ScrollView className="flex-1">
+      <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 80 }}>
         {/* Avatar y datos básicos */}
         <View className="items-center py-6 border-b border-gray-100">
-          <View className="w-24 h-24 rounded-full bg-primary items-center justify-center mb-3">
-            {profile?.avatar_url ? (
-              <Image 
-                source={{ uri: profile.avatar_url }} 
-                className="w-24 h-24 rounded-full"
-              />
-            ) : (
-              <Text className="text-4xl">👤</Text>
-            )}
-          </View>
+          <TouchableOpacity
+            onPress={handleAvatarPress}
+            disabled={uploadingAvatar}
+            className="relative mb-3"
+          >
+            <View className="w-24 h-24 rounded-full bg-primary items-center justify-center">
+              {uploadingAvatar ? (
+                <ActivityIndicator size="large" color="white" />
+              ) : profile?.avatar_url ? (
+                <Image
+                  source={{ uri: profile.avatar_url }}
+                  className="w-24 h-24 rounded-full"
+                />
+              ) : (
+                <Text className="text-4xl">👤</Text>
+              )}
+            </View>
+            <View className="absolute bottom-0 right-0 bg-white rounded-full p-1.5 shadow-md border border-gray-200">
+              <Ionicons name="camera" size={16} color={COLORS.primary} />
+            </View>
+          </TouchableOpacity>
+          <Text className="text-xs text-gray-500 mb-2">Toca para cambiar foto</Text>
           <Text className="text-xl font-bold text-gray-900">
             {profile?.full_name || 'Usuario'}
           </Text>
@@ -165,7 +257,7 @@ export default function ProfileScreen({ navigation }: any) {
         <View className="px-4 py-4 border-b border-gray-100">
           <Text className="text-sm font-semibold text-gray-500 mb-3">MIS ACTIVIDADES</Text>
           
-          {/* Dashboard Vendedor - SOLO SI ES VENDEDOR */}
+          {/* Dashboard Vendedor - SOLO SI ES VENDEDOR INDIVIDUAL */}
           {profile?.role === 'seller_individual' && (
             <TouchableOpacity
               onPress={() => navigation.navigate('SellerDashboard')}
@@ -182,8 +274,25 @@ export default function ProfileScreen({ navigation }: any) {
             </TouchableOpacity>
           )}
 
+          {/* Dashboard Tienda Oficial - SOLO SI ES TIENDA OFICIAL */}
+          {profile?.role === 'seller_official' && (
+            <TouchableOpacity
+              onPress={() => navigation.navigate('OfficialStoreDashboard')}
+              className="flex-row items-center justify-between py-3"
+            >
+              <View className="flex-row items-center flex-1">
+                <Text className="text-2xl mr-3">🏪</Text>
+                <View className="flex-1">
+                  <Text className="text-base font-medium text-gray-900">Dashboard Pro</Text>
+                  <Text className="text-sm text-gray-500">Métricas avanzadas de tienda</Text>
+                </View>
+              </View>
+              <Text className="text-gray-400">→</Text>
+            </TouchableOpacity>
+          )}
+
           {/* Mi Billetera - SOLO SI ES VENDEDOR */}
-          {profile?.role === 'seller_individual' && (
+          {(profile?.role === 'seller_individual' || profile?.role === 'seller_official') && (
             <TouchableOpacity
               onPress={() => navigation.navigate('Wallet')}
               className="flex-row items-center justify-between py-3"
@@ -199,7 +308,7 @@ export default function ProfileScreen({ navigation }: any) {
             </TouchableOpacity>
           )}
 
-          <TouchableOpacity 
+          <TouchableOpacity
             onPress={() => navigation.navigate('MyOrders')}
             className="flex-row items-center justify-between py-3"
           >
@@ -208,6 +317,20 @@ export default function ProfileScreen({ navigation }: any) {
               <View className="flex-1">
                 <Text className="text-base font-medium text-gray-900">Mis Compras</Text>
                 <Text className="text-sm text-gray-500">Historial de pedidos</Text>
+              </View>
+            </View>
+            <Text className="text-gray-400">→</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={() => navigation.navigate('MyInvoices')}
+            className="flex-row items-center justify-between py-3"
+          >
+            <View className="flex-row items-center flex-1">
+              <Text className="text-2xl mr-3">🧾</Text>
+              <View className="flex-1">
+                <Text className="text-base font-medium text-gray-900">Mis Facturas</Text>
+                <Text className="text-sm text-gray-500">Comprobantes fiscales</Text>
               </View>
             </View>
             <Text className="text-gray-400">→</Text>

@@ -41,7 +41,7 @@ export default function PaymentSuccessScreen({ route, navigation }: any) {
         </View>
 
         <TouchableOpacity
-          onPress={() => navigation.navigate('MyOrders')}
+          onPress={() => navigation.navigate('MainTabs', { screen: 'Profile', params: { screen: 'MyOrders' } })}
           className="bg-primary rounded-lg py-4 px-8 w-full mb-3"
           style={{ backgroundColor: COLORS.primary }}
         >
@@ -51,7 +51,7 @@ export default function PaymentSuccessScreen({ route, navigation }: any) {
         </TouchableOpacity>
 
         <TouchableOpacity
-          onPress={() => navigation.navigate('Home')}
+          onPress={() => navigation.navigate('MainTabs', { screen: 'Home' })}
           className="py-3 px-8 w-full"
         >
           <Text className="text-center font-semibold" style={{ color: COLORS.primary }}>

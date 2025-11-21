@@ -22,6 +22,11 @@ export interface SellerStats {
   total_sales: number;
   total_revenue: number;
   pending_orders: number;
+  sales_today: number;
+  revenue_today: number;
+  sales_month: number;
+  revenue_month: number;
+  available_balance: number;
 }
 
 // Obtener productos del vendedor
@@ -128,6 +133,11 @@ export async function deleteProduct(productId: string) {
 // Obtener estadísticas del vendedor
 export async function getSellerStats(sellerId: string): Promise<SellerStats> {
   try {
+    // Fechas para filtros
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+
     // Total de productos
     const { count: totalProducts } = await supabase
       .from('products')
@@ -141,18 +151,38 @@ export async function getSellerStats(sellerId: string): Promise<SellerStats> {
       .eq('seller_id', sellerId)
       .eq('status', 'active');
 
-    // Ventas y revenue (desde order_items)
-    const { data: salesData } = await supabase
+    // Todas las ventas (desde order_items)
+    const { data: allSalesData } = await supabase
       .from('order_items')
       .select(`
         quantity,
         price,
+        created_at,
+        orders!inner(status, created_at),
         products!inner(seller_id)
       `)
-      .eq('products.seller_id', sellerId);
+      .eq('products.seller_id', sellerId)
+      .in('orders.status', ['paid', 'processing', 'shipped', 'delivered']);
 
-    const totalSales = salesData?.reduce((sum, item) => sum + item.quantity, 0) || 0;
-    const totalRevenue = salesData?.reduce((sum, item) => sum + (item.price * item.quantity), 0) || 0;
+    // Calcular totales
+    const totalSales = allSalesData?.reduce((sum, item) => sum + item.quantity, 0) || 0;
+    const totalRevenue = allSalesData?.reduce((sum, item) => sum + (item.price * item.quantity), 0) || 0;
+
+    // Ventas de hoy
+    const todaySales = allSalesData?.filter(item => {
+      const itemDate = new Date(item.orders?.created_at || item.created_at);
+      return itemDate >= today;
+    }) || [];
+    const salesToday = todaySales.reduce((sum, item) => sum + item.quantity, 0);
+    const revenueToday = todaySales.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+
+    // Ventas del mes
+    const monthSales = allSalesData?.filter(item => {
+      const itemDate = new Date(item.orders?.created_at || item.created_at);
+      return itemDate >= startOfMonth;
+    }) || [];
+    const salesMonth = monthSales.reduce((sum, item) => sum + item.quantity, 0);
+    const revenueMonth = monthSales.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
     // Pedidos pendientes
     const { count: pendingOrders } = await supabase
@@ -164,7 +194,19 @@ export async function getSellerStats(sellerId: string): Promise<SellerStats> {
         )
       `, { count: 'exact', head: true })
       .eq('order_items.products.seller_id', sellerId)
-      .eq('status', 'pending');
+      .in('status', ['pending', 'paid', 'processing']);
+
+    // Balance disponible
+    let availableBalance = 0;
+    const { data: balanceData } = await supabase
+      .from('seller_balances')
+      .select('available_balance')
+      .eq('seller_id', sellerId)
+      .single();
+
+    if (balanceData) {
+      availableBalance = balanceData.available_balance || 0;
+    }
 
     return {
       total_products: totalProducts || 0,
@@ -172,6 +214,11 @@ export async function getSellerStats(sellerId: string): Promise<SellerStats> {
       total_sales: totalSales,
       total_revenue: totalRevenue,
       pending_orders: pendingOrders || 0,
+      sales_today: salesToday,
+      revenue_today: revenueToday,
+      sales_month: salesMonth,
+      revenue_month: revenueMonth,
+      available_balance: availableBalance,
     };
   } catch (error) {
     console.error('Error fetching seller stats:', error);
@@ -181,6 +228,11 @@ export async function getSellerStats(sellerId: string): Promise<SellerStats> {
       total_sales: 0,
       total_revenue: 0,
       pending_orders: 0,
+      sales_today: 0,
+      revenue_today: 0,
+      sales_month: 0,
+      revenue_month: 0,
+      available_balance: 0,
     };
   }
 }

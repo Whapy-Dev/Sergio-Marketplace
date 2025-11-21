@@ -5,6 +5,7 @@ export interface Banner {
   title: string;
   description?: string;
   image_url: string;
+  location: BannerLocation;
   link_type: 'product' | 'category' | 'store' | 'external' | 'none';
   link_value?: string;
   display_order: number;
@@ -12,6 +13,57 @@ export interface Banner {
   starts_at?: string;
   ends_at?: string;
   created_at: string;
+}
+
+export type BannerLocation =
+  | 'home_carousel'
+  | 'home_middle'
+  | 'home_bottom'
+  | 'category_top'
+  | 'product_related'
+  | 'checkout'
+  | 'profile';
+
+export const BANNER_LOCATIONS: { value: BannerLocation; label: string }[] = [
+  { value: 'home_carousel', label: 'Home - Carrusel Principal' },
+  { value: 'home_middle', label: 'Home - Sección Media' },
+  { value: 'home_bottom', label: 'Home - Sección Inferior' },
+  { value: 'category_top', label: 'Categorías - Superior' },
+  { value: 'product_related', label: 'Producto - Relacionados' },
+  { value: 'checkout', label: 'Checkout - Promociones' },
+  { value: 'profile', label: 'Perfil - Ofertas' },
+];
+
+/**
+ * Get active banners by location
+ */
+export async function getBannersByLocation(
+  location: BannerLocation,
+  limit: number = 6
+): Promise<Banner[]> {
+  try {
+    const now = new Date().toISOString();
+
+    const { data, error } = await supabase
+      .from('banners')
+      .select('*')
+      .eq('is_active', true)
+      .eq('location', location)
+      .or(`starts_at.is.null,starts_at.lte.${now}`)
+      .or(`ends_at.is.null,ends_at.gte.${now}`)
+      .order('display_order', { ascending: true })
+      .limit(limit);
+
+    if (error) {
+      console.error('Error fetching banners by location:', error);
+      return [];
+    }
+
+    return data || [];
+  } catch (error) {
+    console.error('Error fetching banners by location:', error);
+    return [];
+  }
 }
 
 /**

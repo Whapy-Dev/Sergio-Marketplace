@@ -28,6 +28,17 @@ export default function Settings() {
   const [marketplaceOwnerId, setMarketplaceOwnerId] = useState('');
   const [defaultCommission, setDefaultCommission] = useState('10.00');
 
+  // MercadoPago
+  const [mpPublicKey, setMpPublicKey] = useState('');
+  const [mpAccessToken, setMpAccessToken] = useState('');
+  const [mpTestMode, setMpTestMode] = useState(true);
+
+  // ARCA
+  const [arcaCuit, setArcaCuit] = useState('');
+  const [arcaCertificate, setArcaCertificate] = useState('');
+  const [arcaPrivateKey, setArcaPrivateKey] = useState('');
+  const [arcaTestMode, setArcaTestMode] = useState(true);
+
   useEffect(() => {
     getCurrentUser();
     loadSettings();
@@ -64,6 +75,29 @@ export default function Settings() {
       }
       if (settingsObj.default_commission_rate) {
         setDefaultCommission(settingsObj.default_commission_rate.value as string);
+      }
+      // MercadoPago
+      if (settingsObj.mp_public_key) {
+        setMpPublicKey(settingsObj.mp_public_key.value as string);
+      }
+      if (settingsObj.mp_access_token) {
+        setMpAccessToken(settingsObj.mp_access_token.value as string);
+      }
+      if (settingsObj.mp_test_mode) {
+        setMpTestMode(settingsObj.mp_test_mode.value === 'true' || settingsObj.mp_test_mode.value === true);
+      }
+      // ARCA
+      if (settingsObj.arca_cuit) {
+        setArcaCuit(settingsObj.arca_cuit.value as string);
+      }
+      if (settingsObj.arca_certificate) {
+        setArcaCertificate(settingsObj.arca_certificate.value as string);
+      }
+      if (settingsObj.arca_private_key) {
+        setArcaPrivateKey(settingsObj.arca_private_key.value as string);
+      }
+      if (settingsObj.arca_test_mode) {
+        setArcaTestMode(settingsObj.arca_test_mode.value === 'true' || settingsObj.arca_test_mode.value === true);
       }
     }
 
@@ -109,6 +143,15 @@ export default function Settings() {
         updateSetting('minimum_withdrawal_amount', minimumWithdrawal),
         updateSetting('marketplace_owner_id', marketplaceOwnerId || 'null'),
         updateSetting('default_commission_rate', defaultCommission),
+        // MercadoPago
+        updateSetting('mp_public_key', mpPublicKey),
+        updateSetting('mp_access_token', mpAccessToken),
+        updateSetting('mp_test_mode', mpTestMode.toString()),
+        // ARCA
+        updateSetting('arca_cuit', arcaCuit),
+        updateSetting('arca_certificate', arcaCertificate),
+        updateSetting('arca_private_key', arcaPrivateKey),
+        updateSetting('arca_test_mode', arcaTestMode.toString()),
       ];
 
       const results = await Promise.all(updates);
@@ -246,45 +289,168 @@ export default function Settings() {
           </div>
         </div>
 
-        {/* Payment Methods */}
+        {/* MercadoPago Settings */}
         <div className="bg-white rounded-lg shadow">
           <div className="p-6 border-b border-gray-200">
-            <h2 className="text-xl font-bold text-gray-900">Métodos de Pago</h2>
+            <h2 className="text-xl font-bold text-gray-900">MercadoPago</h2>
             <p className="text-sm text-gray-600 mt-1">
-              Configuración de MercadoPago
+              Credenciales para procesamiento de pagos
             </p>
           </div>
-          <div className="p-6">
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-              <div className="flex items-start">
-                <svg className="w-5 h-5 text-green-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <div className="ml-3">
-                  <p className="text-sm font-medium text-green-900">MercadoPago Configurado</p>
-                  <p className="text-sm text-green-700 mt-1">
-                    Tu cuenta de MercadoPago está correctamente configurada. Todos los pagos se procesan centralizadamente.
-                  </p>
-                  <div className="mt-2 text-xs text-green-600 font-mono">
-                    Modo: TEST
-                  </div>
-                </div>
+          <div className="p-6 space-y-6">
+            {/* Test Mode Toggle */}
+            <div className="flex items-center justify-between">
+              <div>
+                <label className="text-sm font-medium text-gray-700">Modo de Prueba</label>
+                <p className="text-sm text-gray-500">Usar credenciales de test</p>
               </div>
+              <button
+                type="button"
+                onClick={() => setMpTestMode(!mpTestMode)}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                  mpTestMode ? 'bg-primary-600' : 'bg-gray-200'
+                }`}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    mpTestMode ? 'translate-x-6' : 'translate-x-1'
+                  }`}
+                />
+              </button>
             </div>
 
-            <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-              <div className="flex items-start">
-                <svg className="w-5 h-5 text-yellow-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                </svg>
-                <div className="ml-3">
-                  <p className="text-sm font-medium text-yellow-900">Antes de Producción</p>
-                  <p className="text-sm text-yellow-700 mt-1">
-                    Recuerda cambiar a las credenciales de PRODUCCIÓN de MercadoPago en el archivo src/config/mercadopago.ts antes de lanzar el marketplace.
-                  </p>
-                </div>
-              </div>
+            {/* Public Key */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Public Key
+              </label>
+              <input
+                type="text"
+                value={mpPublicKey}
+                onChange={(e) => setMpPublicKey(e.target.value)}
+                placeholder={mpTestMode ? 'TEST-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx' : 'APP_USR-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'}
+                className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary-500 font-mono text-sm"
+              />
+              <p className="text-sm text-gray-500 mt-1">
+                Se usa en el frontend para inicializar MercadoPago
+              </p>
             </div>
+
+            {/* Access Token */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Access Token
+              </label>
+              <input
+                type="password"
+                value={mpAccessToken}
+                onChange={(e) => setMpAccessToken(e.target.value)}
+                placeholder={mpTestMode ? 'TEST-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx' : 'APP_USR-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'}
+                className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary-500 font-mono text-sm"
+              />
+              <p className="text-sm text-gray-500 mt-1">
+                Solo se usa en el backend. Nunca se expone al cliente.
+              </p>
+            </div>
+
+            {mpTestMode && (
+              <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <p className="text-sm text-yellow-800">
+                  <strong>Modo TEST activo.</strong> Los pagos no serán reales. Cambia a producción cuando estés listo para lanzar.
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* ARCA Settings */}
+        <div className="bg-white rounded-lg shadow">
+          <div className="p-6 border-b border-gray-200">
+            <h2 className="text-xl font-bold text-gray-900">ARCA (Facturación Electrónica)</h2>
+            <p className="text-sm text-gray-600 mt-1">
+              Credenciales para emisión de facturas electrónicas
+            </p>
+          </div>
+          <div className="p-6 space-y-6">
+            {/* Test Mode Toggle */}
+            <div className="flex items-center justify-between">
+              <div>
+                <label className="text-sm font-medium text-gray-700">Modo Homologación</label>
+                <p className="text-sm text-gray-500">Usar ambiente de pruebas de ARCA</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setArcaTestMode(!arcaTestMode)}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                  arcaTestMode ? 'bg-primary-600' : 'bg-gray-200'
+                }`}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    arcaTestMode ? 'translate-x-6' : 'translate-x-1'
+                  }`}
+                />
+              </button>
+            </div>
+
+            {/* CUIT */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                CUIT del Emisor
+              </label>
+              <input
+                type="text"
+                value={arcaCuit}
+                onChange={(e) => setArcaCuit(e.target.value)}
+                placeholder="20-12345678-9"
+                className="max-w-xs border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary-500"
+              />
+              <p className="text-sm text-gray-500 mt-1">
+                CUIT de la empresa que emite las facturas
+              </p>
+            </div>
+
+            {/* Certificate */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Certificado (.crt)
+              </label>
+              <textarea
+                value={arcaCertificate}
+                onChange={(e) => setArcaCertificate(e.target.value)}
+                placeholder="-----BEGIN CERTIFICATE-----&#10;...&#10;-----END CERTIFICATE-----"
+                rows={4}
+                className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary-500 font-mono text-xs"
+              />
+              <p className="text-sm text-gray-500 mt-1">
+                Certificado digital obtenido de ARCA
+              </p>
+            </div>
+
+            {/* Private Key */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Clave Privada (.key)
+              </label>
+              <textarea
+                value={arcaPrivateKey}
+                onChange={(e) => setArcaPrivateKey(e.target.value)}
+                placeholder="-----BEGIN RSA PRIVATE KEY-----&#10;...&#10;-----END RSA PRIVATE KEY-----"
+                rows={4}
+                className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary-500 font-mono text-xs"
+              />
+              <p className="text-sm text-gray-500 mt-1">
+                Clave privada correspondiente al certificado
+              </p>
+            </div>
+
+            {arcaTestMode && (
+              <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <p className="text-sm text-blue-800">
+                  <strong>Modo homologación activo.</strong> Las facturas se emitirán en el ambiente de pruebas de ARCA.
+                </p>
+              </div>
+            )}
           </div>
         </div>
 

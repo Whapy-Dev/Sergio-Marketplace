@@ -175,6 +175,7 @@ export default function ConversationsScreen({ navigation }: any) {
           data={conversations}
           renderItem={renderConversation}
           keyExtractor={(item) => item.id}
+          contentContainerStyle={{ paddingBottom: 80 }}
           refreshControl={
             <RefreshControl
               refreshing={refreshing}

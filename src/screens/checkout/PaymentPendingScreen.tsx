@@ -48,7 +48,7 @@ export default function PaymentPendingScreen({ route, navigation }: any) {
         </Text>
 
         <TouchableOpacity
-          onPress={() => navigation.navigate('Home')}
+          onPress={() => navigation.navigate('MainTabs', { screen: 'Home' })}
           className="bg-primary rounded-lg py-4 px-8 w-full"
           style={{ backgroundColor: COLORS.primary }}
         >
@@ -58,7 +58,7 @@ export default function PaymentPendingScreen({ route, navigation }: any) {
         </TouchableOpacity>
 
         <TouchableOpacity
-          onPress={() => navigation.navigate('MyOrders')}
+          onPress={() => navigation.navigate('MainTabs', { screen: 'Profile', params: { screen: 'MyOrders' } })}
           className="mt-3 py-3 px-8 w-full"
         >
           <Text className="text-center font-semibold" style={{ color: COLORS.primary }}>

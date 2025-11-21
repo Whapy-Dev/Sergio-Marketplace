@@ -6,10 +6,12 @@ export interface UserProfile {
   full_name: string | null;
   phone: string | null;
   avatar_url: string | null;
+  street: string | null;
   postal_code: string | null;
   city: string | null;
+  province: string | null;
   is_formosa: boolean;
-  role: 'customer' | 'seller_individual' | 'seller_store' | 'admin';
+  role: 'customer' | 'seller_individual' | 'seller_official' | 'admin';
   created_at: string;
 }
 

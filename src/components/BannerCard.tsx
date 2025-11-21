@@ -162,9 +162,44 @@ function StoreBanner({ banner, onPress }: { banner: Banner; onPress: () => void 
   );
 }
 
-// Banner genérico - Estilo publicitario con gradiente
+// Banner genérico - Con imagen de fondo
 function GenericBanner({ banner, onPress }: { banner: Banner; onPress: () => void }) {
-  // Gradientes variados para banners genéricos
+  // Si tiene imagen, mostrarla como fondo
+  if (banner.image_url) {
+    return (
+      <TouchableOpacity
+        onPress={onPress}
+        activeOpacity={0.9}
+        style={styles.container}
+        disabled={banner.link_type === 'none'}
+      >
+        <View style={styles.imageBanner}>
+          <Image
+            source={{ uri: banner.image_url }}
+            style={styles.bannerImage}
+            resizeMode="cover"
+          />
+          <LinearGradient
+            colors={['rgba(0,0,0,0.1)', 'rgba(0,0,0,0.6)']}
+            style={styles.imageOverlay}
+          >
+            <View style={styles.imageContent}>
+              <Text style={styles.imageTitle} numberOfLines={2}>
+                {banner.title}
+              </Text>
+              {banner.description && (
+                <Text style={styles.imageDescription} numberOfLines={2}>
+                  {banner.description}
+                </Text>
+              )}
+            </View>
+          </LinearGradient>
+        </View>
+      </TouchableOpacity>
+    );
+  }
+
+  // Fallback con gradiente si no hay imagen
   const gradients = [
     ['#FF6B6B', '#FF8E8E'],
     ['#1E5EBE', '#2563EB'],
@@ -173,7 +208,6 @@ function GenericBanner({ banner, onPress }: { banner: Banner; onPress: () => voi
     ['#8B5CF6', '#A78BFA'],
   ];
 
-  // Seleccionar gradiente basado en el ID del banner (pseudo-aleatorio pero consistente)
   const gradientIndex = banner.id.charCodeAt(0) % gradients.length;
   const colors = gradients[gradientIndex];
 
@@ -202,7 +236,6 @@ function GenericBanner({ banner, onPress }: { banner: Banner; onPress: () => voi
             )}
           </View>
 
-          {/* Icono decorativo */}
           <View style={styles.genericIcon}>
             <Ionicons
               name={banner.link_type === 'external' ? 'link' : 'gift'}
@@ -219,6 +252,44 @@ function GenericBanner({ banner, onPress }: { banner: Banner; onPress: () => voi
 const styles = StyleSheet.create({
   container: {
     marginBottom: 16,
+  },
+
+  // Image Banner (generic with image)
+  imageBanner: {
+    height: 180,
+    borderRadius: 24,
+    overflow: 'hidden',
+  },
+  bannerImage: {
+    width: '100%',
+    height: '100%',
+  },
+  imageOverlay: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: '100%',
+    justifyContent: 'flex-end',
+  },
+  imageContent: {
+    padding: 20,
+  },
+  imageTitle: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#FFF',
+    marginBottom: 4,
+    textShadowColor: 'rgba(0, 0, 0, 0.5)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 3,
+  },
+  imageDescription: {
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.95)',
+    textShadowColor: 'rgba(0, 0, 0, 0.5)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
   },
 
   // Product Banner

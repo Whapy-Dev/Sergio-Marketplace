@@ -8,18 +8,19 @@ import { useCart } from '../../contexts/CartContext';
 import { useFavorites } from '../../contexts/FavoritesContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { getOrCreateConversation } from '../../services/chat';
+import {
+  getProductVariants,
+  findVariantByOptions,
+  getVariantDisplayImage,
+  VariantType,
+  ProductVariant as VariantData
+} from '../../services/variants';
 import Button from '../../components/common/Button';
 import AddToListModal from '../../components/favorites/AddToListModal';
+import VariantSelector from '../../components/product/VariantSelector';
 import { COLORS } from '../../constants/theme';
 
 const { width } = Dimensions.get('window');
-
-interface ProductVariant {
-  id: string;
-  color: string;
-  image: string;
-  selected?: boolean;
-}
 
 export default function ProductDetailScreen({ route, navigation }: any) {
   const { productId } = route.params;
@@ -30,30 +31,32 @@ export default function ProductDetailScreen({ route, navigation }: any) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [expandedSpec, setExpandedSpec] = useState<string | null>('camera');
   const [showFullDescription, setShowFullDescription] = useState(false);
-  const [selectedVariant, setSelectedVariant] = useState(0);
   const [relatedProducts, setRelatedProducts] = useState<any[]>([]);
   const [storeProducts, setStoreProducts] = useState<any[]>([]);
   const [showAddToListModal, setShowAddToListModal] = useState(false);
+
+  // Variant system
+  const [variantTypes, setVariantTypes] = useState<VariantType[]>([]);
+  const [variants, setVariants] = useState<VariantData[]>([]);
+  const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>({});
+  const [selectedVariant, setSelectedVariant] = useState<VariantData | undefined>(undefined);
 
   const { addItem: addToCart } = useCart();
   const { toggleFavorite, isFavorite } = useFavorites();
   const { user } = useAuth();
 
-  // Imágenes del producto para el carrusel
-  const productImages = product ? [
-    product.image_url,
-    product.image_url, // En producción, estas serían diferentes imágenes
-    product.image_url,
-    product.image_url,
-  ] : [];
+  // Get display image based on selected variant
+  const displayImage = getVariantDisplayImage(selectedVariant, product?.image_url);
 
-  // Mock variants - en producción estos vendrían de la base de datos
-  const variants: ProductVariant[] = product ? [
-    { id: '1', color: 'Space Grey', image: product.image_url, selected: true },
-    { id: '2', color: 'Azul', image: product.image_url, selected: false },
-    { id: '3', color: 'Rosa', image: product.image_url, selected: false },
-    { id: '4', color: 'Negro', image: product.image_url, selected: false },
-  ] : [];
+  // Images for carousel - use variant images if available
+  const productImages = selectedVariant?.images?.length
+    ? selectedVariant.images.map(img => img.image_url)
+    : product ? [product.image_url] : [];
+
+  // Get effective price and stock
+  const effectivePrice = selectedVariant?.price || product?.price || 0;
+  const effectiveStock = selectedVariant ? selectedVariant.stock : (product?.stock || 0);
+  const effectiveComparePrice = selectedVariant?.compare_at_price || product?.compare_at_price;
 
   useEffect(() => {
     loadProduct();
@@ -82,6 +85,9 @@ export default function ProductDetailScreen({ route, navigation }: any) {
 
       setProduct(data);
 
+      // Load variants
+      loadVariants();
+
       // Load products from same store
       if (data.seller_id) {
         loadStoreProducts(data.seller_id, data.id);
@@ -91,6 +97,37 @@ export default function ProductDetailScreen({ route, navigation }: any) {
     } finally {
       setLoading(false);
     }
+  }
+
+  async function loadVariants() {
+    const { variantTypes: types, variants: vars } = await getProductVariants(productId);
+    setVariantTypes(types);
+    setVariants(vars);
+
+    // Auto-select first options if variants exist
+    if (types.length > 0 && vars.length > 0) {
+      const initialOptions: Record<string, string> = {};
+      types.forEach(type => {
+        if (type.options && type.options.length > 0) {
+          initialOptions[type.name] = type.options[0].value;
+        }
+      });
+      setSelectedOptions(initialOptions);
+
+      // Find matching variant
+      const matchingVariant = findVariantByOptions(vars, initialOptions);
+      setSelectedVariant(matchingVariant);
+    }
+  }
+
+  function handleSelectOption(typeName: string, value: string) {
+    const newOptions = { ...selectedOptions, [typeName]: value };
+    setSelectedOptions(newOptions);
+
+    // Find matching variant
+    const matchingVariant = findVariantByOptions(variants, newOptions);
+    setSelectedVariant(matchingVariant);
+    setCurrentImageIndex(0);
   }
 
   async function loadStoreProducts(sellerId: string, currentProductId: string) {
@@ -131,17 +168,36 @@ export default function ProductDetailScreen({ route, navigation }: any) {
   function handleAddToCart() {
     if (!product) return;
 
+    // Check if product has variants but none selected
+    if (variantTypes.length > 0 && !selectedVariant) {
+      Alert.alert('Selecciona una variante', 'Por favor selecciona todas las opciones antes de agregar al carrito');
+      return;
+    }
+
+    // Check stock
+    if (effectiveStock <= 0) {
+      Alert.alert('Sin stock', 'Este producto no tiene stock disponible');
+      return;
+    }
+
+    // Build product name with variant info
+    let productName = product.name;
+    if (selectedVariant && Object.keys(selectedOptions).length > 0) {
+      const optionValues = Object.values(selectedOptions).join(' - ');
+      productName = `${product.name} (${optionValues})`;
+    }
+
     addToCart({
-      id: product.id,
-      name: product.name,
-      price: product.price,
-      imageUrl: product.image_url,
+      id: selectedVariant ? `${product.id}-${selectedVariant.id}` : product.id,
+      name: productName,
+      price: effectivePrice,
+      imageUrl: displayImage || product.image_url,
       sellerId: product.seller_id,
     }, quantity);
 
     Alert.alert(
       '¡Agregado!',
-      `${product.name} se agregó al carrito`,
+      `${productName} se agregó al carrito`,
       [
         { text: 'Seguir comprando', style: 'cancel' },
         { text: 'Ir al carrito', onPress: () => navigation.navigate('Cart') },
@@ -194,12 +250,6 @@ export default function ProductDetailScreen({ route, navigation }: any) {
     setExpandedSpec(expandedSpec === section ? null : section);
   }
 
-  function handleVariantChange(index: number) {
-    setSelectedVariant(index);
-    // En producción, aquí cambiarías las imágenes según la variante
-    // Por ahora solo actualizamos el estado
-  }
-
   if (loading) {
     return (
       <SafeAreaView className="flex-1 bg-white">
@@ -220,11 +270,11 @@ export default function ProductDetailScreen({ route, navigation }: any) {
     );
   }
 
-  const discount = product.compare_at_price
-    ? Math.round(((product.compare_at_price - product.price) / product.compare_at_price) * 100)
+  const discount = effectiveComparePrice
+    ? Math.round(((effectiveComparePrice - effectivePrice) / effectiveComparePrice) * 100)
     : 0;
 
-  const priceWithoutTax = Math.round(product.price / 1.21 * 100) / 100;
+  const priceWithoutTax = Math.round(effectivePrice / 1.21 * 100) / 100;
   const favorite = isFavorite(product.id);
 
   const renderProductCard = ({ item }: any) => {
@@ -401,10 +451,10 @@ export default function ProductDetailScreen({ route, navigation }: any) {
           </View>
 
           {/* Precio anterior tachado y badge de descuento */}
-          {product.compare_at_price && (
+          {effectiveComparePrice && discount > 0 && (
             <View className="flex-row items-center mb-2">
               <Text className="text-xl text-gray-400 line-through mr-2">
-                ${product.compare_at_price.toLocaleString()}
+                ${effectiveComparePrice.toLocaleString()}
               </Text>
               <LinearGradient
                 colors={['#2563EB', '#DC2626']}
@@ -419,13 +469,25 @@ export default function ProductDetailScreen({ route, navigation }: any) {
 
           {/* Precio principal */}
           <Text className="text-2xl font-semibold text-gray-900 mb-1">
-            ${product.price.toLocaleString()}
+            ${effectivePrice.toLocaleString()}
           </Text>
 
           {/* Precio sin impuestos */}
           <Text className="text-xs text-gray-500 mb-4">
             Precio sin imp. nac. ${priceWithoutTax.toLocaleString()}
           </Text>
+
+          {/* Stock indicator */}
+          {effectiveStock <= 5 && effectiveStock > 0 && (
+            <Text className="text-sm text-orange-600 mb-2">
+              ¡Solo quedan {effectiveStock} unidades!
+            </Text>
+          )}
+          {effectiveStock === 0 && (
+            <Text className="text-sm text-red-600 mb-2">
+              Sin stock
+            </Text>
+          )}
         </View>
 
         {/* Promociones bancarias */}
@@ -499,62 +561,28 @@ export default function ProductDetailScreen({ route, navigation }: any) {
           </View>
         </View>
 
-        {/* Variantes de color */}
-        <View className="border border-gray-300 rounded mx-5 my-4 overflow-hidden" style={{ backgroundColor: 'white' }}>
-          <LinearGradient
-            colors={['#2563EB', '#DC2626']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={{ height: 31, justifyContent: 'center', paddingHorizontal: 12 }}
-          >
-            <Text className="text-white text-lg font-medium">Variantes</Text>
-          </LinearGradient>
+        {/* Variantes */}
+        {variantTypes.length > 0 && (
+          <View className="border border-gray-300 rounded mx-5 my-4 overflow-hidden" style={{ backgroundColor: 'white' }}>
+            <LinearGradient
+              colors={['#2563EB', '#DC2626']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={{ height: 31, justifyContent: 'center', paddingHorizontal: 12 }}
+            >
+              <Text className="text-white text-lg font-medium">Variantes</Text>
+            </LinearGradient>
 
-          <View className="px-3 pt-3 pb-3">
-            <View className="flex-row mb-2">
-              {variants.map((variant, index) => (
-                <TouchableOpacity
-                  key={variant.id}
-                  onPress={() => handleVariantChange(index)}
-                  style={{
-                    width: 63,
-                    height: 63,
-                    marginRight: 10,
-                    borderRadius: 6,
-                    borderWidth: 1,
-                    borderColor: selectedVariant === index ? '#FF4500' : 'rgba(0,0,0,0.23)',
-                    overflow: 'hidden'
-                  }}
-                  activeOpacity={0.7}
-                >
-                  <Image
-                    source={{ uri: variant.image || product.image_url }}
-                    style={{ width: '100%', height: '100%' }}
-                    resizeMode="cover"
-                  />
-                  {selectedVariant === index && (
-                    <View
-                      style={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        borderWidth: 2,
-                        borderColor: '#FF4500',
-                        borderRadius: 6,
-                      }}
-                    />
-                  )}
-                </TouchableOpacity>
-              ))}
+            <View className="px-3 pt-3 pb-3">
+              <VariantSelector
+                variantTypes={variantTypes}
+                variants={variants}
+                selectedOptions={selectedOptions}
+                onSelectOption={handleSelectOption}
+              />
             </View>
-
-            <Text className="text-[10px] text-gray-900">
-              Color: {variants[selectedVariant]?.color}
-            </Text>
           </View>
-        </View>
+        )}
 
         {/* Más Productos de esta tienda */}
         {storeProducts.length > 0 && (
@@ -790,9 +818,9 @@ export default function ProductDetailScreen({ route, navigation }: any) {
         }}
       >
         <Button
-          title="Agregar al Carrito"
+          title={effectiveStock === 0 ? "Sin Stock" : "Agregar al Carrito"}
           onPress={handleAddToCart}
-          disabled={product.stock === 0}
+          disabled={effectiveStock === 0}
         />
       </View>
 
