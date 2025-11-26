@@ -1,34 +1,43 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, SafeAreaView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { scale, moderateScale, verticalScale, wp } from '../../utils/responsive';
 
 export default function Header() {
   const navigation = useNavigation<any>();
 
   return (
     <SafeAreaView className="bg-white border-b border-gray-200">
-      <View className="px-4 py-3">
+      <View style={{ paddingHorizontal: scale(16), paddingVertical: scale(12) }}>
         {/* Logo y Avatar */}
-        <View className="flex-row items-center justify-between mb-3">
-          <Text className="text-2xl font-bold text-primary">
+        <View className="flex-row items-center justify-between" style={{ marginBottom: scale(12) }}>
+          <Text style={{ fontSize: moderateScale(22), fontWeight: 'bold' }} className="text-primary">
             Marketplace
           </Text>
-          
-          <TouchableOpacity 
+
+          <TouchableOpacity
             onPress={() => navigation.navigate('Profile')}
-            className="w-10 h-10 rounded-full bg-primary items-center justify-center"
+            className="rounded-full bg-primary items-center justify-center"
+            style={{
+              width: scale(40),
+              height: scale(40),
+            }}
           >
-            <Text className="text-white text-lg">👤</Text>
+            <Text style={{ fontSize: scale(18), color: 'white' }}>👤</Text>
           </TouchableOpacity>
         </View>
-        
+
         {/* Barra de búsqueda - Navega a SearchScreen */}
-        <TouchableOpacity 
+        <TouchableOpacity
           onPress={() => navigation.navigate('Search')}
-          className="bg-gray-100 rounded-lg px-4 py-3 flex-row items-center"
+          className="bg-gray-100 rounded-lg flex-row items-center"
+          style={{
+            paddingHorizontal: scale(16),
+            paddingVertical: scale(12),
+          }}
           activeOpacity={0.7}
         >
-          <Text className="text-lg mr-2">🔍</Text>
+          <Text style={{ fontSize: scale(18), marginRight: scale(8) }}>🔍</Text>
           <Text className="text-gray-500">Buscar productos...</Text>
         </TouchableOpacity>
       </View>

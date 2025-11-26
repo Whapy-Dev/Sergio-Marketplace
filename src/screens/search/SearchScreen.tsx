@@ -6,6 +6,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { supabase } from '../../services/supabase';
 import { COLORS } from '../../constants/theme';
 import FiltersModal, { FilterState } from '../../components/search/FiltersModal';
+import { scale, moderateScale, verticalScale, wp } from '../../utils/responsive';
 
 interface Product {
   id: string;
@@ -34,19 +35,38 @@ export default function SearchScreen({ navigation }: any) {
   const [filtersVisible, setFiltersVisible] = useState(false);
   const [activeFilters, setActiveFilters] = useState<FilterState | null>(null);
   const [showOnlyOfficialStores, setShowOnlyOfficialStores] = useState(false);
-
-  // Mock brands - en producción vendrían de la base de datos
-  const brands: Brand[] = [
-    { id: 'samsung', name: 'Samsung', logo: 'SAMSUNG' },
-    { id: 'apple', name: 'Apple', logo: '' },
-    { id: 'motorola', name: 'Motorola', logo: 'M' },
-    { id: 'xiaomi', name: 'Xiaomi', logo: 'mi' },
-    { id: 'tcl', name: 'TCL', logo: 'TCL' },
-  ];
+  const [brands, setBrands] = useState<Brand[]>([]);
 
   useEffect(() => {
     loadProducts();
+    loadBrands();
   }, []);
+
+  async function loadBrands() {
+    try {
+      const { data, error } = await supabase
+        .from('official_stores')
+        .select('id, store_name, logo_url')
+        .eq('is_active', true)
+        .order('store_name')
+        .limit(10);
+
+      if (error) {
+        console.error('Error loading brands:', error);
+        return;
+      }
+
+      if (data) {
+        setBrands(data.map(store => ({
+          id: store.id,
+          name: store.store_name,
+          logo: store.store_name.substring(0, 3).toUpperCase()
+        })));
+      }
+    } catch (error) {
+      console.error('Error loading brands:', error);
+    }
+  }
 
   useEffect(() => {
     if (searchQuery.length > 0) {
@@ -220,7 +240,7 @@ export default function SearchScreen({ navigation }: any) {
       <TouchableOpacity
         onPress={() => navigation.navigate('ProductDetail', { productId: item.id })}
         className="border-b border-gray-300 pb-2"
-        style={{ height: 151 }}
+        style={{ height: verticalScale(151) }}
       >
         <View className="flex-row">
           {/* Imagen del producto */}
@@ -233,7 +253,7 @@ export default function SearchScreen({ navigation }: any) {
 
             {/* Badge de cupón/descuento en la esquina superior */}
             {discount > 5 && (
-              <View className="absolute top-0 left-0 rounded overflow-hidden" style={{ width: 80, height: 30 }}>
+              <View className="absolute top-0 left-0 rounded overflow-hidden" style={{ width: scale(80), height: verticalScale(30) }}>
                 <LinearGradient
                   colors={['#2563EB', '#DC2626']}
                   start={{ x: 0, y: 0 }}
@@ -250,13 +270,13 @@ export default function SearchScreen({ navigation }: any) {
             )}
 
             {/* Badge "sin interés" en la parte inferior */}
-            <View className="absolute bottom-0 left-0 rounded overflow-hidden" style={{ width: 67, height: 18 }}>
+            <View className="absolute bottom-0 left-0 rounded overflow-hidden" style={{ width: scale(67), height: verticalScale(18) }}>
               <LinearGradient
                 colors={['#2563EB', '#DC2626']}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 className="flex-row items-center px-1"
-                style={{ height: 18 }}
+                style={{ height: verticalScale(18) }}
               >
                 <View className="bg-black/30 rounded size-[14px] items-center justify-center mr-1">
                   <Text className="text-white text-[10px] font-semibold">3</Text>
@@ -268,7 +288,7 @@ export default function SearchScreen({ navigation }: any) {
             {/* Badge de Tienda Oficial */}
             {item.official_store_id && (
               <View className="absolute top-1 right-1 bg-blue-600 rounded-full px-2 py-1 flex-row items-center">
-                <Ionicons name="checkmark-circle" size={10} color="white" />
+                <Ionicons name="checkmark-circle" size={scale(10)} color="white" />
                 <Text className="text-white text-[8px] font-bold ml-0.5">OFICIAL</Text>
               </View>
             )}
@@ -361,16 +381,16 @@ export default function SearchScreen({ navigation }: any) {
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
         className="rounded-b-[40px]"
-        style={{ height: 70 }}
+        style={{ height: verticalScale(70) }}
       >
         <View className="px-5 py-3 flex-row items-center justify-between">
           <Text className="text-base font-bold text-white">Búsqueda</Text>
           <View className="flex-row items-center">
             <TouchableOpacity className="mr-4">
-              <Ionicons name="notifications-outline" size={24} color="white" />
+              <Ionicons name="notifications-outline" size={scale(24)} color="white" />
             </TouchableOpacity>
             <TouchableOpacity onPress={() => navigation.navigate('Cart')}>
-              <Ionicons name="cart-outline" size={24} color="white" />
+              <Ionicons name="cart-outline" size={scale(24)} color="white" />
             </TouchableOpacity>
           </View>
         </View>
@@ -380,7 +400,7 @@ export default function SearchScreen({ navigation }: any) {
       <View className="px-4 py-2 bg-white">
         <View className="flex-row items-center justify-between">
           <View className="flex-1 flex-row items-center bg-gray-100 rounded-full px-3 py-1.5 mr-3 border border-gray-200">
-            <Ionicons name="search" size={18} color="#999" />
+            <Ionicons name="search" size={scale(18)} color="#999" />
             <TextInput
               className="flex-1 text-sm ml-2"
               placeholder="Buscar"
@@ -394,7 +414,7 @@ export default function SearchScreen({ navigation }: any) {
             onPress={handleFilterPress}
             className="flex-row items-center"
           >
-            <Ionicons name="options-outline" size={18} color="#000" />
+            <Ionicons name="options-outline" size={scale(18)} color="#000" />
             <Text className="text-xs text-gray-900 ml-1">Filtrar</Text>
           </TouchableOpacity>
         </View>
@@ -411,24 +431,24 @@ export default function SearchScreen({ navigation }: any) {
             <TouchableOpacity
               onPress={() => setSelectedBrand(item.id === selectedBrand ? null : item.id)}
               className="items-center mr-2"
-              style={{ width: 65, height: 58 }}
+              style={{ width: scale(65), height: verticalScale(58) }}
             >
               <View
                 className="rounded-lg items-center justify-center mb-1"
                 style={{
-                  width: 45,
-                  height: 45,
+                  width: scale(45),
+                  height: scale(45),
                   backgroundColor: selectedBrand === item.id ? '#EEF2FF' : 'white',
                   borderColor: 'rgba(0,0,0,0.1)',
                   borderWidth: 0.5,
-                  borderRadius: 10
+                  borderRadius: scale(10)
                 }}
               >
                 {item.id === 'apple' ? (
-                  <Ionicons name="logo-apple" size={24} color="#000" />
+                  <Ionicons name="logo-apple" size={scale(24)} color="#000" />
                 ) : (
                   <Text style={{
-                    fontSize: item.id === 'samsung' ? 8 : item.id === 'xiaomi' ? 12 : 10,
+                    fontSize: moderateScale(item.id === 'samsung' ? 8 : item.id === 'xiaomi' ? 12 : 10),
                     fontWeight: item.id === 'xiaomi' ? '300' : 'bold',
                     color: item.id === 'xiaomi' ? '#FF6900' : '#000',
                     letterSpacing: item.id === 'samsung' ? 1 : 0
@@ -437,7 +457,7 @@ export default function SearchScreen({ navigation }: any) {
                   </Text>
                 )}
               </View>
-              <Text style={{ fontSize: 10, color: 'rgba(0,0,0,0.5)', textAlign: 'center' }}>
+              <Text style={{ fontSize: moderateScale(10), color: 'rgba(0,0,0,0.5)', textAlign: 'center' }}>
                 {item.name}
               </Text>
             </TouchableOpacity>
@@ -461,7 +481,7 @@ export default function SearchScreen({ navigation }: any) {
         >
           <Ionicons
             name={showOnlyOfficialStores ? "checkmark-circle" : "storefront-outline"}
-            size={16}
+            size={scale(16)}
             color={showOnlyOfficialStores ? "white" : "#3B82F6"}
           />
           <Text className={`text-xs font-semibold ml-1.5 ${
@@ -476,8 +496,8 @@ export default function SearchScreen({ navigation }: any) {
       <ScrollView
         className="flex-1 px-4"
         showsVerticalScrollIndicator={false}
-        style={{ marginBottom: 90 }}
-        contentContainerStyle={{ paddingTop: 8 }}
+        style={{ marginBottom: verticalScale(90) }}
+        contentContainerStyle={{ paddingTop: verticalScale(8) }}
       >
         {loading ? (
           <View className="flex-1 items-center justify-center py-12">
@@ -493,7 +513,7 @@ export default function SearchScreen({ navigation }: any) {
           />
         ) : (
           <View className="flex-1 items-center justify-center py-12">
-            <Ionicons name="search-outline" size={64} color="#9CA3AF" />
+            <Ionicons name="search-outline" size={scale(64)} color="#9CA3AF" />
             <Text className="text-xl font-bold text-gray-900 mb-2 mt-4">No encontramos resultados</Text>
             <Text className="text-base text-gray-600 text-center">
               Intenta con otras palabras

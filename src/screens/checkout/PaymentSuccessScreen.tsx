@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { COLORS } from '../../constants/theme';
+import { scale, moderateScale, verticalScale } from '../../utils/responsive';
 
 export default function PaymentSuccessScreen({ route, navigation }: any) {
   const { orderId } = route.params;
@@ -15,7 +16,7 @@ export default function PaymentSuccessScreen({ route, navigation }: any) {
           colors={['#10B981', '#34D399']}
           className="rounded-full p-6 mb-6"
         >
-          <Ionicons name="checkmark" size={64} color="white" />
+          <Ionicons name="checkmark" size={scale(64)} color="white" />
         </LinearGradient>
 
         <Text className="text-2xl font-bold text-gray-900 text-center mb-3">

@@ -3,6 +3,7 @@ import { View, Text, ScrollView, TouchableOpacity, Image, ActivityIndicator } fr
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../../constants/theme';
 import { HomeSection } from '../../services/homeSections';
+import { scale, moderateScale, verticalScale, wp } from '../../utils/responsive';
 
 interface DynamicSectionProps {
   section: HomeSection;
@@ -17,18 +18,18 @@ export default function DynamicSection({ section, onProductPress }: DynamicSecti
       key={item.id}
       onPress={() => onProductPress(item.product.id)}
       className="mr-3"
-      style={{ width: 133 }}
+      style={{ width: scale(133) }}
     >
       <View className="bg-white rounded-xl overflow-hidden border border-gray-200">
-        <View className="bg-gray-100 items-center justify-center relative" style={{ height: 133 }}>
+        <View className="bg-gray-100 items-center justify-center relative" style={{ height: scale(133) }}>
           {item.product.image_url ? (
             <Image
               source={{ uri: item.product.image_url }}
-              style={{ width: 133, height: 133 }}
+              style={{ width: scale(133), height: scale(133) }}
               resizeMode="cover"
             />
           ) : (
-            <Ionicons name="image-outline" size={40} color="#9CA3AF" />
+            <Ionicons name="image-outline" size={scale(40)} color="#9CA3AF" />
           )}
           {item.custom_label && (
             <View
@@ -53,11 +54,21 @@ export default function DynamicSection({ section, onProductPress }: DynamicSecti
               </Text>
             )}
           </View>
-          <View className="flex-row items-center">
-            {[1, 2, 3, 4, 5].map((star) => (
-              <Ionicons key={star} name="star" size={10} color="#FBBF24" />
-            ))}
-          </View>
+          {item.product.rating > 0 && (
+            <View className="flex-row items-center">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <Ionicons
+                  key={star}
+                  name={star <= Math.round(item.product.rating) ? 'star' : 'star-outline'}
+                  size={scale(10)}
+                  color="#FBBF24"
+                />
+              ))}
+              <Text className="text-xs text-gray-500 ml-1">
+                ({item.product.reviews_count || 0})
+              </Text>
+            </View>
+          )}
           <TouchableOpacity
             className="mt-2 rounded-full py-2"
             style={{ backgroundColor: COLORS.primary }}
@@ -75,17 +86,17 @@ export default function DynamicSection({ section, onProductPress }: DynamicSecti
       key={item.id}
       onPress={() => onProductPress(item.product.id)}
       className="flex-row bg-white rounded-xl mb-3 border border-gray-200 overflow-hidden"
-      style={{ height: 151 }}
+      style={{ height: scale(151) }}
     >
-      <View className="bg-gray-100 items-center justify-center relative" style={{ width: 151 }}>
+      <View className="bg-gray-100 items-center justify-center relative" style={{ width: scale(151) }}>
         {item.product.image_url ? (
           <Image
             source={{ uri: item.product.image_url }}
-            style={{ width: 151, height: 151 }}
+            style={{ width: scale(151), height: scale(151) }}
             resizeMode="cover"
           />
         ) : (
-          <Ionicons name="image-outline" size={50} color="#9CA3AF" />
+          <Ionicons name="image-outline" size={scale(50)} color="#9CA3AF" />
         )}
         {item.custom_label && (
           <View
@@ -111,20 +122,27 @@ export default function DynamicSection({ section, onProductPress }: DynamicSecti
               </Text>
             )}
           </View>
-          <View className="flex-row items-center mb-2">
-            <View className="flex-row">
-              {[1, 2, 3, 4, 5].map((star) => (
-                <Ionicons key={star} name="star" size={12} color="#FBBF24" />
-              ))}
+          {item.product.rating > 0 && (
+            <View className="flex-row items-center mb-2">
+              <View className="flex-row">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <Ionicons
+                    key={star}
+                    name={star <= Math.round(item.product.rating) ? 'star' : 'star-outline'}
+                    size={scale(12)}
+                    color="#FBBF24"
+                  />
+                ))}
+              </View>
+              <Text className="text-xs text-gray-600 ml-2">
+                ({item.product.reviews_count || 0})
+              </Text>
             </View>
-            <Text className="text-xs text-gray-600 ml-2">
-              ({Math.floor(Math.random() * 500) + 100})
-            </Text>
-          </View>
+          )}
         </View>
-        {index % 3 !== 2 && (
+        {item.product.free_shipping && (
           <View className="bg-green-50 rounded px-2 py-1 self-start flex-row items-center">
-            <Ionicons name="checkmark-circle" size={12} color="#16A34A" />
+            <Ionicons name="checkmark-circle" size={scale(12)} color="#16A34A" />
             <Text className="text-green-600 text-xs font-semibold ml-1">Envío GRATIS</Text>
           </View>
         )}

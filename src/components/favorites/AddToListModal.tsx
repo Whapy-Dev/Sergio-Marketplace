@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { COLORS } from '../../constants/theme';
 import { getUserLists, createList, addProductToList, FavoriteList } from '../../services/favoriteLists';
+import { scale, moderateScale, hp } from '../../utils/responsive';
 
 interface AddToListModalProps {
   visible: boolean;
@@ -89,20 +90,37 @@ export default function AddToListModal({ visible, onClose, productId, userId }: 
       transparent={true}
       onRequestClose={onClose}
     >
-      <View className="flex-1 justify-end" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-        <View className="bg-white rounded-t-[40px] shadow-lg" style={{ height: '75%' }}>
+      <View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.5)' }}>
+        <View style={{
+          backgroundColor: '#FFF',
+          borderTopLeftRadius: scale(40),
+          borderTopRightRadius: scale(40),
+          height: hp(75),
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: -2 },
+          shadowOpacity: 0.1,
+          shadowRadius: 3,
+          elevation: 5,
+        }}>
           {/* Header */}
-          <View className="flex-row items-center justify-between px-5 pt-6 pb-4">
-            <Text className="text-xl font-bold text-gray-900">Agregar a lista</Text>
+          <View style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            paddingHorizontal: scale(20),
+            paddingTop: scale(24),
+            paddingBottom: scale(16),
+          }}>
+            <Text style={{ fontSize: moderateScale(20), fontWeight: 'bold', color: '#111827' }}>Agregar a lista</Text>
             <TouchableOpacity onPress={onClose}>
-              <Ionicons name="close" size={28} color="#000" />
+              <Ionicons name="close" size={scale(28)} color="#000" />
             </TouchableOpacity>
           </View>
 
           {/* Contenido */}
-          <ScrollView className="flex-1 px-5" showsVerticalScrollIndicator={false}>
+          <ScrollView style={{ flex: 1, paddingHorizontal: scale(20) }} showsVerticalScrollIndicator={false}>
             {loading ? (
-              <View className="py-20 items-center justify-center">
+              <View style={{ paddingVertical: scale(80), alignItems: 'center', justifyContent: 'center' }}>
                 <ActivityIndicator size="large" color={COLORS.primary} />
               </View>
             ) : (
@@ -110,16 +128,23 @@ export default function AddToListModal({ visible, onClose, productId, userId }: 
                 {/* Botón crear nueva lista */}
                 <TouchableOpacity
                   onPress={handleCreateList}
-                  className="mb-4"
+                  style={{ marginBottom: scale(16) }}
                 >
                   <LinearGradient
                     colors={['#2563EB', '#DC2626']}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 0 }}
-                    className="rounded-xl py-4 px-4 flex-row items-center justify-center"
+                    style={{
+                      borderRadius: scale(12),
+                      paddingVertical: scale(16),
+                      paddingHorizontal: scale(16),
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
                   >
-                    <Ionicons name="add-circle-outline" size={24} color="white" />
-                    <Text className="text-white text-base font-semibold ml-2">
+                    <Ionicons name="add-circle-outline" size={scale(24)} color="white" />
+                    <Text style={{ color: '#FFF', fontSize: moderateScale(16), fontWeight: '600', marginLeft: scale(8) }}>
                       Crear nueva lista
                     </Text>
                   </LinearGradient>
@@ -127,16 +152,16 @@ export default function AddToListModal({ visible, onClose, productId, userId }: 
 
                 {/* Lista de listas existentes */}
                 {lists.length === 0 ? (
-                  <View className="py-12 items-center">
-                    <Text className="text-4xl mb-3">📋</Text>
-                    <Text className="text-base text-gray-500 text-center">
+                  <View style={{ paddingVertical: scale(48), alignItems: 'center' }}>
+                    <Text style={{ fontSize: scale(40), marginBottom: scale(12) }}>📋</Text>
+                    <Text style={{ fontSize: moderateScale(16), color: '#6B7280', textAlign: 'center' }}>
                       No tienes listas todavía{'\n'}
                       Crea una para organizar tus productos
                     </Text>
                   </View>
                 ) : (
-                  <View className="mb-6">
-                    <Text className="text-sm font-medium text-gray-500 mb-3 uppercase">
+                  <View style={{ marginBottom: scale(24) }}>
+                    <Text style={{ fontSize: moderateScale(12), fontWeight: '500', color: '#6B7280', marginBottom: scale(12), textTransform: 'uppercase' }}>
                       Mis listas
                     </Text>
                     {lists.map((list) => (
@@ -144,21 +169,33 @@ export default function AddToListModal({ visible, onClose, productId, userId }: 
                         key={list.id}
                         onPress={() => handleAddToList(list.id, list.name)}
                         disabled={addingToList === list.id}
-                        className="border border-gray-200 rounded-xl mb-3 overflow-hidden"
+                        style={{
+                          borderWidth: 1,
+                          borderColor: '#E5E7EB',
+                          borderRadius: scale(12),
+                          marginBottom: scale(12),
+                          overflow: 'hidden',
+                        }}
                       >
-                        <View className="px-4 py-4 flex-row items-center justify-between">
-                          <View className="flex-1">
-                            <Text className="text-base font-medium text-gray-900">
+                        <View style={{
+                          paddingHorizontal: scale(16),
+                          paddingVertical: scale(16),
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                        }}>
+                          <View style={{ flex: 1 }}>
+                            <Text style={{ fontSize: moderateScale(16), fontWeight: '500', color: '#111827' }}>
                               {list.name}
                             </Text>
-                            <Text className="text-sm text-gray-500 mt-1">
+                            <Text style={{ fontSize: moderateScale(14), color: '#6B7280', marginTop: scale(4) }}>
                               {list.product_count || 0} productos
                             </Text>
                           </View>
                           {addingToList === list.id ? (
                             <ActivityIndicator size="small" color={COLORS.primary} />
                           ) : (
-                            <Ionicons name="add-circle" size={28} color={COLORS.primary} />
+                            <Ionicons name="add-circle" size={scale(28)} color={COLORS.primary} />
                           )}
                         </View>
                       </TouchableOpacity>

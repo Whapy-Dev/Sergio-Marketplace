@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
+import { scale } from '../../utils/responsive';
 import { VariantType, ProductVariant, getAvailableOptions } from '../../services/variants';
 
 interface VariantSelectorProps {
@@ -56,7 +57,7 @@ export default function VariantSelector({
                         className={`w-10 h-10 rounded-full border-2 ${
                           isSelected ? 'border-primary' : 'border-gray-300'
                         }`}
-                        style={{ padding: 2 }}
+                        style={{ padding: scale(2) }}
                       >
                         <View
                           className="flex-1 rounded-full"

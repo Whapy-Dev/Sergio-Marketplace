@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../../constants/theme';
+import { scale, moderateScale, verticalScale } from '../../utils/responsive';
 
 export default function PaymentFailureScreen({ route, navigation }: any) {
   const { orderId } = route.params;
@@ -11,7 +12,7 @@ export default function PaymentFailureScreen({ route, navigation }: any) {
     <SafeAreaView className="flex-1 bg-white">
       <View className="flex-1 items-center justify-center p-6">
         <View className="bg-red-100 rounded-full p-6 mb-6">
-          <Ionicons name="close" size={64} color="#EF4444" />
+          <Ionicons name="close" size={scale(64)} color="#EF4444" />
         </View>
 
         <Text className="text-2xl font-bold text-gray-900 text-center mb-3">
@@ -32,15 +33,15 @@ export default function PaymentFailureScreen({ route, navigation }: any) {
           <Text className="text-sm text-gray-700 mb-2 font-medium">Posibles causas:</Text>
           <View className="space-y-1">
             <View className="flex-row items-start">
-              <Ionicons name="alert-circle-outline" size={16} color="#EF4444" className="mr-2" />
+              <Ionicons name="alert-circle-outline" size={scale(16)} color="#EF4444" className="mr-2" />
               <Text className="text-sm text-gray-600 flex-1">Fondos insuficientes</Text>
             </View>
             <View className="flex-row items-start">
-              <Ionicons name="alert-circle-outline" size={16} color="#EF4444" className="mr-2" />
+              <Ionicons name="alert-circle-outline" size={scale(16)} color="#EF4444" className="mr-2" />
               <Text className="text-sm text-gray-600 flex-1">Datos incorrectos de la tarjeta</Text>
             </View>
             <View className="flex-row items-start">
-              <Ionicons name="alert-circle-outline" size={16} color="#EF4444" className="mr-2" />
+              <Ionicons name="alert-circle-outline" size={scale(16)} color="#EF4444" className="mr-2" />
               <Text className="text-sm text-gray-600 flex-1">Límite de compra excedido</Text>
             </View>
           </View>

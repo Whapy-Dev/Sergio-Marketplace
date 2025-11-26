@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../../services/supabase';
 import { COLORS } from '../../constants/theme';
+import { scale, moderateScale, verticalScale } from '../../utils/responsive';
 
 interface InvoiceDetail {
   id: string;
@@ -152,12 +153,12 @@ export default function InvoiceDetailScreen({ navigation, route }: any) {
             onPress={() => navigation.goBack()}
             className="mr-3"
           >
-            <Ionicons name="arrow-back" size={24} color={COLORS.primary} />
+            <Ionicons name="arrow-back" size={scale(24)} color={COLORS.primary} />
           </TouchableOpacity>
           <Text className="text-xl font-bold text-gray-900">Detalle de Factura</Text>
         </View>
         <TouchableOpacity onPress={handleShare}>
-          <Ionicons name="share-outline" size={24} color={COLORS.primary} />
+          <Ionicons name="share-outline" size={scale(24)} color={COLORS.primary} />
         </TouchableOpacity>
       </View>
 
@@ -204,14 +205,14 @@ export default function InvoiceDetailScreen({ navigation, route }: any) {
             </Text>
 
             <View className="flex-row items-center mb-2">
-              <Ionicons name="checkmark-circle" size={20} color="#059669" />
+              <Ionicons name="checkmark-circle" size={scale(20)} color="#059669" />
               <Text className="text-sm text-gray-900 ml-2 font-medium">
                 CAE: {invoice.cae}
               </Text>
             </View>
 
             <View className="flex-row items-center">
-              <Ionicons name="calendar" size={20} color="#6B7280" />
+              <Ionicons name="calendar" size={scale(20)} color="#6B7280" />
               <Text className="text-sm text-gray-600 ml-2">
                 Vencimiento CAE: {formatDate(invoice.cae_expiration)}
               </Text>
@@ -227,12 +228,12 @@ export default function InvoiceDetailScreen({ navigation, route }: any) {
 
           <View className="space-y-2">
             <View className="flex-row">
-              <Text className="text-sm text-gray-500 w-24">Nombre:</Text>
+              <Text className="text-sm text-gray-500" style={{ width: scale(96) }}>Nombre:</Text>
               <Text className="text-sm text-gray-900 flex-1">{invoice.customer_name || '-'}</Text>
             </View>
 
             <View className="flex-row mt-2">
-              <Text className="text-sm text-gray-500 w-24">Documento:</Text>
+              <Text className="text-sm text-gray-500" style={{ width: scale(96) }}>Documento:</Text>
               <Text className="text-sm text-gray-900 flex-1">
                 {DOC_TYPES[invoice.customer_doc_type] || 'Doc'}: {invoice.customer_doc_number || '-'}
               </Text>
@@ -240,7 +241,7 @@ export default function InvoiceDetailScreen({ navigation, route }: any) {
 
             {invoice.customer_address && (
               <View className="flex-row mt-2">
-                <Text className="text-sm text-gray-500 w-24">Direccion:</Text>
+                <Text className="text-sm text-gray-500" style={{ width: scale(96) }}>Direccion:</Text>
                 <Text className="text-sm text-gray-900 flex-1">{invoice.customer_address}</Text>
               </View>
             )}
@@ -288,7 +289,7 @@ export default function InvoiceDetailScreen({ navigation, route }: any) {
               Alert.alert('Descargar', 'La factura se descargara en breve');
             }}
           >
-            <Ionicons name="download-outline" size={20} color="white" />
+            <Ionicons name="download-outline" size={scale(20)} color="white" />
             <Text className="text-white font-semibold ml-2">Descargar PDF</Text>
           </TouchableOpacity>
         )}

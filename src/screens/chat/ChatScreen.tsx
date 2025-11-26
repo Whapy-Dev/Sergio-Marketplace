@@ -9,8 +9,14 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
+  Alert,
+  Modal,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
+import * as FileSystem from 'expo-file-system/legacy';
+import * as MediaLibrary from 'expo-media-library';
 import { useAuth } from '../../contexts/AuthContext';
 import {
   getConversationWithMessages,
@@ -19,7 +25,10 @@ import {
   Message,
   ConversationWithDetails,
 } from '../../services/chat';
+import { supabase } from '../../services/supabase';
 import { COLORS } from '../../constants/theme';
+import { scale, moderateScale, verticalScale } from '../../utils/responsive';
+import { TAB_BAR_HEIGHT } from '../../navigation/AppNavigator';
 
 export default function ChatScreen({ route, navigation }: any) {
   const { conversationId } = route.params;
@@ -29,7 +38,75 @@ export default function ChatScreen({ route, navigation }: any) {
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const flatListRef = useRef<FlatList>(null);
+
+  async function handlePickImage() {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+    if (status !== 'granted') {
+      Alert.alert('Permiso requerido', 'Necesitamos acceso a tu galería para enviar imágenes');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      quality: 0.7,
+    });
+
+    if (!result.canceled && result.assets[0] && user && conversation) {
+      await uploadAndSendImage(result.assets[0].uri);
+    }
+  }
+
+  async function uploadAndSendImage(uri: string) {
+    if (!user || !conversation) return;
+
+    try {
+      setUploadingImage(true);
+
+      // Get file extension
+      const ext = uri.split('.').pop()?.toLowerCase() || 'jpg';
+      const fileName = `${conversationId}/${Date.now()}.${ext}`;
+
+      // Read file as binary
+      const response = await fetch(uri);
+      const arrayBuffer = await response.arrayBuffer();
+      const uint8Array = new Uint8Array(arrayBuffer);
+
+      // Upload to Supabase Storage
+      const { error: uploadError } = await supabase.storage
+        .from('chat-images')
+        .upload(fileName, uint8Array, {
+          cacheControl: '3600',
+          upsert: false,
+          contentType: `image/${ext === 'jpg' ? 'jpeg' : ext}`
+        });
+
+      if (uploadError) {
+        console.error('Upload error:', uploadError);
+        Alert.alert('Error', 'No se pudo subir la imagen');
+        return;
+      }
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('chat-images')
+        .getPublicUrl(fileName);
+
+      // Send message with image
+      const otherUserId = conversation.buyer_id === user.id ? conversation.seller_id : conversation.buyer_id;
+      await sendMessage(conversationId, user.id, otherUserId, '', publicUrl);
+
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      Alert.alert('Error', 'Ocurrió un error al enviar la imagen');
+    } finally {
+      setUploadingImage(false);
+    }
+  }
 
   useEffect(() => {
     loadConversation();
@@ -120,22 +197,45 @@ export default function ChatScreen({ route, navigation }: any) {
           className={`mb-2 px-4 ${isMyMessage ? 'items-end' : 'items-start'}`}
         >
           <View
-            className={`rounded-2xl px-4 py-2 max-w-[75%] ${
+            className={`rounded-2xl overflow-hidden max-w-[75%] ${
               isMyMessage ? 'bg-blue-500' : 'bg-gray-200'
-            }`}
+            } ${item.image_url ? '' : 'px-4 py-2'}`}
           >
-            <Text
-              className={`text-base ${isMyMessage ? 'text-white' : 'text-gray-900'}`}
-            >
-              {item.content}
-            </Text>
-            <Text
-              className={`text-xs mt-1 ${
-                isMyMessage ? 'text-blue-100' : 'text-gray-500'
-              }`}
-            >
-              {formatMessageTime(item.created_at)}
-            </Text>
+            {/* Image */}
+            {item.image_url && (
+              <TouchableOpacity
+                onPress={() => setSelectedImage(item.image_url)}
+                activeOpacity={0.8}
+              >
+                <Image
+                  source={{ uri: item.image_url }}
+                  style={{ width: scale(200), height: scale(200) }}
+                  resizeMode="cover"
+                />
+              </TouchableOpacity>
+            )}
+
+            {/* Text content (hide if only image) */}
+            {item.content && item.content !== '📷 Imagen' && (
+              <View className={item.image_url ? 'px-4 py-2' : ''}>
+                <Text
+                  className={`text-base ${isMyMessage ? 'text-white' : 'text-gray-900'}`}
+                >
+                  {item.content}
+                </Text>
+              </View>
+            )}
+
+            {/* Time */}
+            <View className={item.image_url ? 'px-4 pb-2' : ''}>
+              <Text
+                className={`text-xs ${
+                  isMyMessage ? 'text-blue-100' : 'text-gray-500'
+                } ${item.image_url && !item.content ? 'mt-1' : 'mt-1'}`}
+              >
+                {formatMessageTime(item.created_at)}
+              </Text>
+            </View>
           </View>
         </View>
       </View>
@@ -234,7 +334,7 @@ export default function ChatScreen({ route, navigation }: any) {
           data={messages}
           renderItem={renderMessage}
           keyExtractor={(item) => item.id}
-          contentContainerStyle={{ paddingTop: 10, paddingBottom: 10 }}
+          contentContainerStyle={{ paddingTop: verticalScale(10), paddingBottom: verticalScale(10) }}
           onContentSizeChange={() => {
             if (messages.length > 0) {
               flatListRef.current?.scrollToEnd({ animated: true });
@@ -243,7 +343,21 @@ export default function ChatScreen({ route, navigation }: any) {
         />
 
         {/* Input */}
-        <View className="flex-row items-center px-4 py-3 bg-white border-t border-gray-200">
+        <View className="flex-row items-center px-4 py-3 bg-white border-t border-gray-200" style={{ paddingBottom: TAB_BAR_HEIGHT + 10 }}>
+          {/* Image picker button */}
+          <TouchableOpacity
+            onPress={handlePickImage}
+            disabled={uploadingImage || sending}
+            className="mr-2"
+            style={{ opacity: uploadingImage ? 0.5 : 1 }}
+          >
+            {uploadingImage ? (
+              <ActivityIndicator size="small" color={COLORS.primary} />
+            ) : (
+              <Ionicons name="image-outline" size={scale(28)} color={COLORS.primary} />
+            )}
+          </TouchableOpacity>
+
           <TextInput
             className="flex-1 bg-gray-100 rounded-full px-4 py-3 text-base mr-2"
             placeholder="Escribe un mensaje..."
@@ -256,8 +370,8 @@ export default function ChatScreen({ route, navigation }: any) {
             className="rounded-full items-center justify-center"
             style={{
               backgroundColor: newMessage.trim() ? COLORS.primary : '#D1D5DB',
-              width: 44,
-              height: 44,
+              width: scale(44),
+              height: scale(44),
             }}
             onPress={handleSend}
             disabled={!newMessage.trim() || sending}
@@ -265,11 +379,69 @@ export default function ChatScreen({ route, navigation }: any) {
             {sending ? (
               <ActivityIndicator size="small" color="white" />
             ) : (
-              <Text className="text-white text-xl">➤</Text>
+              <Ionicons name="send" size={scale(20)} color="white" />
             )}
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
+
+      {/* Image Viewer Modal */}
+      <Modal
+        visible={!!selectedImage}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setSelectedImage(null)}
+      >
+        <View className="flex-1 bg-black">
+          {/* Header */}
+          <SafeAreaView edges={['top']}>
+            <View className="flex-row items-center justify-between px-4 py-3">
+              <TouchableOpacity onPress={() => setSelectedImage(null)}>
+                <Ionicons name="close" size={scale(28)} color="white" />
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={async () => {
+                  if (selectedImage) {
+                    try {
+                      const { status } = await MediaLibrary.requestPermissionsAsync();
+                      if (status !== 'granted') {
+                        Alert.alert('Permiso requerido', 'Necesitamos acceso a tu galería para guardar imágenes');
+                        return;
+                      }
+
+                      const filename = selectedImage.split('/').pop() || `image_${Date.now()}.jpg`;
+                      const fileUri = FileSystem.documentDirectory + filename;
+
+                      const downloadResult = await FileSystem.downloadAsync(selectedImage, fileUri);
+
+                      const asset = await MediaLibrary.createAssetAsync(downloadResult.uri);
+                      await MediaLibrary.createAlbumAsync('Sergio Marketplace', asset, false);
+
+                      Alert.alert('Guardado', 'Imagen guardada en tu galería');
+                    } catch (error) {
+                      console.error('Error downloading:', error);
+                      Alert.alert('Error', 'No se pudo guardar la imagen');
+                    }
+                  }
+                }}
+              >
+                <Ionicons name="download-outline" size={scale(28)} color="white" />
+              </TouchableOpacity>
+            </View>
+          </SafeAreaView>
+
+          {/* Full Image */}
+          <View className="flex-1 items-center justify-center">
+            {selectedImage && (
+              <Image
+                source={{ uri: selectedImage }}
+                style={{ width: '100%', height: '80%' }}
+                resizeMode="contain"
+              />
+            )}
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }

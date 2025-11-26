@@ -15,10 +15,12 @@ import {
   VariantType,
   ProductVariant as VariantData
 } from '../../services/variants';
+import { getProductReviews, getProductReviewStats, Review, ReviewStats } from '../../services/reviews';
 import Button from '../../components/common/Button';
 import AddToListModal from '../../components/favorites/AddToListModal';
 import VariantSelector from '../../components/product/VariantSelector';
 import { COLORS } from '../../constants/theme';
+import { scale, moderateScale, verticalScale, wp } from '../../utils/responsive';
 
 const { width } = Dimensions.get('window');
 
@@ -29,7 +31,6 @@ export default function ProductDetailScreen({ route, navigation }: any) {
   const [quantity, setQuantity] = useState(1);
   const [email, setEmail] = useState('');
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [expandedSpec, setExpandedSpec] = useState<string | null>('camera');
   const [showFullDescription, setShowFullDescription] = useState(false);
   const [relatedProducts, setRelatedProducts] = useState<any[]>([]);
   const [storeProducts, setStoreProducts] = useState<any[]>([]);
@@ -40,6 +41,10 @@ export default function ProductDetailScreen({ route, navigation }: any) {
   const [variants, setVariants] = useState<VariantData[]>([]);
   const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>({});
   const [selectedVariant, setSelectedVariant] = useState<VariantData | undefined>(undefined);
+
+  // Reviews
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [reviewStats, setReviewStats] = useState<ReviewStats | null>(null);
 
   const { addItem: addToCart } = useCart();
   const { toggleFavorite, isFavorite } = useFavorites();
@@ -61,7 +66,21 @@ export default function ProductDetailScreen({ route, navigation }: any) {
   useEffect(() => {
     loadProduct();
     loadRelatedProducts();
+    loadReviews();
   }, [productId]);
+
+  async function loadReviews() {
+    try {
+      const [reviewsData, statsData] = await Promise.all([
+        getProductReviews(productId, { limit: 5, sortBy: 'recent' }),
+        getProductReviewStats(productId)
+      ]);
+      setReviews(reviewsData);
+      setReviewStats(statsData);
+    } catch (error) {
+      console.error('Error loading reviews:', error);
+    }
+  }
 
   async function loadProduct() {
     try {
@@ -246,9 +265,6 @@ export default function ProductDetailScreen({ route, navigation }: any) {
     }
   }
 
-  function toggleSpecSection(section: string) {
-    setExpandedSpec(expandedSpec === section ? null : section);
-  }
 
   if (loading) {
     return (
@@ -338,19 +354,19 @@ export default function ProductDetailScreen({ route, navigation }: any) {
       >
         <View className="px-5 py-4 flex-row items-center justify-between">
           <TouchableOpacity onPress={() => navigation.goBack()}>
-            <Ionicons name="arrow-back" size={26} color="white" />
+            <Ionicons name="arrow-back" size={scale(26)} color="white" />
           </TouchableOpacity>
           <View className="flex-row items-center">
             <TouchableOpacity className="mr-4">
-              <Ionicons name="notifications-outline" size={28} color="white" />
+              <Ionicons name="notifications-outline" size={scale(28)} color="white" />
             </TouchableOpacity>
             <TouchableOpacity onPress={() => navigation.navigate('Cart')} className="mr-4">
-              <Ionicons name="cart-outline" size={28} color="white" />
+              <Ionicons name="cart-outline" size={scale(28)} color="white" />
             </TouchableOpacity>
             <TouchableOpacity onPress={handleToggleFavorite}>
               <Ionicons
                 name={favorite ? 'heart' : 'heart-outline'}
-                size={28}
+                size={scale(28)}
                 color="white"
               />
             </TouchableOpacity>
@@ -358,11 +374,11 @@ export default function ProductDetailScreen({ route, navigation }: any) {
         </View>
       </LinearGradient>
 
-      <ScrollView className="flex-1" showsVerticalScrollIndicator={false} style={{ paddingBottom: 80 }}>
+      <ScrollView className="flex-1" showsVerticalScrollIndicator={false} style={{ paddingBottom: verticalScale(80) }}>
         {/* Breadcrumb */}
         <View className="px-5 py-4 bg-gray-50 rounded-[20px] mx-5 mt-3">
           <View className="flex-row items-center">
-            <Ionicons name="chevron-back" size={14} color="#000" />
+            <Ionicons name="chevron-back" size={scale(14)} color="#000" />
             <Text className="text-sm text-gray-500 ml-2">
               {product.categories?.name || 'Categoría'} / {product.name.split(' ')[0]}
             </Text>
@@ -381,7 +397,7 @@ export default function ProductDetailScreen({ route, navigation }: any) {
               setCurrentImageIndex(index);
             }}
             renderItem={({ item }) => (
-              <View style={{ width: width - 40, height: 359 }} className="mx-5">
+              <View style={{ width: width - scale(40), height: verticalScale(359) }} className="mx-5">
                 <Image
                   source={{ uri: item }}
                   className="w-full h-full rounded-2xl"
@@ -392,9 +408,9 @@ export default function ProductDetailScreen({ route, navigation }: any) {
                   className="absolute top-3 right-3 bg-white/90 rounded-full p-2"
                   style={{
                     shadowColor: '#000',
-                    shadowOffset: { width: 0, height: 2 },
+                    shadowOffset: { width: 0, height: scale(2) },
                     shadowOpacity: 0.1,
-                    shadowRadius: 4,
+                    shadowRadius: scale(4),
                     elevation: 3
                   }}
                   onPress={() => {
@@ -405,7 +421,7 @@ export default function ProductDetailScreen({ route, navigation }: any) {
                     setShowAddToListModal(true);
                   }}
                 >
-                  <Ionicons name="bookmarks-outline" size={16} color="#000" />
+                  <Ionicons name="bookmarks-outline" size={scale(16)} color="#000" />
                 </TouchableOpacity>
               </View>
             )}
@@ -418,10 +434,10 @@ export default function ProductDetailScreen({ route, navigation }: any) {
                 <View
                   key={index}
                   style={{
-                    width: 24,
-                    height: 8,
-                    borderRadius: 50,
-                    marginHorizontal: 4,
+                    width: scale(24),
+                    height: scale(8),
+                    borderRadius: scale(50),
+                    marginHorizontal: scale(4),
                     backgroundColor: index === currentImageIndex ? '#D9D9D9' : 'rgba(217, 217, 217, 0.5)'
                   }}
                 />
@@ -533,16 +549,19 @@ export default function ProductDetailScreen({ route, navigation }: any) {
           {/* Envío a domicilio */}
           <View className="flex-row items-start mb-4">
             <View className="mr-3">
-              <Ionicons name="car-outline" size={24} color="#000" />
+              <Ionicons name="car-outline" size={scale(24)} color="#000" />
             </View>
             <View className="flex-1">
-              <View className="flex-row items-center justify-between mb-1">
-                <Text className="text-sm text-gray-900">Envío a </Text>
-                <Text className="text-sm font-medium text-gray-900">$3.749</Text>
-              </View>
-              <Text className="text-sm" style={{ color: COLORS.primary }}>Dirección 123</Text>
+              {product.free_shipping ? (
+                <View className="flex-row items-center">
+                  <Ionicons name="checkmark-circle" size={scale(16)} color="#16A34A" />
+                  <Text className="text-sm font-semibold text-green-600 ml-1">Envío GRATIS</Text>
+                </View>
+              ) : (
+                <Text className="text-sm text-gray-900">Envío a calcular en checkout</Text>
+              )}
               <Text className="text-sm text-gray-600 mt-1">
-                Entrega estimada 3 días hábiles
+                Entrega estimada 3-5 días hábiles
               </Text>
             </View>
           </View>
@@ -550,13 +569,11 @@ export default function ProductDetailScreen({ route, navigation }: any) {
           {/* Retiro en sucursal */}
           <View className="flex-row items-start">
             <View className="mr-3">
-              <Ionicons name="bag-outline" size={24} color="#000" />
+              <Ionicons name="bag-outline" size={scale(24)} color="#000" />
             </View>
             <View className="flex-1">
               <Text className="text-sm text-gray-900 mb-1">Retiro GRATIS en sucursal</Text>
-              <TouchableOpacity>
-                <Text className="text-sm" style={{ color: COLORS.primary }}>Ver sucursales</Text>
-              </TouchableOpacity>
+              <Text className="text-sm text-gray-500">Disponible en puntos de retiro</Text>
             </View>
           </View>
         </View>
@@ -568,7 +585,7 @@ export default function ProductDetailScreen({ route, navigation }: any) {
               colors={['#2563EB', '#DC2626']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
-              style={{ height: 31, justifyContent: 'center', paddingHorizontal: 12 }}
+              style={{ height: verticalScale(31), justifyContent: 'center', paddingHorizontal: scale(12) }}
             >
               <Text className="text-white text-lg font-medium">Variantes</Text>
             </LinearGradient>
@@ -602,108 +619,39 @@ export default function ProductDetailScreen({ route, navigation }: any) {
             />
             <TouchableOpacity className="px-5 mt-3 flex-row items-center justify-center">
               <Text className="text-lg text-gray-600 mr-2">Ir a la tienda</Text>
-              <Ionicons name="arrow-forward" size={18} color="#666" />
+              <Ionicons name="arrow-forward" size={scale(18)} color="#666" />
             </TouchableOpacity>
           </View>
         )}
 
-        {/* Especificaciones técnicas */}
+        {/* Información del producto */}
         <View className="px-5 mb-6">
-          <Text className="text-xl font-semibold text-gray-900 mb-4">
-            Especificaciones técnicas
-          </Text>
-
           <Text className="text-lg font-semibold text-center text-gray-900 mb-2">
             {product.name}
           </Text>
-          <Text className="text-sm text-gray-500 text-center mb-6">
-            Artículo: <Text className="underline">22101758</Text>
+          <Text className="text-sm text-gray-500 text-center mb-4">
+            ID: {product.id.slice(0, 8).toUpperCase()}
           </Text>
 
-          <Text className="text-lg font-semibold text-gray-900 mb-3">
-            Características técnicas
-          </Text>
-
-          {/* Acordeón Cámara */}
-          <View className="border-t border-b border-gray-200">
-            <TouchableOpacity
-              className="py-4 flex-row items-center justify-between"
-              onPress={() => toggleSpecSection('camera')}
-            >
-              <Text className="text-base font-medium text-gray-900">Cámara</Text>
-              <Ionicons
-                name={expandedSpec === 'camera' ? 'chevron-up' : 'chevron-down'}
-                size={20}
-                color="#000"
-              />
-            </TouchableOpacity>
-            {expandedSpec === 'camera' && (
-              <View className="pb-4">
-                <View className="bg-gray-50 flex-row justify-between py-2 px-3 mb-1">
-                  <Text className="text-sm text-gray-600">Cámara principal</Text>
-                  <Text className="text-sm text-gray-900">Dual 48 MP y 12 MP</Text>
-                </View>
-                <View className="flex-row justify-between py-2 px-3 mb-1">
-                  <Text className="text-sm text-gray-600">Cámara frontal</Text>
-                  <Text className="text-sm text-gray-900">12 MP</Text>
-                </View>
-                <View className="bg-gray-50 flex-row justify-between py-2 px-3">
-                  <Text className="text-sm text-gray-600">Flash</Text>
-                  <Text className="text-sm text-gray-900">Sí</Text>
-                </View>
+          {/* Detalles básicos */}
+          <View className="bg-gray-50 rounded-lg p-4">
+            <View className="flex-row justify-between py-2 border-b border-gray-200">
+              <Text className="text-sm text-gray-600">Condición</Text>
+              <Text className="text-sm text-gray-900 font-medium">
+                {product.condition === 'new' ? 'Nuevo' : 'Usado'}
+              </Text>
+            </View>
+            <View className="flex-row justify-between py-2 border-b border-gray-200">
+              <Text className="text-sm text-gray-600">Stock disponible</Text>
+              <Text className="text-sm text-gray-900 font-medium">{product.stock} unidades</Text>
+            </View>
+            {product.category && (
+              <View className="flex-row justify-between py-2">
+                <Text className="text-sm text-gray-600">Categoría</Text>
+                <Text className="text-sm text-gray-900 font-medium">{product.category.name}</Text>
               </View>
             )}
           </View>
-
-          {/* Acordeón Memoria */}
-          <TouchableOpacity
-            className="border-b border-gray-200 py-4 flex-row items-center justify-between"
-            onPress={() => toggleSpecSection('memory')}
-          >
-            <Text className="text-base font-medium text-gray-900">Memoria</Text>
-            <Ionicons
-              name={expandedSpec === 'memory' ? 'chevron-up' : 'chevron-down'}
-              size={20}
-              color="#000"
-            />
-          </TouchableOpacity>
-
-          {/* Acordeón Imagen */}
-          <TouchableOpacity
-            className="border-b border-gray-200 py-4 flex-row items-center justify-between"
-            onPress={() => toggleSpecSection('display')}
-          >
-            <Text className="text-base font-medium text-gray-900">Imágen</Text>
-            <Ionicons
-              name={expandedSpec === 'display' ? 'chevron-up' : 'chevron-down'}
-              size={20}
-              color="#000"
-            />
-          </TouchableOpacity>
-
-          {/* Acordeón Red */}
-          <TouchableOpacity
-            className="border-b border-gray-200 py-4 flex-row items-center justify-between"
-            onPress={() => toggleSpecSection('network')}
-          >
-            <Text className="text-base font-medium text-gray-900">Red</Text>
-            <Ionicons
-              name={expandedSpec === 'network' ? 'chevron-up' : 'chevron-down'}
-              size={20}
-              color="#000"
-            />
-          </TouchableOpacity>
-
-          {/* Gradient overlay */}
-          <LinearGradient
-            colors={['rgba(255,255,255,0)', 'rgba(255,255,255,1)']}
-            className="h-20 -mt-20 pointer-events-none"
-          />
-
-          <TouchableOpacity className="mt-4 flex-row items-center justify-center">
-            <Text className="text-lg text-gray-600 mr-2">Ver todas las especificaciones</Text>
-            <Ionicons name="chevron-down" size={18} color="#666" />
-          </TouchableOpacity>
         </View>
 
         {/* Descripción del producto */}
@@ -714,12 +662,10 @@ export default function ProductDetailScreen({ route, navigation }: any) {
 
           <View className="relative">
             <Text
-              className="text-xs text-gray-900 leading-5"
+              className="text-sm text-gray-900 leading-5"
               numberOfLines={showFullDescription ? undefined : 10}
             >
-              {product.description ||
-                `iPhone 14 128GB, un smartphone que combina diseño elegante, rendimiento potente y tecnología avanzada.\n\nPantalla: Cuenta con una pantalla Super Retina XDR OLED de 6.1 pulgadas, que ofrece imágenes nítidas y colores vibrantes para una experiencia visual inigualable.\n\nMemoria: Con 128GB de almacenamiento interno y 6GB de RAM, tendrás espacio y velocidad suficientes para tus fotos, videos, aplicaciones y más.\n\nProcesador: Equipado con el chip A15 Bionic, garantiza un rendimiento rápido y eficiente en todas tus tareas diarias.\n\nCámara: Su sistema de cámara dual incluye una cámara principal de 12MP y una ultra gran angular de 12MP, permitiéndote capturar imágenes detalladas y de alta calidad.`
-              }
+              {product.description || 'Sin descripción disponible para este producto.'}
             </Text>
 
             {!showFullDescription && (
@@ -739,10 +685,131 @@ export default function ProductDetailScreen({ route, navigation }: any) {
             </Text>
             <Ionicons
               name={showFullDescription ? 'chevron-up' : 'chevron-down'}
-              size={18}
+              size={scale(18)}
               color="#666"
             />
           </TouchableOpacity>
+        </View>
+
+        {/* Opiniones y Reseñas */}
+        <View className="px-5 mb-6">
+          <Text className="text-xl font-semibold text-gray-900 mb-4">
+            Opiniones del producto
+          </Text>
+
+          {reviewStats && reviewStats.total > 0 ? (
+            <>
+              {/* Stats Summary */}
+              <View className="flex-row items-center mb-4">
+                <View className="items-center mr-6">
+                  <Text className="text-4xl font-bold text-gray-900">
+                    {reviewStats.average.toFixed(1)}
+                  </Text>
+                  <View className="flex-row mt-1">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <Ionicons
+                        key={star}
+                        name={star <= Math.round(reviewStats.average) ? 'star' : 'star-outline'}
+                        size={scale(16)}
+                        color="#FBBF24"
+                      />
+                    ))}
+                  </View>
+                  <Text className="text-xs text-gray-500 mt-1">
+                    {reviewStats.total} {reviewStats.total === 1 ? 'opinión' : 'opiniones'}
+                  </Text>
+                </View>
+
+                {/* Distribution bars */}
+                <View className="flex-1">
+                  {[5, 4, 3, 2, 1].map((rating) => {
+                    const count = reviewStats.distribution[rating as keyof typeof reviewStats.distribution];
+                    const percentage = reviewStats.total > 0 ? (count / reviewStats.total) * 100 : 0;
+                    return (
+                      <View key={rating} className="flex-row items-center mb-1">
+                        <Text className="text-xs text-gray-600 w-3">{rating}</Text>
+                        <Ionicons name="star" size={scale(10)} color="#FBBF24" />
+                        <View className="flex-1 h-2 bg-gray-200 rounded-full mx-2">
+                          <View
+                            className="h-2 bg-yellow-400 rounded-full"
+                            style={{ width: `${percentage}%` }}
+                          />
+                        </View>
+                        <Text className="text-xs text-gray-500 w-6">{count}</Text>
+                      </View>
+                    );
+                  })}
+                </View>
+              </View>
+
+              {/* Individual Reviews */}
+              {reviews.map((review) => (
+                <View key={review.id} className="border-t border-gray-200 py-4">
+                  <View className="flex-row items-center mb-2">
+                    {review.user?.avatar_url ? (
+                      <Image
+                        source={{ uri: review.user.avatar_url }}
+                        className="w-8 h-8 rounded-full mr-2"
+                      />
+                    ) : (
+                      <View className="w-8 h-8 rounded-full bg-gray-200 items-center justify-center mr-2">
+                        <Ionicons name="person" size={scale(16)} color="#9CA3AF" />
+                      </View>
+                    )}
+                    <View className="flex-1">
+                      <Text className="text-sm font-medium text-gray-900">
+                        {review.user?.full_name || 'Usuario'}
+                      </Text>
+                      <View className="flex-row items-center">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <Ionicons
+                            key={star}
+                            name={star <= review.rating ? 'star' : 'star-outline'}
+                            size={scale(12)}
+                            color="#FBBF24"
+                          />
+                        ))}
+                        <Text className="text-xs text-gray-500 ml-2">
+                          {new Date(review.created_at).toLocaleDateString('es-AR')}
+                        </Text>
+                      </View>
+                    </View>
+                  </View>
+                  {review.title && (
+                    <Text className="text-sm font-semibold text-gray-900 mb-1">
+                      {review.title}
+                    </Text>
+                  )}
+                  {review.comment && (
+                    <Text className="text-sm text-gray-700">{review.comment}</Text>
+                  )}
+                  {review.seller_response && (
+                    <View className="bg-gray-50 rounded-lg p-3 mt-2">
+                      <Text className="text-xs font-medium text-gray-600 mb-1">
+                        Respuesta del vendedor:
+                      </Text>
+                      <Text className="text-sm text-gray-700">{review.seller_response}</Text>
+                    </View>
+                  )}
+                </View>
+              ))}
+
+              {reviewStats.total > 5 && (
+                <TouchableOpacity className="mt-2 flex-row items-center justify-center">
+                  <Text className="text-base" style={{ color: COLORS.primary }}>
+                    Ver todas las opiniones ({reviewStats.total})
+                  </Text>
+                  <Ionicons name="chevron-forward" size={scale(16)} color={COLORS.primary} />
+                </TouchableOpacity>
+              )}
+            </>
+          ) : (
+            <View className="items-center py-6">
+              <Ionicons name="chatbubble-outline" size={scale(40)} color="#D1D5DB" />
+              <Text className="text-gray-500 mt-2">Aún no hay opiniones</Text>
+              <Text className="text-xs text-gray-400">Sé el primero en opinar</Text>
+            </View>
+          )}
         </View>
 
         {/* Productos similares */}
@@ -762,20 +829,8 @@ export default function ProductDetailScreen({ route, navigation }: any) {
           </View>
         )}
 
-        {/* Footer */}
+        {/* Footer - Newsletter */}
         <View className="bg-gray-100 rounded-t-[70px] pt-8 pb-6 px-5">
-          {/* Atención al cliente */}
-          <View className="mb-6">
-            <Text className="text-lg font-bold text-gray-900 mb-2">
-              Atención al cliente
-            </Text>
-            <Text className="text-base text-gray-900 mb-3">0800 123 456</Text>
-            <Text className="text-sm text-gray-900 leading-5">
-              Lunes a Viernes de 09:00 a 18:00{'\n'}Sábados de 9:00 a 13:00
-            </Text>
-          </View>
-
-          {/* Newsletter */}
           <View>
             <Text className="text-sm text-gray-900 mb-3">
               Recibí ofertas y promociones
@@ -814,7 +869,7 @@ export default function ProductDetailScreen({ route, navigation }: any) {
         style={{
           zIndex: 100,
           elevation: 10,
-          paddingBottom: 90 // Espacio para el navbar
+          paddingBottom: verticalScale(90) // Espacio para el navbar
         }}
       >
         <Button

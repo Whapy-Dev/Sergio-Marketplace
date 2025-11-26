@@ -3,6 +3,7 @@ import { View, Text, TextInput, ScrollView, TouchableOpacity, Alert } from 'reac
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { updatePassword } from '../../services/profile';
 import Button from '../../components/common/Button';
+import { scale, moderateScale, verticalScale } from '../../utils/responsive';
 
 export default function ChangePasswordScreen({ navigation }: any) {
   const [newPassword, setNewPassword] = useState('');

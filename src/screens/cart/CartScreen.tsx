@@ -2,7 +2,9 @@ import React from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useCart } from '../../contexts/CartContext';
+import { TAB_BAR_HEIGHT } from '../../navigation/AppNavigator';
 import Button from '../../components/common/Button';
+import { scale, moderateScale, verticalScale } from '../../utils/responsive';
 
 export default function CartScreen({ navigation }: any) {
   const { items, totalItems, totalAmount, removeItem, updateQuantity } = useCart();
@@ -42,7 +44,7 @@ export default function CartScreen({ navigation }: any) {
         </Text>
       </View>
 
-      <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 80 }}>
+      <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: TAB_BAR_HEIGHT + 20 }}>
         {items.map((item) => (
           <View
             key={item.id}

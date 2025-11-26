@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../contexts/AuthContext';
 import { getSellerWithdrawalRequests, type WithdrawalRequest } from '../../services/wallet';
 import { COLORS } from '../../constants/theme';
+import { scale, moderateScale, verticalScale } from '../../utils/responsive';
 
 export default function WithdrawalHistoryScreen({ navigation }: any) {
   const { user } = useAuth();
@@ -104,7 +105,7 @@ export default function WithdrawalHistoryScreen({ navigation }: any) {
       {/* Header */}
       <View className="bg-white px-4 py-4 border-b border-gray-200 flex-row items-center">
         <TouchableOpacity onPress={() => navigation.goBack()} className="mr-3">
-          <Ionicons name="arrow-back" size={24} color="#000" />
+          <Ionicons name="arrow-back" size={scale(24)} color="#000" />
         </TouchableOpacity>
         <Text className="text-xl font-bold text-gray-900">Historial de Retiros</Text>
       </View>
@@ -115,7 +116,7 @@ export default function WithdrawalHistoryScreen({ navigation }: any) {
       >
         {requests.length === 0 ? (
           <View className="flex-1 items-center justify-center px-6 py-12">
-            <Ionicons name="receipt-outline" size={64} color="#D1D5DB" />
+            <Ionicons name="receipt-outline" size={scale(64)} color="#D1D5DB" />
             <Text className="text-gray-900 font-bold text-xl mt-4 text-center">
               No hay retiros aún
             </Text>
@@ -136,7 +137,7 @@ export default function WithdrawalHistoryScreen({ navigation }: any) {
                     >
                       <Ionicons
                         name={getStatusIcon(request.status) as any}
-                        size={20}
+                        size={scale(20)}
                         color={getStatusColor(request.status)}
                       />
                     </View>

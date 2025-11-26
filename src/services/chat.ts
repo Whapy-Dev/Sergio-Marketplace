@@ -6,6 +6,7 @@ export interface Message {
   sender_id: string;
   receiver_id: string;
   content: string;
+  image_url?: string;
   is_read: boolean;
   created_at: string;
 }
@@ -183,17 +184,24 @@ export async function sendMessage(
   conversationId: string,
   senderId: string,
   receiverId: string,
-  content: string
+  content: string,
+  imageUrl?: string
 ): Promise<Message | null> {
   try {
+    const messageData: any = {
+      conversation_id: conversationId,
+      sender_id: senderId,
+      receiver_id: receiverId,
+      content: content.trim() || (imageUrl ? '📷 Imagen' : ''),
+    };
+
+    if (imageUrl) {
+      messageData.image_url = imageUrl;
+    }
+
     const { data, error } = await supabase
       .from('messages')
-      .insert({
-        conversation_id: conversationId,
-        sender_id: senderId,
-        receiver_id: receiverId,
-        content: content.trim(),
-      })
+      .insert(messageData)
       .select()
       .single();
 

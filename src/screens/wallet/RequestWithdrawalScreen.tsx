@@ -10,6 +10,7 @@ import {
   getMinimumWithdrawalAmount,
 } from '../../services/wallet';
 import { COLORS } from '../../constants/theme';
+import { scale, moderateScale, verticalScale } from '../../utils/responsive';
 
 export default function RequestWithdrawalScreen({ navigation }: any) {
   const { user } = useAuth();
@@ -148,12 +149,12 @@ export default function RequestWithdrawalScreen({ navigation }: any) {
       <SafeAreaView className="flex-1 bg-white" edges={['top']}>
         <View className="px-4 py-4 border-b border-gray-200 flex-row items-center">
           <TouchableOpacity onPress={() => navigation.goBack()} className="mr-3">
-            <Ionicons name="arrow-back" size={24} color="#000" />
+            <Ionicons name="arrow-back" size={scale(24)} color="#000" />
           </TouchableOpacity>
           <Text className="text-xl font-bold text-gray-900">Solicitar Retiro</Text>
         </View>
         <View className="flex-1 items-center justify-center px-6">
-          <Ionicons name="card-outline" size={64} color="#D1D5DB" />
+          <Ionicons name="card-outline" size={scale(64)} color="#D1D5DB" />
           <Text className="text-gray-900 font-bold text-xl mt-4 text-center">
             Configura tus Datos Bancarios
           </Text>
@@ -180,7 +181,7 @@ export default function RequestWithdrawalScreen({ navigation }: any) {
       {/* Header */}
       <View className="px-4 py-4 border-b border-gray-200 flex-row items-center">
         <TouchableOpacity onPress={() => navigation.goBack()} className="mr-3">
-          <Ionicons name="arrow-back" size={24} color="#000" />
+          <Ionicons name="arrow-back" size={scale(24)} color="#000" />
         </TouchableOpacity>
         <Text className="text-xl font-bold text-gray-900">Solicitar Retiro</Text>
       </View>
@@ -267,7 +268,7 @@ export default function RequestWithdrawalScreen({ navigation }: any) {
                 >
                   <Ionicons
                     name="business"
-                    size={24}
+                    size={scale(24)}
                     color={paymentMethod === 'cbu_cvu' ? 'white' : '#6B7280'}
                   />
                 </View>
@@ -277,7 +278,7 @@ export default function RequestWithdrawalScreen({ navigation }: any) {
                 </View>
               </View>
               {paymentMethod === 'cbu_cvu' && (
-                <Ionicons name="checkmark-circle" size={24} color={COLORS.primary} />
+                <Ionicons name="checkmark-circle" size={scale(24)} color={COLORS.primary} />
               )}
             </TouchableOpacity>
           )}
@@ -298,7 +299,7 @@ export default function RequestWithdrawalScreen({ navigation }: any) {
                 >
                   <Ionicons
                     name="wallet"
-                    size={24}
+                    size={scale(24)}
                     color={paymentMethod === 'mp_alias' ? 'white' : '#6B7280'}
                   />
                 </View>
@@ -308,7 +309,7 @@ export default function RequestWithdrawalScreen({ navigation }: any) {
                 </View>
               </View>
               {paymentMethod === 'mp_alias' && (
-                <Ionicons name="checkmark-circle" size={24} color={COLORS.primary} />
+                <Ionicons name="checkmark-circle" size={scale(24)} color={COLORS.primary} />
               )}
             </TouchableOpacity>
           )}
@@ -317,7 +318,7 @@ export default function RequestWithdrawalScreen({ navigation }: any) {
         {/* Info */}
         <View className="bg-gray-50 rounded-lg p-4">
           <View className="flex-row items-start">
-            <Ionicons name="time-outline" size={20} color="#6B7280" />
+            <Ionicons name="time-outline" size={scale(20)} color="#6B7280" />
             <View className="ml-3 flex-1">
               <Text className="text-gray-900 font-semibold mb-1">Tiempo de Procesamiento</Text>
               <Text className="text-gray-600 text-sm">

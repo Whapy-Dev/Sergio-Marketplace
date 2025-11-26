@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, Image, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { scale } from '../../utils/responsive';
 import type { Review } from '../../services/reviews';
 
 interface ReviewItemProps {
@@ -31,7 +32,7 @@ export default function ReviewItem({
           <Ionicons
             key={star}
             name={star <= rating ? 'star' : 'star-outline'}
-            size={16}
+            size={scale(16)}
             color={star <= rating ? '#FBBF24' : '#D1D5DB'}
           />
         ))}
@@ -50,7 +51,7 @@ export default function ReviewItem({
           />
         ) : (
           <View className="w-10 h-10 rounded-full bg-gray-200 items-center justify-center">
-            <Ionicons name="person" size={20} color="#9CA3AF" />
+            <Ionicons name="person" size={scale(20)} color="#9CA3AF" />
           </View>
         )}
         <View className="ml-3 flex-1">
@@ -103,7 +104,7 @@ export default function ReviewItem({
           onPress={() => onHelpful?.(review.id)}
           className="flex-row items-center"
         >
-          <Ionicons name="thumbs-up-outline" size={16} color="#6B7280" />
+          <Ionicons name="thumbs-up-outline" size={scale(16)} color="#6B7280" />
           <Text className="text-gray-500 text-sm ml-1">
             Útil ({review.helpful_count})
           </Text>
@@ -114,7 +115,7 @@ export default function ReviewItem({
             onPress={() => onReport?.(review.id)}
             className="flex-row items-center"
           >
-            <Ionicons name="flag-outline" size={16} color="#6B7280" />
+            <Ionicons name="flag-outline" size={scale(16)} color="#6B7280" />
             <Text className="text-gray-500 text-sm ml-1">Reportar</Text>
           </TouchableOpacity>
         )}

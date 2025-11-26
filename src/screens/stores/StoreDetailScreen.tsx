@@ -20,6 +20,7 @@ import {
 import type { OfficialStoreWithDetails } from '../../types/officialStore';
 import { useAuth } from '../../contexts/AuthContext';
 import { COLORS } from '../../constants/theme';
+import { scale, moderateScale, verticalScale } from '../../utils/responsive';
 
 const { width } = Dimensions.get('window');
 
@@ -92,7 +93,7 @@ export default function StoreDetailScreen({ route, navigation }: any) {
       <TouchableOpacity
         onPress={() => handleProductPress(item.id)}
         className="mb-4"
-        style={{ width: (width - 48) / 2 }}
+        style={{ width: (width - scale(48)) / 2 }}
       >
         <View className="bg-white rounded-xl overflow-hidden border border-gray-200">
           {/* Product Image */}
@@ -105,7 +106,7 @@ export default function StoreDetailScreen({ route, navigation }: any) {
               />
             ) : (
               <View className="w-full h-40 bg-gray-100 items-center justify-center">
-                <Ionicons name="image-outline" size={40} color="#9CA3AF" />
+                <Ionicons name="image-outline" size={scale(40)} color="#9CA3AF" />
               </View>
             )}
 
@@ -118,7 +119,7 @@ export default function StoreDetailScreen({ route, navigation }: any) {
 
             {/* Official Badge */}
             <View className="absolute top-2 right-2 bg-blue-500 rounded-full p-1">
-              <Ionicons name="checkmark-circle" size={16} color="white" />
+              <Ionicons name="checkmark-circle" size={scale(16)} color="white" />
             </View>
           </View>
 
@@ -140,7 +141,7 @@ export default function StoreDetailScreen({ route, navigation }: any) {
 
             {item.free_shipping && (
               <View className="flex-row items-center mt-2">
-                <Ionicons name="checkmark-circle" size={12} color="#10B981" />
+                <Ionicons name="checkmark-circle" size={scale(12)} color="#10B981" />
                 <Text className="text-xs text-green-600 font-medium ml-1">
                   Envío gratis
                 </Text>
@@ -166,7 +167,7 @@ export default function StoreDetailScreen({ route, navigation }: any) {
     return (
       <SafeAreaView className="flex-1 bg-white">
         <View className="flex-1 items-center justify-center px-8">
-          <Ionicons name="alert-circle-outline" size={64} color="#EF4444" />
+          <Ionicons name="alert-circle-outline" size={scale(64)} color="#EF4444" />
           <Text className="text-lg font-semibold text-gray-900 mt-4">
             Tienda no encontrada
           </Text>
@@ -184,15 +185,15 @@ export default function StoreDetailScreen({ route, navigation }: any) {
   return (
     <SafeAreaView className="flex-1 bg-gray-50" edges={['top']}>
       {/* Header with Back Button */}
-      <View className="absolute top-12 left-0 right-0 z-10 flex-row items-center justify-between px-4">
+      <View style={{ position: 'absolute', top: verticalScale(12), left: 0, right: 0, zIndex: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: scale(16) }}>
         <TouchableOpacity
           onPress={() => navigation.goBack()}
-          className="w-10 h-10 bg-white/90 rounded-full items-center justify-center shadow-lg"
+          style={{ width: scale(40), height: scale(40), backgroundColor: 'rgba(255,255,255,0.9)', borderRadius: scale(20), alignItems: 'center', justifyContent: 'center' }}
         >
-          <Ionicons name="arrow-back" size={24} color="#111827" />
+          <Ionicons name="arrow-back" size={scale(24)} color="#111827" />
         </TouchableOpacity>
-        <TouchableOpacity className="w-10 h-10 bg-white/90 rounded-full items-center justify-center shadow-lg">
-          <Ionicons name="share-outline" size={22} color="#111827" />
+        <TouchableOpacity style={{ width: scale(40), height: scale(40), backgroundColor: 'rgba(255,255,255,0.9)', borderRadius: scale(20), alignItems: 'center', justifyContent: 'center' }}>
+          <Ionicons name="share-outline" size={scale(22)} color="#111827" />
         </TouchableOpacity>
       </View>
 
@@ -229,7 +230,7 @@ export default function StoreDetailScreen({ route, navigation }: any) {
                   />
                 ) : (
                   <View className="w-full h-full items-center justify-center bg-gray-100">
-                    <Ionicons name="storefront" size={32} color="#9CA3AF" />
+                    <Ionicons name="storefront" size={scale(32)} color="#9CA3AF" />
                   </View>
                 )}
               </View>
@@ -245,7 +246,7 @@ export default function StoreDetailScreen({ route, navigation }: any) {
                 </View>
 
                 <View className="flex-row items-center mt-1">
-                  <Ionicons name="star" size={14} color="#FBBF24" />
+                  <Ionicons name="star" size={scale(14)} color="#FBBF24" />
                   <Text className="text-sm font-semibold text-gray-900 ml-1">
                     {store.rating.toFixed(1)}
                   </Text>
@@ -271,7 +272,7 @@ export default function StoreDetailScreen({ route, navigation }: any) {
               <>
                 <Ionicons
                   name={isFollowing ? 'checkmark-circle' : 'add-circle-outline'}
-                  size={20}
+                  size={scale(20)}
                   color={isFollowing ? '#6B7280' : 'white'}
                 />
                 <Text
@@ -319,7 +320,7 @@ export default function StoreDetailScreen({ route, navigation }: any) {
             <View className="mt-4 pt-4 border-t border-gray-100">
               {store.city && (
                 <View className="flex-row items-center mb-2">
-                  <Ionicons name="location" size={16} color="#6B7280" />
+                  <Ionicons name="location" size={scale(16)} color="#6B7280" />
                   <Text className="text-sm text-gray-700 ml-2">
                     {store.city}, {store.state}
                   </Text>
@@ -327,13 +328,13 @@ export default function StoreDetailScreen({ route, navigation }: any) {
               )}
               {store.phone && (
                 <View className="flex-row items-center mb-2">
-                  <Ionicons name="call" size={16} color="#6B7280" />
+                  <Ionicons name="call" size={scale(16)} color="#6B7280" />
                   <Text className="text-sm text-gray-700 ml-2">{store.phone}</Text>
                 </View>
               )}
               {store.website && (
                 <View className="flex-row items-center">
-                  <Ionicons name="globe" size={16} color="#6B7280" />
+                  <Ionicons name="globe" size={scale(16)} color="#6B7280" />
                   <Text className="text-sm text-blue-600 ml-2">{store.website}</Text>
                 </View>
               )}
@@ -361,7 +362,7 @@ export default function StoreDetailScreen({ route, navigation }: any) {
             />
           ) : (
             <View className="bg-white rounded-xl p-8 items-center">
-              <Ionicons name="cube-outline" size={48} color="#D1D5DB" />
+              <Ionicons name="cube-outline" size={scale(48)} color="#D1D5DB" />
               <Text className="text-gray-500 mt-2">No hay productos disponibles</Text>
             </View>
           )}

@@ -4,6 +4,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import type { Banner } from '../services/banners';
 import { COLORS } from '../constants/theme';
+import { scale, moderateScale, verticalScale } from '../utils/responsive';
+import { wp, hp } from '../utils/responsive';
 
 interface BannerCardProps {
   banner: Banner;
@@ -69,7 +71,7 @@ function ProductBanner({ banner, onPress }: { banner: Banner; onPress: () => voi
             )}
             <View style={styles.productCTA}>
               <Text style={styles.productCTAText}>Ver producto</Text>
-              <Ionicons name="arrow-forward" size={16} color="#FFF" />
+              <Ionicons name="arrow-forward" size={scale(16)} color="#FFF" />
             </View>
           </View>
         </LinearGradient>
@@ -105,7 +107,7 @@ function CategoryBanner({ banner, onPress }: { banner: Banner; onPress: () => vo
       >
         <View style={styles.categoryContent}>
           <View style={styles.categoryIcon}>
-            <Ionicons name="pricetags" size={32} color="#FFF" />
+            <Ionicons name="pricetags" size={scale(32)} color="#FFF" />
           </View>
           <View style={styles.categoryText}>
             <Text style={styles.categoryTitle} numberOfLines={2}>
@@ -117,7 +119,7 @@ function CategoryBanner({ banner, onPress }: { banner: Banner; onPress: () => vo
               </Text>
             )}
           </View>
-          <Ionicons name="chevron-forward" size={24} color="rgba(255,255,255,0.8)" />
+          <Ionicons name="chevron-forward" size={scale(24)} color="rgba(255,255,255,0.8)" />
         </View>
       </LinearGradient>
     </TouchableOpacity>
@@ -140,9 +142,9 @@ function StoreBanner({ banner, onPress }: { banner: Banner; onPress: () => void 
       >
         <View style={styles.storeContent}>
           <View style={styles.storeIcon}>
-            <Ionicons name="storefront" size={40} color="#FFF" />
+            <Ionicons name="storefront" size={scale(40)} color="#FFF" />
             <View style={styles.verifiedBadge}>
-              <Ionicons name="checkmark-circle" size={20} color="#10B981" />
+              <Ionicons name="checkmark-circle" size={scale(20)} color="#10B981" />
             </View>
           </View>
           <View style={styles.storeText}>
@@ -239,7 +241,7 @@ function GenericBanner({ banner, onPress }: { banner: Banner; onPress: () => voi
           <View style={styles.genericIcon}>
             <Ionicons
               name={banner.link_type === 'external' ? 'link' : 'gift'}
-              size={60}
+              size={scale(60)}
               color="rgba(255,255,255,0.3)"
             />
           </View>
@@ -251,13 +253,13 @@ function GenericBanner({ banner, onPress }: { banner: Banner; onPress: () => voi
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: 16,
+    marginBottom: scale(16),
   },
 
   // Image Banner (generic with image)
   imageBanner: {
-    height: 180,
-    borderRadius: 24,
+    height: scale(180),
+    borderRadius: scale(24),
     overflow: 'hidden',
   },
   bannerImage: {
@@ -273,19 +275,19 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   imageContent: {
-    padding: 20,
+    padding: scale(20),
   },
   imageTitle: {
-    fontSize: 22,
+    fontSize: moderateScale(22),
     fontWeight: 'bold',
     color: '#FFF',
-    marginBottom: 4,
+    marginBottom: scale(4),
     textShadowColor: 'rgba(0, 0, 0, 0.5)',
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 3,
   },
   imageDescription: {
-    fontSize: 14,
+    fontSize: moderateScale(14),
     color: 'rgba(255,255,255,0.95)',
     textShadowColor: 'rgba(0, 0, 0, 0.5)',
     textShadowOffset: { width: 1, height: 1 },
@@ -294,8 +296,8 @@ const styles = StyleSheet.create({
 
   // Product Banner
   productBanner: {
-    height: 200,
-    borderRadius: 24,
+    height: scale(200),
+    borderRadius: scale(24),
     overflow: 'hidden',
   },
   productImage: {
@@ -311,36 +313,36 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   productContent: {
-    padding: 20,
+    padding: scale(20),
   },
   productTitle: {
-    fontSize: 20,
+    fontSize: moderateScale(20),
     fontWeight: 'bold',
     color: '#FFF',
-    marginBottom: 4,
+    marginBottom: scale(4),
   },
   productDescription: {
-    fontSize: 14,
+    fontSize: moderateScale(14),
     color: 'rgba(255,255,255,0.9)',
-    marginBottom: 8,
+    marginBottom: scale(8),
   },
   productCTA: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 8,
+    marginTop: scale(8),
   },
   productCTAText: {
-    fontSize: 14,
+    fontSize: moderateScale(14),
     fontWeight: '600',
     color: '#FFF',
-    marginRight: 4,
+    marginRight: scale(4),
   },
 
   // Category Banner
   categoryBanner: {
-    height: 100,
-    borderRadius: 20,
-    padding: 20,
+    height: scale(100),
+    borderRadius: scale(20),
+    padding: scale(20),
   },
   categoryContent: {
     flex: 1,
@@ -348,33 +350,33 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   categoryIcon: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    width: scale(60),
+    height: scale(60),
+    borderRadius: scale(30),
     backgroundColor: 'rgba(255,255,255,0.2)',
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 16,
+    marginRight: scale(16),
   },
   categoryText: {
     flex: 1,
   },
   categoryTitle: {
-    fontSize: 18,
+    fontSize: moderateScale(18),
     fontWeight: 'bold',
     color: '#FFF',
-    marginBottom: 4,
+    marginBottom: scale(4),
   },
   categoryDescription: {
-    fontSize: 13,
+    fontSize: moderateScale(13),
     color: 'rgba(255,255,255,0.9)',
   },
 
   // Store Banner
   storeBanner: {
-    height: 120,
-    borderRadius: 20,
-    padding: 20,
+    height: scale(120),
+    borderRadius: scale(20),
+    padding: scale(20),
   },
   storeContent: {
     flex: 1,
@@ -382,48 +384,48 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   storeIcon: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    width: scale(80),
+    height: scale(80),
+    borderRadius: scale(40),
     backgroundColor: 'rgba(255,255,255,0.2)',
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 16,
+    marginRight: scale(16),
     position: 'relative',
   },
   verifiedBadge: {
     position: 'absolute',
-    bottom: -4,
-    right: -4,
+    bottom: scale(-4),
+    right: scale(-4),
     backgroundColor: '#FFF',
-    borderRadius: 12,
-    padding: 2,
+    borderRadius: scale(12),
+    padding: scale(2),
   },
   storeText: {
     flex: 1,
   },
   storeTitle: {
-    fontSize: 20,
+    fontSize: moderateScale(20),
     fontWeight: 'bold',
     color: '#FFF',
-    marginBottom: 6,
+    marginBottom: scale(6),
   },
   storeDescription: {
-    fontSize: 13,
+    fontSize: moderateScale(13),
     color: 'rgba(255,255,255,0.9)',
-    marginBottom: 8,
+    marginBottom: scale(8),
   },
   storeVisit: {
-    fontSize: 12,
+    fontSize: moderateScale(12),
     fontWeight: '600',
     color: '#FFF',
   },
 
   // Generic Banner
   genericBanner: {
-    height: 150,
-    borderRadius: 24,
-    padding: 20,
+    height: scale(150),
+    borderRadius: scale(24),
+    padding: scale(20),
     position: 'relative',
     overflow: 'hidden',
   },
@@ -434,20 +436,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   genericTitle: {
-    fontSize: 18,
+    fontSize: moderateScale(18),
     fontWeight: 'bold',
     color: '#FFF',
-    marginBottom: 6,
-    lineHeight: 24,
+    marginBottom: scale(6),
+    lineHeight: scale(24),
   },
   genericDescription: {
-    fontSize: 13,
+    fontSize: moderateScale(13),
     color: 'rgba(255,255,255,0.95)',
-    lineHeight: 18,
+    lineHeight: scale(18),
   },
   genericIcon: {
     position: 'absolute',
-    bottom: -10,
-    right: -10,
+    bottom: scale(-10),
+    right: scale(-10),
   },
 });

@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../contexts/AuthContext';
 import { getStoreStats, StoreStats, StatsPeriod } from '../../services/storeStats';
 import { COLORS } from '../../constants/theme';
+import { scale, verticalScale } from '../../utils/responsive';
 
 const { width } = Dimensions.get('window');
 
@@ -86,7 +87,7 @@ export default function OfficialStoreDashboardScreen({ navigation }: any) {
             onPress={onRefresh}
             className="w-9 h-9 rounded-full bg-gray-100 items-center justify-center"
           >
-            <Ionicons name="refresh" size={18} color="#6B7280" />
+            <Ionicons name="refresh" size={scale(18)} color="#6B7280" />
           </TouchableOpacity>
         </View>
       </View>
@@ -122,7 +123,7 @@ export default function OfficialStoreDashboardScreen({ navigation }: any) {
               <View className={`flex-row items-center px-2 py-1 rounded-full ${stats && stats.revenue_change_percent >= 0 ? 'bg-green-500/20' : 'bg-red-500/20'}`}>
                 <Ionicons
                   name={stats && stats.revenue_change_percent >= 0 ? 'trending-up' : 'trending-down'}
-                  size={12}
+                  size={scale(12)}
                   color={stats && stats.revenue_change_percent >= 0 ? '#10B981' : '#EF4444'}
                 />
                 <Text className={`text-xs ml-1 ${stats && stats.revenue_change_percent >= 0 ? 'text-green-400' : 'text-red-400'}`}>
@@ -156,7 +157,7 @@ export default function OfficialStoreDashboardScreen({ navigation }: any) {
                   <View key={index} className="flex-1 items-center mx-0.5">
                     <View
                       className="w-full bg-blue-500 rounded-t"
-                      style={{ height: Math.max(height, 2), minHeight: 2 }}
+                      style={{ height: Math.max(height, 2), minHeight: verticalScale(2) }}
                     />
                   </View>
                 );
@@ -182,8 +183,8 @@ export default function OfficialStoreDashboardScreen({ navigation }: any) {
               className="w-[48%] bg-white rounded-xl p-4 mb-3 border border-gray-100"
             >
               <View className="flex-row items-center justify-between mb-2">
-                <Ionicons name="wallet-outline" size={20} color="#10B981" />
-                <Ionicons name="chevron-forward" size={14} color="#9CA3AF" />
+                <Ionicons name="wallet-outline" size={scale(20)} color="#10B981" />
+                <Ionicons name="chevron-forward" size={scale(14)} color="#9CA3AF" />
               </View>
               <Text className="text-xl font-bold text-gray-900">
                 ${stats?.available_balance.toLocaleString() || 0}
@@ -197,7 +198,7 @@ export default function OfficialStoreDashboardScreen({ navigation }: any) {
               className="w-[48%] bg-white rounded-xl p-4 mb-3 border border-gray-100"
             >
               <View className="flex-row items-center justify-between mb-2">
-                <Ionicons name="time-outline" size={20} color="#F59E0B" />
+                <Ionicons name="time-outline" size={scale(20)} color="#F59E0B" />
                 {stats && stats.pending_orders > 0 && (
                   <View className="bg-red-500 rounded-full w-5 h-5 items-center justify-center">
                     <Text className="text-white text-xs font-bold">{stats.pending_orders}</Text>
@@ -213,7 +214,7 @@ export default function OfficialStoreDashboardScreen({ navigation }: any) {
             {/* Conversión */}
             <View className="w-[48%] bg-white rounded-xl p-4 mb-3 border border-gray-100">
               <View className="flex-row items-center justify-between mb-2">
-                <Ionicons name="analytics-outline" size={20} color="#8B5CF6" />
+                <Ionicons name="analytics-outline" size={scale(20)} color="#8B5CF6" />
               </View>
               <Text className="text-xl font-bold text-gray-900">
                 {stats?.conversion_rate || 0}%
@@ -224,7 +225,7 @@ export default function OfficialStoreDashboardScreen({ navigation }: any) {
             {/* Clientes */}
             <View className="w-[48%] bg-white rounded-xl p-4 mb-3 border border-gray-100">
               <View className="flex-row items-center justify-between mb-2">
-                <Ionicons name="people-outline" size={20} color="#3B82F6" />
+                <Ionicons name="people-outline" size={scale(20)} color="#3B82F6" />
               </View>
               <Text className="text-xl font-bold text-gray-900">
                 {stats?.total_customers || 0}
@@ -263,7 +264,7 @@ export default function OfficialStoreDashboardScreen({ navigation }: any) {
             <View className="bg-white rounded-xl p-4 border border-gray-100">
               <View className="flex-row items-center justify-between mb-3">
                 <Text className="text-xs font-bold text-gray-500">TOP VENDIDOS</Text>
-                <Ionicons name="trophy" size={16} color="#F59E0B" />
+                <Ionicons name="trophy" size={scale(16)} color="#F59E0B" />
               </View>
               {stats.top_selling_products.map((product, index) => (
                 <View key={product.id} className="flex-row items-center py-2 border-b border-gray-50 last:border-0">
@@ -272,7 +273,7 @@ export default function OfficialStoreDashboardScreen({ navigation }: any) {
                     <Image source={{ uri: product.image_url }} className="w-10 h-10 rounded-lg mr-3" />
                   ) : (
                     <View className="w-10 h-10 rounded-lg bg-gray-100 mr-3 items-center justify-center">
-                      <Ionicons name="cube-outline" size={20} color="#9CA3AF" />
+                      <Ionicons name="cube-outline" size={scale(20)} color="#9CA3AF" />
                     </View>
                   )}
                   <View className="flex-1">
@@ -292,7 +293,7 @@ export default function OfficialStoreDashboardScreen({ navigation }: any) {
             <View className="bg-white rounded-xl p-4 border border-gray-100">
               <View className="flex-row items-center justify-between mb-3">
                 <Text className="text-xs font-bold text-gray-500">MÁS VISTOS</Text>
-                <Ionicons name="eye" size={16} color="#3B82F6" />
+                <Ionicons name="eye" size={scale(16)} color="#3B82F6" />
               </View>
               {stats.top_viewed_products.map((product, index) => (
                 <View key={product.id} className="flex-row items-center py-2 border-b border-gray-50 last:border-0">
@@ -301,14 +302,14 @@ export default function OfficialStoreDashboardScreen({ navigation }: any) {
                     <Image source={{ uri: product.image_url }} className="w-10 h-10 rounded-lg mr-3" />
                   ) : (
                     <View className="w-10 h-10 rounded-lg bg-gray-100 mr-3 items-center justify-center">
-                      <Ionicons name="cube-outline" size={20} color="#9CA3AF" />
+                      <Ionicons name="cube-outline" size={scale(20)} color="#9CA3AF" />
                     </View>
                   )}
                   <View className="flex-1">
                     <Text className="text-sm font-medium text-gray-900" numberOfLines={1}>{product.name}</Text>
                   </View>
                   <View className="flex-row items-center">
-                    <Ionicons name="eye-outline" size={14} color="#9CA3AF" />
+                    <Ionicons name="eye-outline" size={scale(14)} color="#9CA3AF" />
                     <Text className="text-sm text-gray-600 ml-1">{product.views.toLocaleString()}</Text>
                   </View>
                 </View>
@@ -323,7 +324,7 @@ export default function OfficialStoreDashboardScreen({ navigation }: any) {
             <View className="bg-red-50 rounded-xl p-4 border border-red-100">
               <View className="flex-row items-center justify-between mb-3">
                 <Text className="text-xs font-bold text-red-600">INVENTARIO BAJO</Text>
-                <Ionicons name="warning" size={16} color="#EF4444" />
+                <Ionicons name="warning" size={scale(16)} color="#EF4444" />
               </View>
               {stats.low_stock_products.map((product) => (
                 <View key={product.id} className="flex-row items-center py-2 border-b border-red-100/50 last:border-0">
@@ -331,7 +332,7 @@ export default function OfficialStoreDashboardScreen({ navigation }: any) {
                     <Image source={{ uri: product.image_url }} className="w-10 h-10 rounded-lg mr-3" />
                   ) : (
                     <View className="w-10 h-10 rounded-lg bg-red-100 mr-3 items-center justify-center">
-                      <Ionicons name="cube-outline" size={20} color="#EF4444" />
+                      <Ionicons name="cube-outline" size={scale(20)} color="#EF4444" />
                     </View>
                   )}
                   <View className="flex-1">
@@ -355,12 +356,12 @@ export default function OfficialStoreDashboardScreen({ navigation }: any) {
             className="bg-white rounded-xl p-4 mb-2 flex-row items-center border border-gray-100"
           >
             <View className="w-10 h-10 rounded-full bg-blue-50 items-center justify-center mr-3">
-              <Ionicons name="add" size={22} color="#3B82F6" />
+              <Ionicons name="add" size={scale(22)} color="#3B82F6" />
             </View>
             <View className="flex-1">
               <Text className="text-sm font-semibold text-gray-900">Publicar Producto</Text>
             </View>
-            <Ionicons name="chevron-forward" size={18} color="#9CA3AF" />
+            <Ionicons name="chevron-forward" size={scale(18)} color="#9CA3AF" />
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -368,7 +369,7 @@ export default function OfficialStoreDashboardScreen({ navigation }: any) {
             className="bg-white rounded-xl p-4 mb-2 flex-row items-center border border-gray-100"
           >
             <View className="w-10 h-10 rounded-full bg-yellow-50 items-center justify-center mr-3">
-              <Ionicons name="list" size={22} color="#F59E0B" />
+              <Ionicons name="list" size={scale(22)} color="#F59E0B" />
             </View>
             <View className="flex-1">
               <Text className="text-sm font-semibold text-gray-900">Gestionar Pedidos</Text>
@@ -378,7 +379,7 @@ export default function OfficialStoreDashboardScreen({ navigation }: any) {
                 <Text className="text-white text-xs font-bold">{stats.pending_orders}</Text>
               </View>
             )}
-            <Ionicons name="chevron-forward" size={18} color="#9CA3AF" />
+            <Ionicons name="chevron-forward" size={scale(18)} color="#9CA3AF" />
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -386,12 +387,12 @@ export default function OfficialStoreDashboardScreen({ navigation }: any) {
             className="bg-white rounded-xl p-4 mb-2 flex-row items-center border border-gray-100"
           >
             <View className="w-10 h-10 rounded-full bg-purple-50 items-center justify-center mr-3">
-              <Ionicons name="cube" size={22} color="#8B5CF6" />
+              <Ionicons name="cube" size={scale(22)} color="#8B5CF6" />
             </View>
             <View className="flex-1">
               <Text className="text-sm font-semibold text-gray-900">Catálogo de Productos</Text>
             </View>
-            <Ionicons name="chevron-forward" size={18} color="#9CA3AF" />
+            <Ionicons name="chevron-forward" size={scale(18)} color="#9CA3AF" />
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -399,12 +400,12 @@ export default function OfficialStoreDashboardScreen({ navigation }: any) {
             className="bg-white rounded-xl p-4 flex-row items-center border border-gray-100"
           >
             <View className="w-10 h-10 rounded-full bg-green-50 items-center justify-center mr-3">
-              <Ionicons name="wallet" size={22} color="#10B981" />
+              <Ionicons name="wallet" size={scale(22)} color="#10B981" />
             </View>
             <View className="flex-1">
               <Text className="text-sm font-semibold text-gray-900">Retirar Fondos</Text>
             </View>
-            <Ionicons name="chevron-forward" size={18} color="#9CA3AF" />
+            <Ionicons name="chevron-forward" size={scale(18)} color="#9CA3AF" />
           </TouchableOpacity>
         </View>
 

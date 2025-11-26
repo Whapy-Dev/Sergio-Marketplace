@@ -121,7 +121,7 @@ export async function getProductReviews(
       .from('reviews')
       .select(`
         *,
-        user:profiles(id, full_name, avatar_url)
+        user:profiles!reviews_buyer_id_fkey(id, full_name, avatar_url)
       `)
       .eq('product_id', productId)
       .eq('status', 'approved');

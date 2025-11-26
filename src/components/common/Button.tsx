@@ -1,5 +1,6 @@
 import React from 'react';
 import { TouchableOpacity, Text, ActivityIndicator } from 'react-native';
+import { scale, moderateScale } from '../../utils/responsive';
 
 interface ButtonProps {
   title: string;
@@ -17,7 +18,8 @@ export default function Button({
   disabled = false 
 }: ButtonProps) {
   
-  const baseClass = "py-4 px-6 rounded-lg items-center justify-center";
+  const baseClass = "rounded-lg items-center justify-center";
+  const paddingSize = { paddingVertical: scale(16), paddingHorizontal: scale(24) };
   
   const variantClasses = {
     primary: "bg-primary",
@@ -26,22 +28,25 @@ export default function Button({
   };
   
   const textVariantClasses = {
-    primary: "text-white font-semibold text-base",
-    secondary: "text-white font-semibold text-base",
-    outline: "text-primary font-semibold text-base"
+    primary: "text-white font-semibold",
+    secondary: "text-white font-semibold",
+    outline: "text-primary font-semibold"
   };
+
+  const textSize = { fontSize: moderateScale(16) };
 
   return (
     <TouchableOpacity
       onPress={onPress}
       disabled={disabled || loading}
       className={`${baseClass} ${variantClasses[variant]} ${(disabled || loading) ? 'opacity-50' : ''}`}
+      style={paddingSize}
       activeOpacity={0.7}
     >
       {loading ? (
-        <ActivityIndicator color={variant === 'outline' ? '#2563EB' : 'white'} />
+        <ActivityIndicator color={variant === 'outline' ? '#2563EB' : 'white'} size={scale(24)} />
       ) : (
-        <Text className={textVariantClasses[variant]}>
+        <Text className={textVariantClasses[variant]} style={textSize}>
           {title}
         </Text>
       )}

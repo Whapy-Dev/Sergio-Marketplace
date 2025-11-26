@@ -8,6 +8,7 @@ import { createOrder } from '../../services/orders';
 import { createPaymentPreference } from '../../services/mercadopago';
 import { getUserProfile } from '../../services/profile';
 import { COLORS } from '../../constants/theme';
+import { scale, moderateScale, verticalScale } from '../../utils/responsive';
 
 interface ProductParam {
   id: string;
@@ -60,6 +61,10 @@ export default function CheckoutScreen({ route, navigation }: CheckoutScreenProp
   const [postalCode, setPostalCode] = useState('');
   const [notes, setNotes] = useState('');
 
+  // Shipping method: 'pickup' or 'delivery'
+  const [shippingMethod, setShippingMethod] = useState<'pickup' | 'delivery'>('delivery');
+  const DELIVERY_COST = 3500; // Costo de envío a domicilio
+
   useEffect(() => {
     loadUserData();
   }, []);
@@ -85,8 +90,14 @@ export default function CheckoutScreen({ route, navigation }: CheckoutScreenProp
       return;
     }
 
-    if (!fullName || !email || !phone || !address || !city || !state) {
-      Alert.alert('Datos incompletos', 'Por favor completa todos los campos requeridos');
+    // Validate based on shipping method
+    if (!fullName || !email || !phone) {
+      Alert.alert('Datos incompletos', 'Por favor completa todos los campos de contacto');
+      return;
+    }
+
+    if (shippingMethod === 'delivery' && (!address || !city || !state)) {
+      Alert.alert('Datos incompletos', 'Por favor completa la dirección de envío');
       return;
     }
 
@@ -94,7 +105,9 @@ export default function CheckoutScreen({ route, navigation }: CheckoutScreenProp
 
     try {
       // 1. Create order in database
-      const shippingAddress = `${address}, ${city}, ${state}${postalCode ? ` (${postalCode})` : ''}`;
+      const shippingAddress = shippingMethod === 'pickup'
+        ? 'Retiro en sucursal'
+        : `${address}, ${city}, ${state}${postalCode ? ` (${postalCode})` : ''}`;
 
       const orderData = {
         buyer_id: user.id,
@@ -180,7 +193,7 @@ export default function CheckoutScreen({ route, navigation }: CheckoutScreenProp
   const subtotal = isCartCheckout
     ? cartTotal
     : (product?.price || 0) * quantity;
-  const shipping = 0; // Free shipping for now
+  const shipping = shippingMethod === 'pickup' ? 0 : DELIVERY_COST;
   const total = subtotal + shipping;
 
   return (
@@ -188,7 +201,7 @@ export default function CheckoutScreen({ route, navigation }: CheckoutScreenProp
       {/* Header */}
       <View className="px-4 py-4 border-b border-gray-200 flex-row items-center">
         <TouchableOpacity onPress={() => navigation.goBack()} className="mr-3">
-          <Ionicons name="arrow-back" size={24} color="#000" />
+          <Ionicons name="arrow-back" size={scale(24)} color="#000" />
         </TouchableOpacity>
         <Text className="text-xl font-bold text-gray-900">Finalizar Compra</Text>
       </View>
@@ -219,7 +232,11 @@ export default function CheckoutScreen({ route, navigation }: CheckoutScreenProp
             </View>
             <View className="flex-row justify-between">
               <Text className="text-gray-600">Envío</Text>
-              <Text className="text-green-600 font-semibold">GRATIS</Text>
+              {shipping === 0 ? (
+                <Text className="text-green-600 font-semibold">GRATIS</Text>
+              ) : (
+                <Text className="text-gray-900">${shipping.toLocaleString('es-AR')}</Text>
+              )}
             </View>
             <View className="h-px bg-gray-200 my-2" />
             <View className="flex-row justify-between">
@@ -271,7 +288,79 @@ export default function CheckoutScreen({ route, navigation }: CheckoutScreenProp
           </View>
         </View>
 
-        {/* Shipping Address */}
+        {/* Shipping Method */}
+        <View className="p-4 border-t border-gray-200">
+          <Text className="text-lg font-bold text-gray-900 mb-4">Método de envío</Text>
+
+          {/* Pickup Option */}
+          <TouchableOpacity
+            onPress={() => setShippingMethod('pickup')}
+            className={`border rounded-lg p-4 mb-3 flex-row items-center ${
+              shippingMethod === 'pickup' ? 'border-blue-500 bg-blue-50' : 'border-gray-200'
+            }`}
+          >
+            <View className={`w-5 h-5 rounded-full border-2 mr-3 items-center justify-center ${
+              shippingMethod === 'pickup' ? 'border-blue-500' : 'border-gray-300'
+            }`}>
+              {shippingMethod === 'pickup' && (
+                <View className="w-3 h-3 rounded-full bg-blue-500" />
+              )}
+            </View>
+            <View className="flex-1">
+              <View className="flex-row items-center">
+                <Ionicons name="storefront-outline" size={scale(20)} color={shippingMethod === 'pickup' ? '#2563EB' : '#6B7280'} />
+                <Text className={`ml-2 font-semibold ${shippingMethod === 'pickup' ? 'text-blue-600' : 'text-gray-900'}`}>
+                  Retiro en sucursal
+                </Text>
+              </View>
+              <Text className="text-sm text-gray-500 mt-1">
+                Retirá gratis en nuestra sucursal
+              </Text>
+            </View>
+            <Text className="text-green-600 font-bold">GRATIS</Text>
+          </TouchableOpacity>
+
+          {/* Delivery Option */}
+          <TouchableOpacity
+            onPress={() => setShippingMethod('delivery')}
+            className={`border rounded-lg p-4 flex-row items-center ${
+              shippingMethod === 'delivery' ? 'border-blue-500 bg-blue-50' : 'border-gray-200'
+            }`}
+          >
+            <View className={`w-5 h-5 rounded-full border-2 mr-3 items-center justify-center ${
+              shippingMethod === 'delivery' ? 'border-blue-500' : 'border-gray-300'
+            }`}>
+              {shippingMethod === 'delivery' && (
+                <View className="w-3 h-3 rounded-full bg-blue-500" />
+              )}
+            </View>
+            <View className="flex-1">
+              <View className="flex-row items-center">
+                <Ionicons name="car-outline" size={scale(20)} color={shippingMethod === 'delivery' ? '#2563EB' : '#6B7280'} />
+                <Text className={`ml-2 font-semibold ${shippingMethod === 'delivery' ? 'text-blue-600' : 'text-gray-900'}`}>
+                  Envío a domicilio
+                </Text>
+              </View>
+              <Text className="text-sm text-gray-500 mt-1">
+                Recibí en tu dirección en 3-5 días hábiles
+              </Text>
+            </View>
+            <Text className="font-bold text-gray-900">${DELIVERY_COST.toLocaleString('es-AR')}</Text>
+          </TouchableOpacity>
+
+          {/* Pickup info */}
+          {shippingMethod === 'pickup' && (
+            <View className="bg-gray-50 rounded-lg p-4 mt-3">
+              <Text className="font-semibold text-gray-900 mb-2">Dirección de retiro:</Text>
+              <Text className="text-gray-700">Av. 25 de Mayo 1234</Text>
+              <Text className="text-gray-700">Formosa, Formosa</Text>
+              <Text className="text-sm text-gray-500 mt-2">Lun a Vie: 9:00 - 18:00</Text>
+            </View>
+          )}
+        </View>
+
+        {/* Shipping Address - Only for delivery */}
+        {shippingMethod === 'delivery' && (
         <View className="p-4 border-t border-gray-200">
           <Text className="text-lg font-bold text-gray-900 mb-4">Dirección de envío</Text>
 
@@ -333,19 +422,20 @@ export default function CheckoutScreen({ route, navigation }: CheckoutScreenProp
             </View>
           </View>
         </View>
+        )}
 
         {/* Payment Method */}
         <View className="p-4 border-t border-gray-200">
           <Text className="text-lg font-bold text-gray-900 mb-3">Método de pago</Text>
           <View className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex-row items-center">
             <View className="bg-blue-600 rounded-lg p-2 mr-3">
-              <Ionicons name="card" size={24} color="white" />
+              <Ionicons name="card" size={scale(24)} color="white" />
             </View>
             <View className="flex-1">
               <Text className="font-semibold text-gray-900">MercadoPago</Text>
               <Text className="text-xs text-gray-600">Pago seguro con tarjeta o efectivo</Text>
             </View>
-            <Ionicons name="checkmark-circle" size={24} color="#2563EB" />
+            <Ionicons name="checkmark-circle" size={scale(24)} color="#2563EB" />
           </View>
         </View>
 

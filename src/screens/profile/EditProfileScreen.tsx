@@ -9,6 +9,7 @@ import { getBankingDetails, updateBankingDetails } from '../../services/wallet';
 import { supabase } from '../../services/supabase';
 import Button from '../../components/common/Button';
 import { COLORS } from '../../constants/theme';
+import { scale, moderateScale, verticalScale } from '../../utils/responsive';
 
 const FORMOSA_POSTAL_CODES = ['3600', '3601', '3602', '3603', '3604', '3605'];
 
@@ -247,7 +248,7 @@ export default function EditProfileScreen({ navigation }: any) {
       {/* Header */}
       <View className="px-4 py-3 bg-white border-b border-gray-200 flex-row items-center">
         <TouchableOpacity onPress={() => navigation.goBack()} className="mr-3 p-1">
-          <Ionicons name="arrow-back" size={24} color="#374151" />
+          <Ionicons name="arrow-back" size={scale(24)} color="#374151" />
         </TouchableOpacity>
         <Text className="text-xl font-bold text-gray-900">Editar Perfil</Text>
       </View>
@@ -264,7 +265,7 @@ export default function EditProfileScreen({ navigation }: any) {
                 />
               ) : (
                 <View className="w-24 h-24 rounded-full bg-gray-200 items-center justify-center">
-                  <Ionicons name="person" size={40} color="#9CA3AF" />
+                  <Ionicons name="person" size={scale(40)} color="#9CA3AF" />
                 </View>
               )}
               {uploadingAvatar ? (
@@ -273,7 +274,7 @@ export default function EditProfileScreen({ navigation }: any) {
                 </View>
               ) : (
                 <View className="absolute bottom-0 right-0 bg-blue-500 rounded-full p-2">
-                  <Ionicons name="camera" size={16} color="white" />
+                  <Ionicons name="camera" size={scale(16)} color="white" />
                 </View>
               )}
             </View>

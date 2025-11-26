@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, Image } from 'react-native';
+import { scale, moderateScale, verticalScale, wp } from '../../utils/responsive';
 
 interface ProductCardProps {
   id: string;
@@ -31,15 +32,15 @@ export default function ProductCard({
       className="bg-white rounded-lg border border-gray-200 overflow-hidden mb-3"
       activeOpacity={0.7}
     >
-      <View className="bg-gray-100 h-40 items-center justify-center">
+      <View className="bg-gray-100 items-center justify-center" style={{ height: scale(160) }}>
         {imageUrl ? (
-          <Image 
-            source={{ uri: imageUrl }} 
+          <Image
+            source={{ uri: imageUrl }}
             className="w-full h-full"
             resizeMode="cover"
           />
         ) : (
-          <Text className="text-5xl">📦</Text>
+          <Text style={{ fontSize: scale(48) }}>📦</Text>
         )}
         
         {discount > 0 && (

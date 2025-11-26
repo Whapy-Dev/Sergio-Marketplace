@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { View, Image, ScrollView, Dimensions, Text } from 'react-native';
+import { scale } from '../../utils/responsive';
 
 interface ImageGalleryProps {
   images: string[];

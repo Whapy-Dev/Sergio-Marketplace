@@ -1,8 +1,14 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView, Alert, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
+import * as WebBrowser from 'expo-web-browser';
+import * as AuthSession from 'expo-auth-session';
 import { supabase } from '../../services/supabase';
 import Button from '../../components/common/Button';
+import { scale, moderateScale, verticalScale, wp } from '../../utils/responsive';
+
+WebBrowser.maybeCompleteAuthSession();
 
 interface RegisterScreenProps {
   navigation: any;
@@ -18,6 +24,57 @@ export default function RegisterScreen({ navigation }: RegisterScreenProps) {
   const [postalCode, setPostalCode] = useState('');
   const [city, setCity] = useState('');
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const [appleLoading, setAppleLoading] = useState(false);
+
+  const redirectUrl = AuthSession.makeRedirectUri({
+    scheme: 'sergiomarketplace',
+    path: 'auth/callback',
+  });
+
+  async function handleSocialAuth(provider: 'google' | 'apple') {
+    const setLoading = provider === 'google' ? setGoogleLoading : setAppleLoading;
+
+    try {
+      setLoading(true);
+
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: {
+          redirectTo: redirectUrl,
+          skipBrowserRedirect: true,
+        },
+      });
+
+      if (error) throw error;
+
+      if (data?.url) {
+        const result = await WebBrowser.openAuthSessionAsync(
+          data.url,
+          redirectUrl
+        );
+
+        if (result.type === 'success') {
+          const url = result.url;
+          const params = new URLSearchParams(url.split('#')[1]);
+          const access_token = params.get('access_token');
+          const refresh_token = params.get('refresh_token');
+
+          if (access_token && refresh_token) {
+            await supabase.auth.setSession({
+              access_token,
+              refresh_token,
+            });
+          }
+        }
+      }
+    } catch (error: any) {
+      console.error(`${provider} login error:`, error);
+      Alert.alert('Error', `No se pudo registrar con ${provider === 'google' ? 'Google' : 'Apple'}`);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   async function handleRegister() {
     if (!fullName || !email || !password || !phone || !postalCode || !city) {
@@ -105,7 +162,7 @@ const { error: profileError } = await supabase
       >
         <ScrollView 
           className="flex-1"
-          contentContainerStyle={{ paddingBottom: 40 }}
+          contentContainerStyle={{ paddingBottom: scale(40) }}
           keyboardShouldPersistTaps="handled"
         >
           <View className="px-6 pt-8">
@@ -120,6 +177,50 @@ const { error: profileError } = await supabase
               <Text className="text-base text-gray-600">
                 Completa tus datos para registrarte
               </Text>
+            </View>
+
+            {/* Botones sociales */}
+            <View className="flex-row justify-center space-x-4 mb-4">
+              {/* Google */}
+              <TouchableOpacity
+                onPress={() => handleSocialAuth('google')}
+                disabled={googleLoading || loading}
+                className="flex-1 flex-row items-center justify-center bg-white border border-gray-300 rounded-lg py-3 mr-2"
+                style={{ opacity: googleLoading ? 0.7 : 1 }}
+              >
+                {googleLoading ? (
+                  <ActivityIndicator size="small" color="#4285F4" />
+                ) : (
+                  <>
+                    <Ionicons name="logo-google" size={scale(20)} color="#4285F4" />
+                    <Text className="ml-2 font-medium text-gray-700">Google</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+
+              {/* Apple */}
+              <TouchableOpacity
+                onPress={() => handleSocialAuth('apple')}
+                disabled={appleLoading || loading}
+                className="flex-1 flex-row items-center justify-center bg-black rounded-lg py-3 ml-2"
+                style={{ opacity: appleLoading ? 0.7 : 1 }}
+              >
+                {appleLoading ? (
+                  <ActivityIndicator size="small" color="white" />
+                ) : (
+                  <>
+                    <Ionicons name="logo-apple" size={scale(20)} color="white" />
+                    <Text className="ml-2 font-medium text-white">Apple</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            </View>
+
+            {/* Separador */}
+            <View className="flex-row items-center mb-4">
+              <View className="flex-1 h-px bg-gray-300" />
+              <Text className="mx-4 text-gray-500 text-sm">o regístrate con email</Text>
+              <View className="flex-1 h-px bg-gray-300" />
             </View>
 
             <View className="mb-4">

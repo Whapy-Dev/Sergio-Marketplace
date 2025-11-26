@@ -1,10 +1,11 @@
 import React, { useRef, useState } from 'react';
 import { View, ScrollView, Image, Dimensions, TouchableOpacity, Text } from 'react-native';
 import type { Banner } from '../services/banners';
+import { scale, wp, hp } from '../utils/responsive';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const BANNER_WIDTH = SCREEN_WIDTH - 32; // 16px padding on each side
-const BANNER_HEIGHT = 160;
+const BANNER_WIDTH = SCREEN_WIDTH - scale(32); // 16px padding on each side (scaled)
+const BANNER_HEIGHT = scale(160);
 
 interface BannerCarouselProps {
   banners: Banner[];
@@ -32,7 +33,7 @@ export default function BannerCarousel({ banners, onBannerPress }: BannerCarouse
   };
 
   return (
-    <View className="mb-6">
+    <View style={{ marginBottom: scale(24) }}>
       <ScrollView
         ref={scrollViewRef}
         horizontal
@@ -42,7 +43,7 @@ export default function BannerCarousel({ banners, onBannerPress }: BannerCarouse
         scrollEventThrottle={16}
         decelerationRate="fast"
         snapToInterval={BANNER_WIDTH}
-        contentContainerStyle={{ paddingHorizontal: 16 }}
+        contentContainerStyle={{ paddingHorizontal: scale(16) }}
       >
         {banners.map((banner) => (
           <TouchableOpacity
@@ -56,7 +57,7 @@ export default function BannerCarousel({ banners, onBannerPress }: BannerCarouse
               style={{
                 width: BANNER_WIDTH,
                 height: BANNER_HEIGHT,
-                borderRadius: 12,
+                borderRadius: scale(12),
               }}
               resizeMode="cover"
             />
@@ -66,15 +67,17 @@ export default function BannerCarousel({ banners, onBannerPress }: BannerCarouse
 
       {/* Pagination Dots */}
       {banners.length > 1 && (
-        <View className="flex-row justify-center items-center mt-3">
+        <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginTop: scale(12) }}>
           {banners.map((_, index) => (
             <View
               key={index}
-              className={`h-2 rounded-full mx-1 ${
-                index === activeIndex
-                  ? 'bg-primary w-6'
-                  : 'bg-gray-300 w-2'
-              }`}
+              style={{
+                height: scale(8),
+                borderRadius: scale(4),
+                marginHorizontal: scale(4),
+                backgroundColor: index === activeIndex ? '#2563EB' : '#D1D5DB',
+                width: index === activeIndex ? scale(24) : scale(8),
+              }}
             />
           ))}
         </View>

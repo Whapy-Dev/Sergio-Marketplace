@@ -59,7 +59,7 @@ export async function registerForPushNotifications(): Promise<string | null> {
 
     // Get Expo push token
     const tokenData = await Notifications.getExpoPushTokenAsync({
-      projectId: 'e42498d5-d3c7-4317-a07f-17f6becb49ba', // From app.json
+      projectId: '72af8675-7bdc-48f3-8297-e1f420a656de', // From app.json
     });
 
     // Configure Android channel

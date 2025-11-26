@@ -8,7 +8,9 @@ import { getUserProfile, UserProfile } from '../../services/profile';
 import { getUserOfficialStore, getUserStoreApplication } from '../../services/officialStores';
 import type { OfficialStore, StoreApplication } from '../../types/officialStore';
 import { supabase } from '../../services/supabase';
+import { TAB_BAR_HEIGHT } from '../../navigation/AppNavigator';
 import { COLORS } from '../../constants/theme';
+import { scale, moderateScale, verticalScale } from '../../utils/responsive';
 
 export default function ProfileScreen({ navigation }: any) {
   const { user, signOut } = useAuth();
@@ -161,7 +163,7 @@ export default function ProfileScreen({ navigation }: any) {
         <Text className="text-2xl font-bold text-gray-900">Mi Perfil</Text>
       </View>
 
-      <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 80 }}>
+      <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: TAB_BAR_HEIGHT + 20 }}>
         {/* Avatar y datos básicos */}
         <View className="items-center py-6 border-b border-gray-100">
           <TouchableOpacity
@@ -182,7 +184,7 @@ export default function ProfileScreen({ navigation }: any) {
               )}
             </View>
             <View className="absolute bottom-0 right-0 bg-white rounded-full p-1.5 shadow-md border border-gray-200">
-              <Ionicons name="camera" size={16} color={COLORS.primary} />
+              <Ionicons name="camera" size={scale(16)} color={COLORS.primary} />
             </View>
           </TouchableOpacity>
           <Text className="text-xs text-gray-500 mb-2">Toca para cambiar foto</Text>
@@ -190,252 +192,441 @@ export default function ProfileScreen({ navigation }: any) {
             {profile?.full_name || 'Usuario'}
           </Text>
           <Text className="text-base text-gray-600 mt-1">{profile?.email}</Text>
+          {profile?.role === 'customer' && (
+            <View className="mt-2 px-3 py-1 bg-gray-100 rounded-full">
+              <Text className="text-xs text-gray-600 font-semibold">Comprador</Text>
+            </View>
+          )}
           {profile?.role === 'seller_individual' && (
             <View className="mt-2 px-3 py-1 bg-blue-100 rounded-full">
               <Text className="text-xs text-primary font-semibold">Vendedor</Text>
             </View>
           )}
+          {profile?.role === 'seller_official' && (
+            <View className="mt-2 px-3 py-1 bg-purple-100 rounded-full flex-row items-center">
+              <Ionicons name="checkmark-circle" size={scale(12)} color="#9333EA" />
+              <Text className="text-xs text-purple-700 font-semibold ml-1">Tienda Oficial</Text>
+            </View>
+          )}
         </View>
 
-        {/* TEMPORAL: Botón para hacerse vendedor */}
+        {/* ==================== MENÚ PARA COMPRADORES ==================== */}
         {profile?.role === 'customer' && (
-          <View className="px-4 py-4">
-            <TouchableOpacity
-              onPress={async () => {
-                if (!user) return;
-                const { error } = await supabase
-                  .from('profiles')
-                  .update({ role: 'seller_individual' })
-                  .eq('id', user.id);
-                
-                if (!error) {
-                  Alert.alert('¡Listo!', 'Ahora eres vendedor. Recarga la app.');
-                  loadProfile();
-                }
-              }}
-              className="bg-green-500 rounded-lg py-3"
-            >
-              <Text className="text-white font-semibold text-center">Convertirme en Vendedor</Text>
-            </TouchableOpacity>
-          </View>
+          <>
+            {/* Convertirse en vendedor */}
+            <View className="px-4 py-4">
+              <TouchableOpacity
+                onPress={async () => {
+                  if (!user) return;
+                  const { error } = await supabase
+                    .from('profiles')
+                    .update({ role: 'seller_individual' })
+                    .eq('id', user.id);
+
+                  if (!error) {
+                    Alert.alert('¡Listo!', 'Ahora eres vendedor. Recarga la app.');
+                    loadProfile();
+                  }
+                }}
+                className="bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl py-4 px-4 flex-row items-center"
+                style={{ backgroundColor: '#3B82F6' }}
+              >
+                <View className="bg-white/20 rounded-full p-2 mr-3">
+                  <Ionicons name="storefront" size={scale(24)} color="white" />
+                </View>
+                <View className="flex-1">
+                  <Text className="text-white font-bold text-base">Empezar a Vender</Text>
+                  <Text className="text-white/80 text-sm">Publica tus productos y gana dinero</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={scale(20)} color="white" />
+              </TouchableOpacity>
+            </View>
+
+            {/* Mis Compras */}
+            <View className="px-4 py-4 border-b border-gray-100">
+              <Text className="text-sm font-semibold text-gray-500 mb-3">MIS COMPRAS</Text>
+
+              <TouchableOpacity
+                onPress={() => navigation.navigate('MyOrders')}
+                className="flex-row items-center justify-between py-3"
+              >
+                <View className="flex-row items-center flex-1">
+                  <Text className="text-2xl mr-3">📦</Text>
+                  <View className="flex-1">
+                    <Text className="text-base font-medium text-gray-900">Mis Pedidos</Text>
+                    <Text className="text-sm text-gray-500">Ver historial de compras</Text>
+                  </View>
+                </View>
+                <Ionicons name="chevron-forward" size={scale(20)} color="#9CA3AF" />
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={() => navigation.navigate('MyInvoices')}
+                className="flex-row items-center justify-between py-3"
+              >
+                <View className="flex-row items-center flex-1">
+                  <Text className="text-2xl mr-3">🧾</Text>
+                  <View className="flex-1">
+                    <Text className="text-base font-medium text-gray-900">Mis Facturas</Text>
+                    <Text className="text-sm text-gray-500">Comprobantes fiscales</Text>
+                  </View>
+                </View>
+                <Ionicons name="chevron-forward" size={scale(20)} color="#9CA3AF" />
+              </TouchableOpacity>
+            </View>
+
+            {/* Mi Cuenta */}
+            <View className="px-4 py-4 border-b border-gray-100">
+              <Text className="text-sm font-semibold text-gray-500 mb-3">MI CUENTA</Text>
+
+              <TouchableOpacity
+                onPress={() => navigation.navigate('EditProfile')}
+                className="flex-row items-center justify-between py-3"
+              >
+                <View className="flex-row items-center flex-1">
+                  <Text className="text-2xl mr-3">👤</Text>
+                  <View className="flex-1">
+                    <Text className="text-base font-medium text-gray-900">Datos Personales</Text>
+                    <Text className="text-sm text-gray-500">Nombre, teléfono, dirección</Text>
+                  </View>
+                </View>
+                <Ionicons name="chevron-forward" size={scale(20)} color="#9CA3AF" />
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={() => navigation.navigate('ChangePassword')}
+                className="flex-row items-center justify-between py-3"
+              >
+                <View className="flex-row items-center flex-1">
+                  <Text className="text-2xl mr-3">🔒</Text>
+                  <View className="flex-1">
+                    <Text className="text-base font-medium text-gray-900">Seguridad</Text>
+                    <Text className="text-sm text-gray-500">Cambiar contraseña</Text>
+                  </View>
+                </View>
+                <Ionicons name="chevron-forward" size={scale(20)} color="#9CA3AF" />
+              </TouchableOpacity>
+            </View>
+          </>
         )}
 
-        {/* Información personal */}
-        <View className="px-4 py-4 border-b border-gray-100">
-          <Text className="text-sm font-semibold text-gray-500 mb-3">INFORMACIÓN PERSONAL</Text>
-          
-          <TouchableOpacity 
-            onPress={() => navigation.navigate('EditProfile')}
-            className="flex-row items-center justify-between py-3"
-          >
-            <View className="flex-row items-center flex-1">
-              <Text className="text-2xl mr-3">📝</Text>
-              <View className="flex-1">
-                <Text className="text-base font-medium text-gray-900">Editar Perfil</Text>
-                <Text className="text-sm text-gray-500">Nombre, teléfono, dirección</Text>
-              </View>
-            </View>
-            <Text className="text-gray-400">→</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity 
-            onPress={() => navigation.navigate('ChangePassword')}
-            className="flex-row items-center justify-between py-3"
-          >
-            <View className="flex-row items-center flex-1">
-              <Text className="text-2xl mr-3">🔒</Text>
-              <View className="flex-1">
-                <Text className="text-base font-medium text-gray-900">Cambiar Contraseña</Text>
-                <Text className="text-sm text-gray-500">Actualizar tu contraseña</Text>
-              </View>
-            </View>
-            <Text className="text-gray-400">→</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Mis actividades */}
-        <View className="px-4 py-4 border-b border-gray-100">
-          <Text className="text-sm font-semibold text-gray-500 mb-3">MIS ACTIVIDADES</Text>
-          
-          {/* Dashboard Vendedor - SOLO SI ES VENDEDOR INDIVIDUAL */}
-          {profile?.role === 'seller_individual' && (
-            <TouchableOpacity
-              onPress={() => navigation.navigate('SellerDashboard')}
-              className="flex-row items-center justify-between py-3"
-            >
-              <View className="flex-row items-center flex-1">
-                <Text className="text-2xl mr-3">📊</Text>
-                <View className="flex-1">
-                  <Text className="text-base font-medium text-gray-900">Dashboard Vendedor</Text>
-                  <Text className="text-sm text-gray-500">Estadísticas y métricas</Text>
+        {/* ==================== MENÚ PARA VENDEDORES INDIVIDUALES ==================== */}
+        {profile?.role === 'seller_individual' && (
+          <>
+            {/* Acceso rápido a Dashboard */}
+            <View className="px-4 py-4">
+              <TouchableOpacity
+                onPress={() => navigation.navigate('SellerDashboard')}
+                className="bg-blue-600 rounded-xl py-4 px-4 flex-row items-center"
+              >
+                <View className="bg-white/20 rounded-full p-2 mr-3">
+                  <Ionicons name="stats-chart" size={scale(24)} color="white" />
                 </View>
-              </View>
-              <Text className="text-gray-400">→</Text>
-            </TouchableOpacity>
-          )}
-
-          {/* Dashboard Tienda Oficial - SOLO SI ES TIENDA OFICIAL */}
-          {profile?.role === 'seller_official' && (
-            <TouchableOpacity
-              onPress={() => navigation.navigate('OfficialStoreDashboard')}
-              className="flex-row items-center justify-between py-3"
-            >
-              <View className="flex-row items-center flex-1">
-                <Text className="text-2xl mr-3">🏪</Text>
                 <View className="flex-1">
-                  <Text className="text-base font-medium text-gray-900">Dashboard Pro</Text>
-                  <Text className="text-sm text-gray-500">Métricas avanzadas de tienda</Text>
+                  <Text className="text-white font-bold text-base">Mi Dashboard</Text>
+                  <Text className="text-white/80 text-sm">Ver ventas y estadísticas</Text>
                 </View>
-              </View>
-              <Text className="text-gray-400">→</Text>
-            </TouchableOpacity>
-          )}
-
-          {/* Mi Billetera - SOLO SI ES VENDEDOR */}
-          {(profile?.role === 'seller_individual' || profile?.role === 'seller_official') && (
-            <TouchableOpacity
-              onPress={() => navigation.navigate('Wallet')}
-              className="flex-row items-center justify-between py-3"
-            >
-              <View className="flex-row items-center flex-1">
-                <Text className="text-2xl mr-3">💰</Text>
-                <View className="flex-1">
-                  <Text className="text-base font-medium text-gray-900">Mi Billetera</Text>
-                  <Text className="text-sm text-gray-500">Saldo y retiros</Text>
-                </View>
-              </View>
-              <Text className="text-gray-400">→</Text>
-            </TouchableOpacity>
-          )}
-
-          <TouchableOpacity
-            onPress={() => navigation.navigate('MyOrders')}
-            className="flex-row items-center justify-between py-3"
-          >
-            <View className="flex-row items-center flex-1">
-              <Text className="text-2xl mr-3">📦</Text>
-              <View className="flex-1">
-                <Text className="text-base font-medium text-gray-900">Mis Compras</Text>
-                <Text className="text-sm text-gray-500">Historial de pedidos</Text>
-              </View>
+                <Ionicons name="chevron-forward" size={scale(20)} color="white" />
+              </TouchableOpacity>
             </View>
-            <Text className="text-gray-400">→</Text>
-          </TouchableOpacity>
 
-          <TouchableOpacity
-            onPress={() => navigation.navigate('MyInvoices')}
-            className="flex-row items-center justify-between py-3"
-          >
-            <View className="flex-row items-center flex-1">
-              <Text className="text-2xl mr-3">🧾</Text>
-              <View className="flex-1">
-                <Text className="text-base font-medium text-gray-900">Mis Facturas</Text>
-                <Text className="text-sm text-gray-500">Comprobantes fiscales</Text>
-              </View>
-            </View>
-            <Text className="text-gray-400">→</Text>
-          </TouchableOpacity>
+            {/* Gestión de Ventas */}
+            <View className="px-4 py-4 border-b border-gray-100">
+              <Text className="text-sm font-semibold text-gray-500 mb-3">GESTIÓN DE VENTAS</Text>
 
-          {profile?.role === 'seller_individual' && (
-            <TouchableOpacity
-              onPress={() => navigation.navigate('MyProducts')}
-              className="flex-row items-center justify-between py-3"
-            >
-              <View className="flex-row items-center flex-1">
-                <Text className="text-2xl mr-3">🏪</Text>
-                <View className="flex-1">
-                  <Text className="text-base font-medium text-gray-900">Mis Publicaciones</Text>
-                  <Text className="text-sm text-gray-500">Productos que vendés</Text>
+              <TouchableOpacity
+                onPress={() => navigation.navigate('MyProducts')}
+                className="flex-row items-center justify-between py-3"
+              >
+                <View className="flex-row items-center flex-1">
+                  <Text className="text-2xl mr-3">📦</Text>
+                  <View className="flex-1">
+                    <Text className="text-base font-medium text-gray-900">Mis Productos</Text>
+                    <Text className="text-sm text-gray-500">Gestionar publicaciones</Text>
+                  </View>
                 </View>
-              </View>
-              <Text className="text-gray-400">→</Text>
-            </TouchableOpacity>
-          )}
+                <Ionicons name="chevron-forward" size={scale(20)} color="#9CA3AF" />
+              </TouchableOpacity>
 
-          {/* Tienda Oficial */}
-          {profile?.role === 'seller_individual' && (
-            <>
+              <TouchableOpacity
+                onPress={() => navigation.navigate('SellerOrders')}
+                className="flex-row items-center justify-between py-3"
+              >
+                <View className="flex-row items-center flex-1">
+                  <Text className="text-2xl mr-3">🛒</Text>
+                  <View className="flex-1">
+                    <Text className="text-base font-medium text-gray-900">Pedidos Recibidos</Text>
+                    <Text className="text-sm text-gray-500">Gestionar ventas</Text>
+                  </View>
+                </View>
+                <Ionicons name="chevron-forward" size={scale(20)} color="#9CA3AF" />
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={() => navigation.navigate('Wallet')}
+                className="flex-row items-center justify-between py-3"
+              >
+                <View className="flex-row items-center flex-1">
+                  <Text className="text-2xl mr-3">💰</Text>
+                  <View className="flex-1">
+                    <Text className="text-base font-medium text-gray-900">Mi Billetera</Text>
+                    <Text className="text-sm text-gray-500">Saldo y retiros</Text>
+                  </View>
+                </View>
+                <Ionicons name="chevron-forward" size={scale(20)} color="#9CA3AF" />
+              </TouchableOpacity>
+            </View>
+
+            {/* Convertirse en Tienda Oficial */}
+            <View className="px-4 py-4 border-b border-gray-100">
+              <Text className="text-sm font-semibold text-gray-500 mb-3">CRECER</Text>
+
               {officialStore ? (
-                // Ya tiene tienda oficial aprobada
                 <TouchableOpacity
                   onPress={() => navigation.navigate('StoreDetail', { storeId: officialStore.id })}
-                  className="flex-row items-center justify-between py-3 bg-blue-50 rounded-xl px-3 mb-2"
+                  className="flex-row items-center justify-between py-3 bg-purple-50 rounded-xl px-3"
                 >
                   <View className="flex-row items-center flex-1">
-                    <View className="bg-blue-600 rounded-full p-2 mr-3">
-                      <Ionicons name="storefront" size={20} color="white" />
+                    <View className="bg-purple-600 rounded-full p-2 mr-3">
+                      <Ionicons name="checkmark-circle" size={scale(20)} color="white" />
                     </View>
                     <View className="flex-1">
-                      <View className="flex-row items-center">
-                        <Text className="text-base font-bold text-gray-900">Mi Tienda Oficial</Text>
-                        <View className="bg-blue-600 rounded-full ml-2 px-2 py-0.5">
-                          <Text className="text-white text-xs font-bold">OFICIAL</Text>
-                        </View>
-                      </View>
-                      <Text className="text-sm text-gray-600">{officialStore.store_name}</Text>
+                      <Text className="text-base font-bold text-gray-900">Mi Tienda Oficial</Text>
+                      <Text className="text-sm text-purple-600">{officialStore.store_name}</Text>
                     </View>
                   </View>
-                  <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
+                  <Ionicons name="chevron-forward" size={scale(20)} color="#9CA3AF" />
                 </TouchableOpacity>
               ) : storeApplication ? (
-                // Tiene aplicación pendiente
                 <TouchableOpacity
                   onPress={() => navigation.navigate('RegisterOfficialStore')}
-                  className="flex-row items-center justify-between py-3 bg-yellow-50 rounded-xl px-3 mb-2"
+                  className="flex-row items-center justify-between py-3 bg-yellow-50 rounded-xl px-3"
                 >
                   <View className="flex-row items-center flex-1">
                     <View className="bg-yellow-500 rounded-full p-2 mr-3">
-                      <Ionicons name="time" size={20} color="white" />
+                      <Ionicons name="time" size={scale(20)} color="white" />
                     </View>
                     <View className="flex-1">
-                      <Text className="text-base font-bold text-gray-900">Solicitud Enviada</Text>
-                      <Text className="text-sm text-gray-600">
+                      <Text className="text-base font-bold text-gray-900">Solicitud en Proceso</Text>
+                      <Text className="text-sm text-yellow-600">
                         {storeApplication.status === 'pending' && 'Pendiente de revisión'}
                         {storeApplication.status === 'under_review' && 'En revisión'}
-                        {storeApplication.status === 'approved' && 'Aprobada'}
-                        {storeApplication.status === 'rejected' && 'Rechazada'}
                       </Text>
                     </View>
                   </View>
-                  <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
+                  <Ionicons name="chevron-forward" size={scale(20)} color="#9CA3AF" />
                 </TouchableOpacity>
               ) : (
-                // Puede aplicar
                 <TouchableOpacity
                   onPress={() => navigation.navigate('RegisterOfficialStore')}
-                  className="flex-row items-center justify-between py-3 border-2 border-blue-200 border-dashed rounded-xl px-3 mb-2"
+                  className="flex-row items-center justify-between py-3 border-2 border-purple-200 border-dashed rounded-xl px-3"
                 >
                   <View className="flex-row items-center flex-1">
-                    <View className="bg-blue-100 rounded-full p-2 mr-3">
-                      <Ionicons name="star" size={20} color="#2563EB" />
+                    <View className="bg-purple-100 rounded-full p-2 mr-3">
+                      <Ionicons name="star" size={scale(20)} color="#9333EA" />
                     </View>
                     <View className="flex-1">
-                      <Text className="text-base font-bold text-blue-900">Convertirse en Tienda Oficial</Text>
-                      <Text className="text-sm text-blue-700">Badge verificado + más beneficios</Text>
+                      <Text className="text-base font-bold text-purple-900">Ser Tienda Oficial</Text>
+                      <Text className="text-sm text-purple-700">Badge + menor comisión + destacado</Text>
                     </View>
                   </View>
-                  <Ionicons name="chevron-forward" size={20} color="#2563EB" />
+                  <Ionicons name="chevron-forward" size={scale(20)} color="#9333EA" />
                 </TouchableOpacity>
               )}
-            </>
-          )}
+            </View>
 
-          {/* COMENTADO: Pendiente de implementar
-          <TouchableOpacity 
-            onPress={() => navigation.navigate('MyReviews')}
-            className="flex-row items-center justify-between py-3"
-          >
-            <View className="flex-row items-center flex-1">
-              <Text className="text-2xl mr-3">⭐</Text>
-              <View className="flex-1">
-                <Text className="text-base font-medium text-gray-900">Mis Valoraciones</Text>
-                <Text className="text-sm text-gray-500">Opiniones y calificaciones</Text>
+            {/* Mis Compras (también puede comprar) */}
+            <View className="px-4 py-4 border-b border-gray-100">
+              <Text className="text-sm font-semibold text-gray-500 mb-3">MIS COMPRAS</Text>
+
+              <TouchableOpacity
+                onPress={() => navigation.navigate('MyOrders')}
+                className="flex-row items-center justify-between py-3"
+              >
+                <View className="flex-row items-center flex-1">
+                  <Text className="text-2xl mr-3">🛍️</Text>
+                  <View className="flex-1">
+                    <Text className="text-base font-medium text-gray-900">Mis Pedidos</Text>
+                    <Text className="text-sm text-gray-500">Compras realizadas</Text>
+                  </View>
+                </View>
+                <Ionicons name="chevron-forward" size={scale(20)} color="#9CA3AF" />
+              </TouchableOpacity>
+            </View>
+
+            {/* Mi Cuenta */}
+            <View className="px-4 py-4 border-b border-gray-100">
+              <Text className="text-sm font-semibold text-gray-500 mb-3">MI CUENTA</Text>
+
+              <TouchableOpacity
+                onPress={() => navigation.navigate('EditProfile')}
+                className="flex-row items-center justify-between py-3"
+              >
+                <View className="flex-row items-center flex-1">
+                  <Text className="text-2xl mr-3">👤</Text>
+                  <View className="flex-1">
+                    <Text className="text-base font-medium text-gray-900">Datos y Banco</Text>
+                    <Text className="text-sm text-gray-500">Perfil, CBU/CVU, datos fiscales</Text>
+                  </View>
+                </View>
+                <Ionicons name="chevron-forward" size={scale(20)} color="#9CA3AF" />
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={() => navigation.navigate('ChangePassword')}
+                className="flex-row items-center justify-between py-3"
+              >
+                <View className="flex-row items-center flex-1">
+                  <Text className="text-2xl mr-3">🔒</Text>
+                  <View className="flex-1">
+                    <Text className="text-base font-medium text-gray-900">Seguridad</Text>
+                    <Text className="text-sm text-gray-500">Cambiar contraseña</Text>
+                  </View>
+                </View>
+                <Ionicons name="chevron-forward" size={scale(20)} color="#9CA3AF" />
+              </TouchableOpacity>
+            </View>
+          </>
+        )}
+
+        {/* ==================== MENÚ PARA TIENDAS OFICIALES ==================== */}
+        {profile?.role === 'seller_official' && (
+          <>
+            {/* Dashboard Pro */}
+            <View className="px-4 py-4">
+              <TouchableOpacity
+                onPress={() => navigation.navigate('OfficialStoreDashboard')}
+                className="rounded-xl py-4 px-4 flex-row items-center"
+                style={{ backgroundColor: '#9333EA' }}
+              >
+                <View className="bg-white/20 rounded-full p-2 mr-3">
+                  <Ionicons name="analytics" size={scale(24)} color="white" />
+                </View>
+                <View className="flex-1">
+                  <Text className="text-white font-bold text-base">Dashboard Pro</Text>
+                  <Text className="text-white/80 text-sm">Analytics avanzados y métricas</Text>
+                </View>
+                <View className="bg-white/20 rounded-full px-2 py-1">
+                  <Text className="text-white text-xs font-bold">PRO</Text>
+                </View>
+              </TouchableOpacity>
+            </View>
+
+            {/* Gestión Tienda */}
+            <View className="px-4 py-4 border-b border-gray-100">
+              <Text className="text-sm font-semibold text-gray-500 mb-3">MI TIENDA OFICIAL</Text>
+
+              <TouchableOpacity
+                onPress={() => navigation.navigate('MyProducts')}
+                className="flex-row items-center justify-between py-3"
+              >
+                <View className="flex-row items-center flex-1">
+                  <Text className="text-2xl mr-3">📦</Text>
+                  <View className="flex-1">
+                    <Text className="text-base font-medium text-gray-900">Catálogo</Text>
+                    <Text className="text-sm text-gray-500">Gestionar productos</Text>
+                  </View>
+                </View>
+                <Ionicons name="chevron-forward" size={scale(20)} color="#9CA3AF" />
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={() => navigation.navigate('SellerOrders')}
+                className="flex-row items-center justify-between py-3"
+              >
+                <View className="flex-row items-center flex-1">
+                  <Text className="text-2xl mr-3">🛒</Text>
+                  <View className="flex-1">
+                    <Text className="text-base font-medium text-gray-900">Pedidos</Text>
+                    <Text className="text-sm text-gray-500">Gestionar ventas</Text>
+                  </View>
+                </View>
+                <Ionicons name="chevron-forward" size={scale(20)} color="#9CA3AF" />
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={() => navigation.navigate('Wallet')}
+                className="flex-row items-center justify-between py-3"
+              >
+                <View className="flex-row items-center flex-1">
+                  <Text className="text-2xl mr-3">💰</Text>
+                  <View className="flex-1">
+                    <Text className="text-base font-medium text-gray-900">Billetera</Text>
+                    <Text className="text-sm text-gray-500">Saldo y retiros</Text>
+                  </View>
+                </View>
+                <Ionicons name="chevron-forward" size={scale(20)} color="#9CA3AF" />
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={() => navigation.navigate('SellerAnalytics')}
+                className="flex-row items-center justify-between py-3"
+              >
+                <View className="flex-row items-center flex-1">
+                  <Text className="text-2xl mr-3">📊</Text>
+                  <View className="flex-1">
+                    <Text className="text-base font-medium text-gray-900">Analytics</Text>
+                    <Text className="text-sm text-gray-500">Reportes detallados</Text>
+                  </View>
+                </View>
+                <Ionicons name="chevron-forward" size={scale(20)} color="#9CA3AF" />
+              </TouchableOpacity>
+            </View>
+
+            {/* Beneficios Tienda Oficial */}
+            <View className="px-4 py-4 border-b border-gray-100">
+              <Text className="text-sm font-semibold text-gray-500 mb-3">TUS BENEFICIOS</Text>
+
+              <View className="bg-purple-50 rounded-xl p-4">
+                <View className="flex-row items-center mb-3">
+                  <Ionicons name="checkmark-circle" size={scale(20)} color="#9333EA" />
+                  <Text className="text-sm text-purple-900 ml-2">Badge de tienda verificada</Text>
+                </View>
+                <View className="flex-row items-center mb-3">
+                  <Ionicons name="checkmark-circle" size={scale(20)} color="#9333EA" />
+                  <Text className="text-sm text-purple-900 ml-2">Comisión reducida en ventas</Text>
+                </View>
+                <View className="flex-row items-center">
+                  <Ionicons name="checkmark-circle" size={scale(20)} color="#9333EA" />
+                  <Text className="text-sm text-purple-900 ml-2">Prioridad en búsquedas</Text>
+                </View>
               </View>
             </View>
-            <Text className="text-gray-400">→</Text>
-          </TouchableOpacity>
-          */}
-        </View>
+
+            {/* Mi Cuenta */}
+            <View className="px-4 py-4 border-b border-gray-100">
+              <Text className="text-sm font-semibold text-gray-500 mb-3">MI CUENTA</Text>
+
+              <TouchableOpacity
+                onPress={() => navigation.navigate('EditProfile')}
+                className="flex-row items-center justify-between py-3"
+              >
+                <View className="flex-row items-center flex-1">
+                  <Text className="text-2xl mr-3">👤</Text>
+                  <View className="flex-1">
+                    <Text className="text-base font-medium text-gray-900">Datos Fiscales</Text>
+                    <Text className="text-sm text-gray-500">Perfil, CBU/CVU, CUIT</Text>
+                  </View>
+                </View>
+                <Ionicons name="chevron-forward" size={scale(20)} color="#9CA3AF" />
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={() => navigation.navigate('ChangePassword')}
+                className="flex-row items-center justify-between py-3"
+              >
+                <View className="flex-row items-center flex-1">
+                  <Text className="text-2xl mr-3">🔒</Text>
+                  <View className="flex-1">
+                    <Text className="text-base font-medium text-gray-900">Seguridad</Text>
+                    <Text className="text-sm text-gray-500">Cambiar contraseña</Text>
+                  </View>
+                </View>
+                <Ionicons name="chevron-forward" size={scale(20)} color="#9CA3AF" />
+              </TouchableOpacity>
+            </View>
+          </>
+        )}
 
         {/* Configuración */}
         <View className="px-4 py-4 border-b border-gray-100">

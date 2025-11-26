@@ -11,6 +11,7 @@ import {
   type BalanceTransaction,
 } from '../../services/wallet';
 import { COLORS } from '../../constants/theme';
+import { scale, moderateScale, verticalScale } from '../../utils/responsive';
 
 export default function WalletScreen({ navigation }: any) {
   const { user } = useAuth();
@@ -120,12 +121,12 @@ export default function WalletScreen({ navigation }: any) {
       <View className="bg-white px-4 py-4 border-b border-gray-200 flex-row items-center justify-between">
         <View className="flex-row items-center">
           <TouchableOpacity onPress={() => navigation.goBack()} className="mr-3">
-            <Ionicons name="arrow-back" size={24} color="#000" />
+            <Ionicons name="arrow-back" size={scale(24)} color="#000" />
           </TouchableOpacity>
           <Text className="text-xl font-bold text-gray-900">Mi Billetera</Text>
         </View>
         <TouchableOpacity onPress={() => navigation.navigate('BankingDetails')}>
-          <Ionicons name="settings-outline" size={24} color="#000" />
+          <Ionicons name="settings-outline" size={scale(24)} color="#000" />
         </TouchableOpacity>
       </View>
 
@@ -160,7 +161,7 @@ export default function WalletScreen({ navigation }: any) {
           <View className="flex-row gap-3">
             <View className="flex-1 bg-white rounded-xl p-4 shadow-sm">
               <View className="flex-row items-center mb-2">
-                <Ionicons name="time-outline" size={20} color="#F59E0B" />
+                <Ionicons name="time-outline" size={scale(20)} color="#F59E0B" />
                 <Text className="text-gray-600 text-xs font-medium ml-2">Pendiente</Text>
               </View>
               <Text className="text-gray-900 text-xl font-bold">
@@ -171,7 +172,7 @@ export default function WalletScreen({ navigation }: any) {
 
             <View className="flex-1 bg-white rounded-xl p-4 shadow-sm">
               <View className="flex-row items-center mb-2">
-                <Ionicons name="trending-up-outline" size={20} color="#10B981" />
+                <Ionicons name="trending-up-outline" size={scale(20)} color="#10B981" />
                 <Text className="text-gray-600 text-xs font-medium ml-2">Total Ganado</Text>
               </View>
               <Text className="text-gray-900 text-xl font-bold">
@@ -185,7 +186,7 @@ export default function WalletScreen({ navigation }: any) {
           <View className="bg-white rounded-xl p-4 shadow-sm">
             <View className="flex-row items-center justify-between">
               <View className="flex-row items-center">
-                <Ionicons name="cash-outline" size={20} color="#6B7280" />
+                <Ionicons name="cash-outline" size={scale(20)} color="#6B7280" />
                 <Text className="text-gray-600 text-sm font-medium ml-2">Total Retirado</Text>
               </View>
               <Text className="text-gray-900 text-lg font-bold">
@@ -205,10 +206,10 @@ export default function WalletScreen({ navigation }: any) {
                 className="flex-row items-center justify-between py-3 border-b border-gray-100"
               >
                 <View className="flex-row items-center">
-                  <Ionicons name="list-outline" size={22} color={COLORS.primary} />
+                  <Ionicons name="list-outline" size={scale(22)} color={COLORS.primary} />
                   <Text className="text-gray-700 font-medium ml-3">Ver Retiros</Text>
                 </View>
-                <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
+                <Ionicons name="chevron-forward" size={scale(20)} color="#9CA3AF" />
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -216,10 +217,10 @@ export default function WalletScreen({ navigation }: any) {
                 className="flex-row items-center justify-between py-3"
               >
                 <View className="flex-row items-center">
-                  <Ionicons name="card-outline" size={22} color={COLORS.primary} />
+                  <Ionicons name="card-outline" size={scale(22)} color={COLORS.primary} />
                   <Text className="text-gray-700 font-medium ml-3">Datos Bancarios</Text>
                 </View>
-                <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
+                <Ionicons name="chevron-forward" size={scale(20)} color="#9CA3AF" />
               </TouchableOpacity>
             </View>
           </View>
@@ -240,7 +241,7 @@ export default function WalletScreen({ navigation }: any) {
 
           {transactions.length === 0 ? (
             <View className="bg-white rounded-xl p-8 items-center">
-              <Ionicons name="receipt-outline" size={48} color="#D1D5DB" />
+              <Ionicons name="receipt-outline" size={scale(48)} color="#D1D5DB" />
               <Text className="text-gray-500 text-center mt-3">
                 No hay movimientos aún
               </Text>
@@ -261,7 +262,7 @@ export default function WalletScreen({ navigation }: any) {
                     >
                       <Ionicons
                         name={getTransactionIcon(transaction.type) as any}
-                        size={20}
+                        size={scale(20)}
                         color={getTransactionColor(transaction.type)}
                       />
                     </View>

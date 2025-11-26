@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../services/supabase';
 import { COLORS } from '../../constants/theme';
+import { scale, moderateScale, verticalScale } from '../../utils/responsive';
 
 interface Invoice {
   id: string;
@@ -116,7 +117,7 @@ export default function MyInvoicesScreen({ navigation }: any) {
           onPress={() => navigation.goBack()}
           className="mr-3"
         >
-          <Ionicons name="arrow-back" size={24} color={COLORS.primary} />
+          <Ionicons name="arrow-back" size={scale(24)} color={COLORS.primary} />
         </TouchableOpacity>
         <Text className="text-xl font-bold text-gray-900">Mis Facturas</Text>
       </View>
@@ -127,7 +128,7 @@ export default function MyInvoicesScreen({ navigation }: any) {
         </View>
       ) : invoices.length === 0 ? (
         <View className="flex-1 items-center justify-center px-6">
-          <Ionicons name="document-text-outline" size={64} color="#9CA3AF" />
+          <Ionicons name="document-text-outline" size={scale(64)} color="#9CA3AF" />
           <Text className="text-xl font-bold text-gray-900 mb-2 mt-4">No hay facturas</Text>
           <Text className="text-base text-gray-600 text-center">
             Las facturas de tus compras apareceran aqui
@@ -169,7 +170,7 @@ export default function MyInvoicesScreen({ navigation }: any) {
                 </View>
 
                 <View className="flex-row items-center mb-2">
-                  <Ionicons name="calendar-outline" size={14} color="#6B7280" />
+                  <Ionicons name="calendar-outline" size={scale(14)} color="#6B7280" />
                   <Text className="text-sm text-gray-600 ml-1">
                     {formatDate(invoice.created_at)}
                   </Text>
@@ -177,7 +178,7 @@ export default function MyInvoicesScreen({ navigation }: any) {
 
                 {invoice.order_number && (
                   <View className="flex-row items-center mb-2">
-                    <Ionicons name="cart-outline" size={14} color="#6B7280" />
+                    <Ionicons name="cart-outline" size={scale(14)} color="#6B7280" />
                     <Text className="text-sm text-gray-600 ml-1">
                       Pedido #{invoice.order_number}
                     </Text>
@@ -186,7 +187,7 @@ export default function MyInvoicesScreen({ navigation }: any) {
 
                 {invoice.cae && (
                   <View className="flex-row items-center mb-2">
-                    <Ionicons name="checkmark-circle-outline" size={14} color="#059669" />
+                    <Ionicons name="checkmark-circle-outline" size={scale(14)} color="#059669" />
                     <Text className="text-sm text-gray-600 ml-1">
                       CAE: {invoice.cae}
                     </Text>

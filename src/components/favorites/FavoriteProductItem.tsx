@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, Image } from 'react-native';
 import { useCart } from '../../contexts/CartContext';
 import { useFavorites } from '../../contexts/FavoritesContext';
+import { scale, moderateScale, wp } from '../../utils/responsive';
 
 interface FavoriteProductItemProps {
   id: string;
@@ -36,60 +37,80 @@ export default function FavoriteProductItem({
     await toggleFavorite(id);
   };
 
+  const imageSize = scale(133);
+  const spacing = scale(12);
+
   return (
     <TouchableOpacity
       onPress={onPress}
-      className="border-b border-gray-300 pb-4 mb-4"
+      style={{
+        borderBottomWidth: 1,
+        borderBottomColor: '#D1D5DB',
+        paddingBottom: scale(16),
+        marginBottom: scale(16),
+      }}
       activeOpacity={0.7}
     >
-      <View className="flex-row">
+      <View style={{ flexDirection: 'row' }}>
         {/* Imagen del producto */}
-        <View className="w-[133px] h-[133px] bg-gray-100 rounded-lg items-center justify-center mr-3">
+        <View style={{
+          width: imageSize,
+          height: imageSize,
+          backgroundColor: '#F3F4F6',
+          borderRadius: scale(8),
+          alignItems: 'center',
+          justifyContent: 'center',
+          marginRight: spacing,
+        }}>
           {imageUrl ? (
             <Image
               source={{ uri: imageUrl }}
-              className="w-full h-full rounded-lg"
+              style={{
+                width: '100%',
+                height: '100%',
+                borderRadius: scale(8),
+              }}
               resizeMode="contain"
             />
           ) : (
-            <Text className="text-5xl">📦</Text>
+            <Text style={{ fontSize: scale(40) }}>📦</Text>
           )}
         </View>
 
         {/* Información del producto */}
-        <View className="flex-1 justify-between">
+        <View style={{ flex: 1, justifyContent: 'space-between' }}>
           {/* Nombre del producto */}
-          <Text className="text-xs font-medium text-black" numberOfLines={2}>
+          <Text style={{ fontSize: moderateScale(12), fontWeight: '500', color: '#000' }} numberOfLines={2}>
             {name}
           </Text>
 
           {/* Precio anterior (si existe) */}
           {compareAtPrice && (
-            <Text className="text-xs text-gray-400 line-through mt-1">
+            <Text style={{ fontSize: moderateScale(12), color: '#9CA3AF', textDecorationLine: 'line-through', marginTop: scale(4) }}>
               ${compareAtPrice.toLocaleString('es-AR')}
             </Text>
           )}
 
           {/* Precio principal */}
-          <Text className="text-lg font-semibold text-black mt-1">
+          <Text style={{ fontSize: moderateScale(18), fontWeight: '600', color: '#000', marginTop: scale(4) }}>
             ${price.toLocaleString('es-AR')}
           </Text>
 
           {/* Precio sin impuestos */}
-          <Text className="text-[10px] font-light text-gray-500 mt-0.5">
+          <Text style={{ fontSize: moderateScale(10), fontWeight: '300', color: '#6B7280', marginTop: scale(2) }}>
             Precio sin imp. nac. ${priceWithoutTax.toLocaleString('es-AR')}
           </Text>
 
           {/* Botones de acción */}
-          <View className="flex-row mt-2 justify-between">
+          <View style={{ flexDirection: 'row', marginTop: scale(8), justifyContent: 'space-between' }}>
             <TouchableOpacity onPress={handleRemoveFavorite}>
-              <Text className="text-xs font-medium text-primary">
+              <Text style={{ fontSize: moderateScale(12), fontWeight: '500', color: '#2563EB' }}>
                 Quitar de favoritos
               </Text>
             </TouchableOpacity>
 
             <TouchableOpacity onPress={handleAddToCart}>
-              <Text className="text-xs font-medium text-primary">
+              <Text style={{ fontSize: moderateScale(12), fontWeight: '500', color: '#2563EB' }}>
                 Añadir al carrito
               </Text>
             </TouchableOpacity>

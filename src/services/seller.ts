@@ -81,7 +81,7 @@ export async function createProduct(productData: {
       return { success: false, error: error.message };
     }
 
-    return { success: true, data };
+    return { success: true, data, productId: data.id };
   } catch (error: any) {
     console.error('Error:', error);
     return { success: false, error: error.message };

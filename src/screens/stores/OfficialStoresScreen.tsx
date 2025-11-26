@@ -14,6 +14,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { getOfficialStores } from '../../services/officialStores';
 import type { OfficialStore } from '../../types/officialStore';
 import { COLORS } from '../../constants/theme';
+import { scale, moderateScale, verticalScale } from '../../utils/responsive';
 
 export default function OfficialStoresScreen({ navigation }: any) {
   const [stores, setStores] = useState<OfficialStore[]>([]);
@@ -74,14 +75,14 @@ export default function OfficialStoresScreen({ navigation }: any) {
             />
           ) : (
             <View className="w-full h-full rounded-xl bg-gray-100 items-center justify-center">
-              <Ionicons name="storefront" size={40} color="#9CA3AF" />
+              <Ionicons name="storefront" size={scale(40)} color="#9CA3AF" />
             </View>
           )}
         </View>
 
         {/* Verified Badge */}
         <View className="absolute top-2 right-2 bg-blue-500 rounded-full px-3 py-1.5 flex-row items-center">
-          <Ionicons name="checkmark-circle" size={14} color="white" />
+          <Ionicons name="checkmark-circle" size={scale(14)} color="white" />
           <Text className="text-white text-xs font-bold ml-1">OFICIAL</Text>
         </View>
 
@@ -101,7 +102,7 @@ export default function OfficialStoresScreen({ navigation }: any) {
           <View className="flex-row items-center justify-between pt-3 border-t border-gray-100">
             {/* Rating */}
             <View className="flex-row items-center">
-              <Ionicons name="star" size={16} color="#FBBF24" />
+              <Ionicons name="star" size={scale(16)} color="#FBBF24" />
               <Text className="text-sm font-semibold text-gray-900 ml-1">
                 {item.rating.toFixed(1)}
               </Text>
@@ -109,7 +110,7 @@ export default function OfficialStoresScreen({ navigation }: any) {
 
             {/* Products */}
             <View className="flex-row items-center">
-              <Ionicons name="cube-outline" size={16} color="#6B7280" />
+              <Ionicons name="cube-outline" size={scale(16)} color="#6B7280" />
               <Text className="text-sm text-gray-600 ml-1">
                 {item.total_products} productos
               </Text>
@@ -117,7 +118,7 @@ export default function OfficialStoresScreen({ navigation }: any) {
 
             {/* Followers */}
             <View className="flex-row items-center">
-              <Ionicons name="people-outline" size={16} color="#6B7280" />
+              <Ionicons name="people-outline" size={scale(16)} color="#6B7280" />
               <Text className="text-sm text-gray-600 ml-1">
                 {item.followers_count} seguidores
               </Text>
@@ -127,7 +128,7 @@ export default function OfficialStoresScreen({ navigation }: any) {
           {/* Location */}
           {item.city && (
             <View className="flex-row items-center mt-2">
-              <Ionicons name="location-outline" size={14} color="#6B7280" />
+              <Ionicons name="location-outline" size={scale(14)} color="#6B7280" />
               <Text className="text-xs text-gray-500 ml-1">
                 {item.city}, {item.state || item.country}
               </Text>
@@ -150,10 +151,10 @@ export default function OfficialStoresScreen({ navigation }: any) {
         >
           <View className="flex-row items-center justify-between px-4 pt-2">
             <TouchableOpacity onPress={() => navigation.goBack()} className="p-2">
-              <Ionicons name="arrow-back" size={24} color="white" />
+              <Ionicons name="arrow-back" size={scale(24)} color="white" />
             </TouchableOpacity>
             <Text className="text-xl font-bold text-white">Tiendas Oficiales</Text>
-            <View className="w-10" />
+            <View style={{ width: scale(10) }} />
           </View>
         </LinearGradient>
 
@@ -176,18 +177,18 @@ export default function OfficialStoresScreen({ navigation }: any) {
       >
         <View className="flex-row items-center justify-between px-4 pt-2">
           <TouchableOpacity onPress={() => navigation.goBack()} className="p-2">
-            <Ionicons name="arrow-back" size={24} color="white" />
+            <Ionicons name="arrow-back" size={scale(24)} color="white" />
           </TouchableOpacity>
           <Text className="text-xl font-bold text-white">Tiendas Oficiales</Text>
           <TouchableOpacity className="p-2">
-            <Ionicons name="search" size={24} color="white" />
+            <Ionicons name="search" size={scale(24)} color="white" />
           </TouchableOpacity>
         </View>
 
         {/* Info Banner */}
         <View className="mx-4 mt-3 bg-white/20 rounded-xl px-4 py-3">
           <View className="flex-row items-center">
-            <Ionicons name="shield-checkmark" size={20} color="white" />
+            <Ionicons name="shield-checkmark" size={scale(20)} color="white" />
             <Text className="text-white text-sm font-medium ml-2 flex-1">
               Tiendas verificadas con garantía oficial
             </Text>
@@ -200,7 +201,7 @@ export default function OfficialStoresScreen({ navigation }: any) {
         data={stores}
         keyExtractor={(item) => item.id}
         renderItem={renderStoreCard}
-        contentContainerStyle={{ padding: 16 }}
+        contentContainerStyle={{ padding: scale(16) }}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
@@ -211,7 +212,7 @@ export default function OfficialStoresScreen({ navigation }: any) {
         }
         ListEmptyComponent={
           <View className="items-center justify-center py-20">
-            <Ionicons name="storefront-outline" size={80} color="#D1D5DB" />
+            <Ionicons name="storefront-outline" size={scale(80)} color="#D1D5DB" />
             <Text className="text-gray-500 text-lg font-medium mt-4">
               No hay tiendas oficiales
             </Text>

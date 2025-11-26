@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { COLORS } from '../../constants/theme';
 import { getListProducts, removeProductFromList, updateListName, deleteList } from '../../services/favoriteLists';
+import { scale, moderateScale, verticalScale } from '../../utils/responsive';
 
 export default function ListDetailScreen({ route, navigation }: any) {
   const { listId, listName } = route.params;
@@ -117,7 +118,7 @@ export default function ListDetailScreen({ route, navigation }: any) {
         colors={['#2563EB', '#DC2626']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
-        className="h-[100px] rounded-bl-[40px] rounded-br-[40px]"
+        style={{ height: verticalScale(100), borderBottomLeftRadius: scale(40), borderBottomRightRadius: scale(40) }}
       >
         <View className="flex-1 px-5 pt-2 flex-row items-center justify-between">
           <View className="flex-row items-center flex-1">
@@ -125,7 +126,7 @@ export default function ListDetailScreen({ route, navigation }: any) {
               onPress={() => navigation.goBack()}
               className="mr-3"
             >
-              <Ionicons name="arrow-back" size={28} color="white" />
+              <Ionicons name="arrow-back" size={scale(28)} color="white" />
             </TouchableOpacity>
             <Text className="text-lg font-bold text-white flex-1" numberOfLines={1}>
               {currentListName}
@@ -137,12 +138,12 @@ export default function ListDetailScreen({ route, navigation }: any) {
               className="mr-4"
               onPress={handleEditListName}
             >
-              <Ionicons name="pencil-outline" size={24} color="white" />
+              <Ionicons name="pencil-outline" size={scale(24)} color="white" />
             </TouchableOpacity>
             <TouchableOpacity
               onPress={handleDeleteList}
             >
-              <Ionicons name="trash-outline" size={24} color="white" />
+              <Ionicons name="trash-outline" size={scale(24)} color="white" />
             </TouchableOpacity>
           </View>
         </View>
@@ -155,7 +156,7 @@ export default function ListDetailScreen({ route, navigation }: any) {
         </View>
       ) : products.length === 0 ? (
         <View className="flex-1 items-center justify-center px-6">
-          <Ionicons name="cube-outline" size={64} color="#9CA3AF" />
+          <Ionicons name="cube-outline" size={scale(64)} color="#9CA3AF" />
           <Text className="text-xl font-bold text-gray-900 mb-2 mt-4">Lista vacía</Text>
           <Text className="text-base text-gray-600 text-center">
             Agrega productos a esta lista desde la pantalla de detalles del producto
@@ -173,13 +174,13 @@ export default function ListDetailScreen({ route, navigation }: any) {
               <View
                 key={product.id}
                 className="border-b border-gray-300 pb-2 mb-4"
-                style={{ minHeight: 151 }}
+                style={{ minHeight: verticalScale(151) }}
               >
                 <View className="flex-row">
                   {/* Imagen del producto */}
                   <TouchableOpacity
                     onPress={() => handleProductPress(product.id)}
-                    style={{ width: 133, height: 133 }}
+                    style={{ width: scale(133), height: scale(133) }}
                   >
                     <Image
                       source={{ uri: product.image_url || 'https://via.placeholder.com/133' }}
@@ -243,7 +244,7 @@ export default function ListDetailScreen({ route, navigation }: any) {
                       className="absolute top-0 right-0 p-2"
                       onPress={() => handleRemoveProduct(product.id, product.name)}
                     >
-                      <Ionicons name="close-circle" size={24} color="#EF4444" />
+                      <Ionicons name="close-circle" size={scale(24)} color="#EF4444" />
                     </TouchableOpacity>
                   </View>
                 </View>

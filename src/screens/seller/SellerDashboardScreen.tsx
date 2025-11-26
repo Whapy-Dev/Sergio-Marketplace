@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../contexts/AuthContext';
 import { getSellerStats, SellerStats } from '../../services/seller';
 import { COLORS } from '../../constants/theme';
+import { scale } from '../../utils/responsive';
 
 export default function SellerDashboardScreen({ navigation }: any) {
   const { user } = useAuth();
@@ -53,7 +54,7 @@ export default function SellerDashboardScreen({ navigation }: any) {
             onPress={onRefresh}
             className="w-9 h-9 rounded-full bg-gray-100 items-center justify-center"
           >
-            <Ionicons name="refresh" size={18} color="#6B7280" />
+            <Ionicons name="refresh" size={scale(18)} color="#6B7280" />
           </TouchableOpacity>
         </View>
       </View>
@@ -73,7 +74,7 @@ export default function SellerDashboardScreen({ navigation }: any) {
           >
             <View className="flex-row items-center justify-between mb-2">
               <Text className="text-white text-sm opacity-90">Balance Disponible</Text>
-              <Ionicons name="wallet-outline" size={20} color="rgba(255,255,255,0.8)" />
+              <Ionicons name="wallet-outline" size={scale(20)} color="rgba(255,255,255,0.8)" />
             </View>
             <Text className="text-white text-3xl font-bold mb-1">
               ${stats?.available_balance.toLocaleString() || 0}
@@ -90,7 +91,7 @@ export default function SellerDashboardScreen({ navigation }: any) {
             {/* Ventas Hoy */}
             <View className="w-[48%] bg-white rounded-xl p-4 mb-3 border border-gray-100">
               <View className="flex-row items-center justify-between mb-2">
-                <Ionicons name="today-outline" size={20} color="#10B981" />
+                <Ionicons name="today-outline" size={scale(20)} color="#10B981" />
                 <Text className="text-xs text-gray-500">Hoy</Text>
               </View>
               <Text className="text-xl font-bold text-gray-900">
@@ -104,7 +105,7 @@ export default function SellerDashboardScreen({ navigation }: any) {
             {/* Ventas Mes */}
             <View className="w-[48%] bg-white rounded-xl p-4 mb-3 border border-gray-100">
               <View className="flex-row items-center justify-between mb-2">
-                <Ionicons name="calendar-outline" size={20} color="#3B82F6" />
+                <Ionicons name="calendar-outline" size={scale(20)} color="#3B82F6" />
                 <Text className="text-xs text-gray-500">Este mes</Text>
               </View>
               <Text className="text-xl font-bold text-gray-900">
@@ -118,7 +119,7 @@ export default function SellerDashboardScreen({ navigation }: any) {
             {/* Pedidos Pendientes */}
             <View className="w-[48%] bg-white rounded-xl p-4 mb-3 border border-gray-100">
               <View className="flex-row items-center justify-between mb-2">
-                <Ionicons name="time-outline" size={20} color="#F59E0B" />
+                <Ionicons name="time-outline" size={scale(20)} color="#F59E0B" />
                 {stats && stats.pending_orders > 0 && (
                   <View className="bg-red-500 rounded-full w-5 h-5 items-center justify-center">
                     <Text className="text-white text-xs font-bold">{stats.pending_orders}</Text>
@@ -134,7 +135,7 @@ export default function SellerDashboardScreen({ navigation }: any) {
             {/* Productos Activos */}
             <View className="w-[48%] bg-white rounded-xl p-4 mb-3 border border-gray-100">
               <View className="flex-row items-center justify-between mb-2">
-                <Ionicons name="cube-outline" size={20} color="#8B5CF6" />
+                <Ionicons name="cube-outline" size={scale(20)} color="#8B5CF6" />
               </View>
               <Text className="text-xl font-bold text-gray-900">
                 {stats?.active_products || 0}
@@ -153,12 +154,12 @@ export default function SellerDashboardScreen({ navigation }: any) {
             className="bg-white rounded-xl p-4 mb-2 flex-row items-center border border-gray-100"
           >
             <View className="w-10 h-10 rounded-full bg-blue-50 items-center justify-center mr-3">
-              <Ionicons name="add" size={22} color="#3B82F6" />
+              <Ionicons name="add" size={scale(22)} color="#3B82F6" />
             </View>
             <View className="flex-1">
               <Text className="text-sm font-semibold text-gray-900">Publicar Producto</Text>
             </View>
-            <Ionicons name="chevron-forward" size={18} color="#9CA3AF" />
+            <Ionicons name="chevron-forward" size={scale(18)} color="#9CA3AF" />
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -166,7 +167,7 @@ export default function SellerDashboardScreen({ navigation }: any) {
             className="bg-white rounded-xl p-4 mb-2 flex-row items-center border border-gray-100"
           >
             <View className="w-10 h-10 rounded-full bg-yellow-50 items-center justify-center mr-3">
-              <Ionicons name="list" size={22} color="#F59E0B" />
+              <Ionicons name="list" size={scale(22)} color="#F59E0B" />
             </View>
             <View className="flex-1">
               <Text className="text-sm font-semibold text-gray-900">Ver Pedidos</Text>
@@ -176,7 +177,7 @@ export default function SellerDashboardScreen({ navigation }: any) {
                 <Text className="text-white text-xs font-bold">{stats.pending_orders}</Text>
               </View>
             )}
-            <Ionicons name="chevron-forward" size={18} color="#9CA3AF" />
+            <Ionicons name="chevron-forward" size={scale(18)} color="#9CA3AF" />
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -184,12 +185,12 @@ export default function SellerDashboardScreen({ navigation }: any) {
             className="bg-white rounded-xl p-4 mb-2 flex-row items-center border border-gray-100"
           >
             <View className="w-10 h-10 rounded-full bg-purple-50 items-center justify-center mr-3">
-              <Ionicons name="cube" size={22} color="#8B5CF6" />
+              <Ionicons name="cube" size={scale(22)} color="#8B5CF6" />
             </View>
             <View className="flex-1">
               <Text className="text-sm font-semibold text-gray-900">Mis Productos</Text>
             </View>
-            <Ionicons name="chevron-forward" size={18} color="#9CA3AF" />
+            <Ionicons name="chevron-forward" size={scale(18)} color="#9CA3AF" />
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -197,12 +198,12 @@ export default function SellerDashboardScreen({ navigation }: any) {
             className="bg-white rounded-xl p-4 flex-row items-center border border-gray-100"
           >
             <View className="w-10 h-10 rounded-full bg-green-50 items-center justify-center mr-3">
-              <Ionicons name="wallet" size={22} color="#10B981" />
+              <Ionicons name="wallet" size={scale(22)} color="#10B981" />
             </View>
             <View className="flex-1">
               <Text className="text-sm font-semibold text-gray-900">Retirar Dinero</Text>
             </View>
-            <Ionicons name="chevron-forward" size={18} color="#9CA3AF" />
+            <Ionicons name="chevron-forward" size={scale(18)} color="#9CA3AF" />
           </TouchableOpacity>
         </View>
 

@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../contexts/AuthContext';
 import { deleteAccount } from '../../services/profile';
 import Button from '../../components/common/Button';
+import { scale, moderateScale, verticalScale } from '../../utils/responsive';
 
 export default function DeleteAccountScreen({ navigation }: any) {
   const { user } = useAuth();

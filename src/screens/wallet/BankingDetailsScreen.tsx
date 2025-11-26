@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../contexts/AuthContext';
 import { getBankingDetails, updateBankingDetails, type BankingDetails } from '../../services/wallet';
 import { COLORS } from '../../constants/theme';
+import { scale, moderateScale, verticalScale } from '../../utils/responsive';
 
 export default function BankingDetailsScreen({ navigation }: any) {
   const { user } = useAuth();
@@ -112,7 +113,7 @@ export default function BankingDetailsScreen({ navigation }: any) {
       {/* Header */}
       <View className="px-4 py-4 border-b border-gray-200 flex-row items-center">
         <TouchableOpacity onPress={() => navigation.goBack()} className="mr-3">
-          <Ionicons name="arrow-back" size={24} color="#000" />
+          <Ionicons name="arrow-back" size={scale(24)} color="#000" />
         </TouchableOpacity>
         <Text className="text-xl font-bold text-gray-900">Datos Bancarios</Text>
       </View>
@@ -120,7 +121,7 @@ export default function BankingDetailsScreen({ navigation }: any) {
       <ScrollView className="flex-1 px-4 py-6">
         {/* Info Banner */}
         <View className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6 flex-row">
-          <Ionicons name="information-circle" size={24} color={COLORS.primary} />
+          <Ionicons name="information-circle" size={scale(24)} color={COLORS.primary} />
           <View className="ml-3 flex-1">
             <Text className="text-blue-900 font-semibold mb-1">Información importante</Text>
             <Text className="text-blue-700 text-sm">
@@ -202,7 +203,7 @@ export default function BankingDetailsScreen({ navigation }: any) {
         {/* Info Box */}
         <View className="bg-gray-50 rounded-lg p-4 mb-6">
           <View className="flex-row items-start">
-            <Ionicons name="shield-checkmark" size={20} color="#10B981" />
+            <Ionicons name="shield-checkmark" size={scale(20)} color="#10B981" />
             <View className="ml-3 flex-1">
               <Text className="text-gray-900 font-semibold mb-1">Seguridad</Text>
               <Text className="text-gray-600 text-sm">

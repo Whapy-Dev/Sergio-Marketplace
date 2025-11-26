@@ -9,11 +9,13 @@ import { getOfficialStores } from '../../services/officialStores';
 import type { OfficialStore } from '../../types/officialStore';
 import { getActiveBanners, type Banner } from '../../services/banners';
 import { getHomeSections, HomeSection } from '../../services/homeSections';
+import { TAB_BAR_HEIGHT } from '../../navigation/AppNavigator';
 import BannerCard from '../../components/BannerCard';
 import DynamicSection from '../../components/home/DynamicSection';
 import { COLORS } from '../../constants/theme';
+import { scale, verticalScale, moderateScale, wp } from '../../utils/responsive';
 
-export default function HomeScreen({ navigation }: any) {
+export default function HomeScreen({ navigation, route }: any) {
   const { categories, loading: loadingCategories, refresh: refreshCategories } = useCategories();
   const { products, loading: loadingProducts, refetch: refetchProducts } = useProducts();
   const [refreshing, setRefreshing] = useState(false);
@@ -24,6 +26,14 @@ export default function HomeScreen({ navigation }: any) {
   const [loadingBanners, setLoadingBanners] = useState(true);
   const [homeSections, setHomeSections] = useState<HomeSection[]>([]);
   const [loadingSections, setLoadingSections] = useState(true);
+  const scrollViewRef = useRef<any>(null);
+
+  // Scroll to top when tab is pressed
+  useEffect(() => {
+    if (route?.params?.scrollToTop) {
+      scrollViewRef.current?.scrollTo({ y: 0, animated: true });
+    }
+  }, [route?.params?.scrollToTop]);
 
   useEffect(() => {
     loadOfficialStores();
@@ -63,8 +73,8 @@ export default function HomeScreen({ navigation }: any) {
 
   // Animación del header
   const scrollY = useRef(new Animated.Value(0)).current;
-  const HEADER_EXPANDED_HEIGHT = 280; // Altura total del header expandido
-  const HEADER_COLLAPSED_HEIGHT = 70; // Altura compacta (igual a SearchScreen)
+  const HEADER_EXPANDED_HEIGHT = verticalScale(280); // Altura total del header expandido
+  const HEADER_COLLAPSED_HEIGHT = verticalScale(70); // Altura compacta (igual a SearchScreen)
 
   const headerHeight = scrollY.interpolate({
     inputRange: [0, HEADER_EXPANDED_HEIGHT - HEADER_COLLAPSED_HEIGHT],
@@ -154,10 +164,11 @@ export default function HomeScreen({ navigation }: any) {
       </Animated.View>
 
       <Animated.ScrollView
+        ref={scrollViewRef}
         className="flex-1"
         showsVerticalScrollIndicator={false}
         scrollEventThrottle={16}
-        contentContainerStyle={{ paddingBottom: 80 }}
+        contentContainerStyle={{ paddingBottom: TAB_BAR_HEIGHT + 20 }}
         onScroll={Animated.event(
           [{ nativeEvent: { contentOffset: { y: scrollY } } }],
           { useNativeDriver: false }
@@ -252,45 +263,56 @@ export default function HomeScreen({ navigation }: any) {
               horizontal
               showsHorizontalScrollIndicator={false}
             >
-              {/* Ofertas */}
-              <TouchableOpacity className="items-center mr-4">
+              {/* Ofertas - siempre visible */}
+              <TouchableOpacity
+                className="items-center mr-4"
+                onPress={() => navigation.navigate('Search', { filter: 'offers' })}
+              >
                 <View className="bg-yellow-100 rounded-full items-center justify-center" style={{ width: 55, height: 55 }}>
                   <Ionicons name="pricetag" size={28} color="#EAB308" />
                 </View>
                 <Text className="text-xs text-gray-900 mt-1">Ofertas</Text>
               </TouchableOpacity>
 
-              {/* Cupones */}
-              <TouchableOpacity className="items-center mr-4">
-                <View className="bg-blue-100 rounded-full items-center justify-center" style={{ width: 55, height: 55 }}>
-                  <Ionicons name="ticket" size={28} color="#3B82F6" />
-                </View>
-                <Text className="text-xs text-gray-900 mt-1">Cupones</Text>
-              </TouchableOpacity>
-
-              {/* Supermercado */}
-              <TouchableOpacity className="items-center mr-4">
-                <View className="bg-green-100 rounded-full items-center justify-center" style={{ width: 55, height: 55 }}>
-                  <Ionicons name="cart" size={28} color="#16A34A" />
-                </View>
-                <Text className="text-xs text-gray-900 mt-1">Supermercado</Text>
-              </TouchableOpacity>
-
-              {/* Celulares */}
-              <TouchableOpacity className="items-center mr-4">
-                <View className="bg-purple-100 rounded-full items-center justify-center" style={{ width: 55, height: 55 }}>
-                  <Ionicons name="phone-portrait" size={28} color="#9333EA" />
-                </View>
-                <Text className="text-xs text-gray-900 mt-1">Celulares</Text>
-              </TouchableOpacity>
+              {/* Categorías reales de la DB */}
+              {categories.slice(0, 6).map((category: any) => (
+                <TouchableOpacity
+                  key={category.id}
+                  className="items-center mr-4"
+                  onPress={() => navigation.navigate('Search', { categoryId: category.id, categoryName: category.name })}
+                >
+                  <View
+                    className="rounded-full items-center justify-center"
+                    style={{
+                      width: 55,
+                      height: 55,
+                      backgroundColor: category.color ? `${category.color}20` : '#F3F4F6'
+                    }}
+                  >
+                    <Ionicons
+                      name={(category.icon as any) || 'grid-outline'}
+                      size={28}
+                      color={category.color || '#6B7280'}
+                    />
+                  </View>
+                  <Text className="text-xs text-gray-900 mt-1" numberOfLines={1} style={{ maxWidth: 60 }}>
+                    {category.name}
+                  </Text>
+                </TouchableOpacity>
+              ))}
 
               {/* Ver más */}
-              <TouchableOpacity className="items-center">
-                <View className="bg-gray-200 rounded-full items-center justify-center" style={{ width: 55, height: 55 }}>
-                  <Ionicons name="add" size={28} color="#6B7280" />
-                </View>
-                <Text className="text-xs text-gray-900 mt-1">Ver más</Text>
-              </TouchableOpacity>
+              {categories.length > 6 && (
+                <TouchableOpacity
+                  className="items-center"
+                  onPress={() => navigation.navigate('Categories')}
+                >
+                  <View className="bg-gray-200 rounded-full items-center justify-center" style={{ width: 55, height: 55 }}>
+                    <Ionicons name="add" size={28} color="#6B7280" />
+                  </View>
+                  <Text className="text-xs text-gray-900 mt-1">Ver más</Text>
+                </TouchableOpacity>
+              )}
             </ScrollView>
           )}
         </View>

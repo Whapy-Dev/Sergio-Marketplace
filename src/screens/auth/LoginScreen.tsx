@@ -1,8 +1,14 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView, Alert, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
+import * as WebBrowser from 'expo-web-browser';
+import * as AuthSession from 'expo-auth-session';
 import { supabase } from '../../services/supabase';
 import Button from '../../components/common/Button';
+import { scale, moderateScale, verticalScale, wp } from '../../utils/responsive';
+
+WebBrowser.maybeCompleteAuthSession();
 
 interface LoginScreenProps {
   navigation: any;
@@ -12,6 +18,98 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const [appleLoading, setAppleLoading] = useState(false);
+
+  const redirectUrl = AuthSession.makeRedirectUri({
+    scheme: 'sergiomarketplace',
+    path: 'auth/callback',
+  });
+
+  async function handleGoogleLogin() {
+    try {
+      setGoogleLoading(true);
+
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: redirectUrl,
+          skipBrowserRedirect: true,
+        },
+      });
+
+      if (error) throw error;
+
+      if (data?.url) {
+        const result = await WebBrowser.openAuthSessionAsync(
+          data.url,
+          redirectUrl
+        );
+
+        if (result.type === 'success') {
+          const url = result.url;
+          // Extract tokens from URL
+          const params = new URLSearchParams(url.split('#')[1]);
+          const access_token = params.get('access_token');
+          const refresh_token = params.get('refresh_token');
+
+          if (access_token && refresh_token) {
+            await supabase.auth.setSession({
+              access_token,
+              refresh_token,
+            });
+          }
+        }
+      }
+    } catch (error: any) {
+      console.error('Google login error:', error);
+      Alert.alert('Error', 'No se pudo iniciar sesión con Google');
+    } finally {
+      setGoogleLoading(false);
+    }
+  }
+
+  async function handleAppleLogin() {
+    try {
+      setAppleLoading(true);
+
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'apple',
+        options: {
+          redirectTo: redirectUrl,
+          skipBrowserRedirect: true,
+        },
+      });
+
+      if (error) throw error;
+
+      if (data?.url) {
+        const result = await WebBrowser.openAuthSessionAsync(
+          data.url,
+          redirectUrl
+        );
+
+        if (result.type === 'success') {
+          const url = result.url;
+          const params = new URLSearchParams(url.split('#')[1]);
+          const access_token = params.get('access_token');
+          const refresh_token = params.get('refresh_token');
+
+          if (access_token && refresh_token) {
+            await supabase.auth.setSession({
+              access_token,
+              refresh_token,
+            });
+          }
+        }
+      }
+    } catch (error: any) {
+      console.error('Apple login error:', error);
+      Alert.alert('Error', 'No se pudo iniciar sesión con Apple');
+    } finally {
+      setAppleLoading(false);
+    }
+  }
 
   async function handleLogin() {
     if (!email || !password) {
@@ -108,7 +206,51 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
               loading={loading}
             />
 
-            <View className="flex-row justify-center items-center mt-6">
+            {/* Separador */}
+            <View className="flex-row items-center my-6">
+              <View className="flex-1 h-px bg-gray-300" />
+              <Text className="mx-4 text-gray-500">o continúa con</Text>
+              <View className="flex-1 h-px bg-gray-300" />
+            </View>
+
+            {/* Botones sociales */}
+            <View className="flex-row justify-center space-x-4 mb-6">
+              {/* Google */}
+              <TouchableOpacity
+                onPress={handleGoogleLogin}
+                disabled={googleLoading || loading}
+                className="flex-1 flex-row items-center justify-center bg-white border border-gray-300 rounded-lg py-3 mr-2"
+                style={{ opacity: googleLoading ? 0.7 : 1 }}
+              >
+                {googleLoading ? (
+                  <ActivityIndicator size="small" color="#4285F4" />
+                ) : (
+                  <>
+                    <Ionicons name="logo-google" size={scale(20)} color="#4285F4" />
+                    <Text className="ml-2 font-medium text-gray-700">Google</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+
+              {/* Apple */}
+              <TouchableOpacity
+                onPress={handleAppleLogin}
+                disabled={appleLoading || loading}
+                className="flex-1 flex-row items-center justify-center bg-black rounded-lg py-3 ml-2"
+                style={{ opacity: appleLoading ? 0.7 : 1 }}
+              >
+                {appleLoading ? (
+                  <ActivityIndicator size="small" color="white" />
+                ) : (
+                  <>
+                    <Ionicons name="logo-apple" size={scale(20)} color="white" />
+                    <Text className="ml-2 font-medium text-white">Apple</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            </View>
+
+            <View className="flex-row justify-center items-center">
               <Text className="text-gray-600">
                 ¿No tienes cuenta?{' '}
               </Text>

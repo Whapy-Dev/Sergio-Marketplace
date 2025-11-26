@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { scale } from '../../utils/responsive';
 
 interface RatingInputProps {
   rating: number;
@@ -12,7 +13,7 @@ interface RatingInputProps {
 export default function RatingInput({
   rating,
   onRatingChange,
-  size = 32,
+  size = scale(32),
   disabled = false,
 }: RatingInputProps) {
   return (

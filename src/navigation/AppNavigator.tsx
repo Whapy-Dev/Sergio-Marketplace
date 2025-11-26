@@ -8,6 +8,7 @@ import { COLORS } from '../constants/theme';
 import { useAuth } from '../contexts/AuthContext';
 import { useCart } from '../contexts/CartContext';
 import { useFavorites } from '../contexts/FavoritesContext';
+import { useNotifications } from '../contexts/NotificationContext';
 
 // Screens - Home
 import HomeScreen from '../screens/home/HomeScreen';
@@ -72,6 +73,9 @@ import RegisterOfficialStoreScreen from '../screens/stores/RegisterOfficialStore
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
+
+// Export tab bar height for screens to use as bottom padding
+export const TAB_BAR_HEIGHT = 70;
 
 // Home Stack Navigator
 function HomeStack() {
@@ -145,6 +149,7 @@ function ProfileStack() {
 function TabNavigator() {
   const { totalItems } = useCart();
   const { favorites } = useFavorites();
+  const { unreadCount } = useNotifications();
 
   return (
     <Tab.Navigator
@@ -182,6 +187,15 @@ function TabNavigator() {
             />
           ),
         }}
+        listeners={({ navigation }) => ({
+          tabPress: (e) => {
+            // Navigate to HomeMain with scrollToTop param
+            navigation.navigate('Home', {
+              screen: 'HomeMain',
+              params: { scrollToTop: Date.now() },
+            });
+          },
+        })}
       />
       <Tab.Screen
         name="Favorites"
@@ -271,11 +285,33 @@ function TabNavigator() {
         component={ProfileStack}
         options={{
           tabBarIcon: ({ focused, color }) => (
-            <Ionicons
-              name={focused ? 'person' : 'person-outline'}
-              size={28}
-              color={color}
-            />
+            <View style={{ width: 28, height: 28, position: 'relative' }}>
+              <Ionicons
+                name={focused ? 'person' : 'person-outline'}
+                size={28}
+                color={color}
+              />
+              {unreadCount > 0 && (
+                <View
+                  style={{
+                    position: 'absolute',
+                    right: -8,
+                    top: -4,
+                    backgroundColor: '#EF4444',
+                    borderRadius: 10,
+                    minWidth: 18,
+                    height: 18,
+                    paddingHorizontal: 4,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                  }}
+                >
+                  <Text style={{ color: 'white', fontSize: 10, fontWeight: 'bold' }}>
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </Text>
+                </View>
+              )}
+            </View>
           ),
         }}
       />

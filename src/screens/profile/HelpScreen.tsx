@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { scale, moderateScale, verticalScale } from '../../utils/responsive';
 
 const FAQ_ITEMS = [
   {

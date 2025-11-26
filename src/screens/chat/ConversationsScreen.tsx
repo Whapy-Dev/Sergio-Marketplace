@@ -11,7 +11,9 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../contexts/AuthContext';
 import { getUserConversations, Conversation } from '../../services/chat';
+import { TAB_BAR_HEIGHT } from '../../navigation/AppNavigator';
 import { COLORS } from '../../constants/theme';
+import { scale, moderateScale, verticalScale } from '../../utils/responsive';
 
 export default function ConversationsScreen({ navigation }: any) {
   const { user } = useAuth();
@@ -128,9 +130,9 @@ export default function ConversationsScreen({ navigation }: any) {
                 className="ml-2 rounded-full items-center justify-center"
                 style={{
                   backgroundColor: COLORS.primary,
-                  minWidth: 20,
-                  height: 20,
-                  paddingHorizontal: 6,
+                  minWidth: scale(20),
+                  height: scale(20),
+                  paddingHorizontal: scale(6),
                 }}
               >
                 <Text className="text-white text-xs font-bold">
@@ -175,7 +177,7 @@ export default function ConversationsScreen({ navigation }: any) {
           data={conversations}
           renderItem={renderConversation}
           keyExtractor={(item) => item.id}
-          contentContainerStyle={{ paddingBottom: 80 }}
+          contentContainerStyle={{ paddingBottom: TAB_BAR_HEIGHT + 20 }}
           refreshControl={
             <RefreshControl
               refreshing={refreshing}

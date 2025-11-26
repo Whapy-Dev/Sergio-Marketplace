@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../../constants/theme';
+import { scale, moderateScale, verticalScale } from '../../utils/responsive';
 
 export default function PaymentPendingScreen({ route, navigation }: any) {
   const { orderId } = route.params;
@@ -22,7 +23,7 @@ export default function PaymentPendingScreen({ route, navigation }: any) {
     <SafeAreaView className="flex-1 bg-white">
       <View className="flex-1 items-center justify-center p-6">
         <View className="bg-yellow-100 rounded-full p-6 mb-6">
-          <Ionicons name="time" size={64} color="#EAB308" />
+          <Ionicons name="time" size={scale(64)} color="#EAB308" />
         </View>
 
         <Text className="text-2xl font-bold text-gray-900 text-center mb-3">

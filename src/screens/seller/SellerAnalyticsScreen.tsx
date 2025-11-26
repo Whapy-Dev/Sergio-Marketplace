@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../services/supabase';
 import { COLORS } from '../../constants/theme';
+import { scale } from '../../utils/responsive';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 

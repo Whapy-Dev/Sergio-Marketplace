@@ -7,10 +7,12 @@ import { useFavorites } from '../../contexts/FavoritesContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { useCart } from '../../contexts/CartContext';
 import { supabase } from '../../services/supabase';
+import { TAB_BAR_HEIGHT } from '../../navigation/AppNavigator';
 import FavoriteProductItem from '../../components/favorites/FavoriteProductItem';
 import Button from '../../components/common/Button';
 import { COLORS } from '../../constants/theme';
 import { getUserLists, createList, deleteList, FavoriteList } from '../../services/favoriteLists';
+import { scale, moderateScale, verticalScale } from '../../utils/responsive';
 
 interface FavoriteProduct {
   id: string;
@@ -159,7 +161,7 @@ export default function FavoritesScreen({ navigation }: any) {
         </View>
 
         <View className="flex-1 items-center justify-center px-6">
-          <Ionicons name="heart-outline" size={64} color="#9CA3AF" />
+          <Ionicons name="heart-outline" size={scale(64)} color="#9CA3AF" />
           <Text className="text-xl font-bold text-gray-900 mb-2 mt-4">Inicia sesión</Text>
           <Text className="text-base text-gray-600 text-center mb-6">
             Debes iniciar sesión para guardar tus productos favoritos
@@ -194,7 +196,7 @@ export default function FavoritesScreen({ navigation }: any) {
         </View>
 
         <View className="flex-1 items-center justify-center px-6">
-          <Ionicons name="heart-outline" size={64} color="#9CA3AF" />
+          <Ionicons name="heart-outline" size={scale(64)} color="#9CA3AF" />
           <Text className="text-xl font-bold text-gray-900 mb-2 mt-4">No tienes favoritos</Text>
           <Text className="text-base text-gray-600 text-center mb-6">
             Explora productos y guarda los que más te gusten
@@ -215,7 +217,7 @@ export default function FavoritesScreen({ navigation }: any) {
         colors={['#2563EB', '#DC2626']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
-        className="h-[100px] rounded-bl-[40px] rounded-br-[40px]"
+        style={{ height: verticalScale(100), borderBottomLeftRadius: scale(40), borderBottomRightRadius: scale(40) }}
       >
         <SafeAreaView className="flex-1">
           <View className="px-5 pt-2 flex-row items-center justify-between">
@@ -226,20 +228,20 @@ export default function FavoritesScreen({ navigation }: any) {
             <View className="flex-row">
               {/* Icono de notificaciones */}
               <TouchableOpacity
-                className="w-7 h-7 items-center justify-center mr-4"
+                style={{ width: scale(28), height: scale(28), alignItems: 'center', justifyContent: 'center', marginRight: scale(16) }}
                 onPress={() => navigation.navigate('Profile', { screen: 'Notifications' })}
               >
-                <Ionicons name="notifications-outline" size={28} color="white" />
+                <Ionicons name="notifications-outline" size={scale(28)} color="white" />
               </TouchableOpacity>
 
               {/* Icono de carrito */}
               <TouchableOpacity
-                className="w-7 h-7 items-center justify-center relative"
+                style={{ width: scale(28), height: scale(28), alignItems: 'center', justifyContent: 'center', position: 'relative' }}
                 onPress={() => navigation.navigate('Cart')}
               >
-                <Ionicons name="cart-outline" size={28} color="white" />
+                <Ionicons name="cart-outline" size={scale(28)} color="white" />
                 {totalItems > 0 && (
-                  <View className="absolute -top-1 -right-1 bg-white rounded-full w-4 h-4 items-center justify-center">
+                  <View style={{ position: 'absolute', top: -scale(4), right: -scale(4), backgroundColor: 'white', borderRadius: scale(8), width: scale(16), height: scale(16), alignItems: 'center', justifyContent: 'center' }}>
                     <Text className="text-[10px] font-bold text-primary">
                       {totalItems > 9 ? '9+' : totalItems}
                     </Text>
@@ -252,7 +254,7 @@ export default function FavoritesScreen({ navigation }: any) {
       </LinearGradient>
 
       {/* Tabs */}
-      <View className="h-[53px] px-5 mt-1 flex-row items-center justify-center">
+      <View style={{ height: verticalScale(53), paddingHorizontal: scale(20), marginTop: verticalScale(4), flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
         <TouchableOpacity
           className={`flex-1 h-11 items-center justify-center border-b-2 ${
             activeTab === 'favorites' ? 'border-black' : 'border-transparent'
@@ -281,7 +283,7 @@ export default function FavoritesScreen({ navigation }: any) {
       </View>
 
       {/* Lista de productos o listas */}
-      <ScrollView className="flex-1 px-5 pt-6" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 80 }}>
+      <ScrollView className="flex-1 px-5 pt-6" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: TAB_BAR_HEIGHT + 20 }}>
         {activeTab === 'favorites' ? (
           products.map((product) => (
             <FavoriteProductItem
@@ -302,7 +304,7 @@ export default function FavoritesScreen({ navigation }: any) {
               </View>
             ) : lists.length === 0 ? (
               <View className="items-center justify-center py-20">
-                <Ionicons name="list-outline" size={64} color="#9CA3AF" />
+                <Ionicons name="list-outline" size={scale(64)} color="#9CA3AF" />
                 <Text className="text-lg font-bold text-gray-900 mb-2 mt-4">
                   No tienes listas
                 </Text>
@@ -320,7 +322,7 @@ export default function FavoritesScreen({ navigation }: any) {
                   <TouchableOpacity
                     key={list.id}
                     className="border-b border-gray-300 pb-2"
-                    style={{ height: 151 }}
+                    style={{ height: verticalScale(151) }}
                     onPress={() => navigation.navigate('ListDetail', { listId: list.id, listName: list.name })}
                   >
                     <View className="flex-row">
@@ -328,8 +330,8 @@ export default function FavoritesScreen({ navigation }: any) {
                       <View
                         className="rounded-lg overflow-hidden"
                         style={{
-                          width: 133,
-                          height: 133,
+                          width: scale(133),
+                          height: scale(133),
                           backgroundColor: 'rgba(0,0,0,0.1)',
                         }}
                       >
@@ -337,16 +339,16 @@ export default function FavoritesScreen({ navigation }: any) {
                         {list.preview_images && list.preview_images.length > 0 ? (
                           <View className="flex-1">
                             {/* Fila superior: 2 imágenes */}
-                            <View className="flex-row absolute top-[10px] left-[9px]">
+                            <View style={{ flexDirection: 'row', position: 'absolute', top: scale(10), left: scale(9) }}>
                               {/* Imagen top-left */}
                               {list.preview_images[0] && (
                                 <View
-                                  className="bg-white rounded-lg overflow-hidden mr-[5px]"
-                                  style={{ width: 55, height: 55 }}
+                                  className="bg-white rounded-lg overflow-hidden"
+                                  style={{ width: scale(55), height: scale(55), marginRight: scale(5) }}
                                 >
                                   <Image
                                     source={{ uri: list.preview_images[0] }}
-                                    style={{ width: 55, height: 55 }}
+                                    style={{ width: scale(55), height: scale(55) }}
                                     resizeMode="cover"
                                   />
                                 </View>
@@ -356,11 +358,11 @@ export default function FavoritesScreen({ navigation }: any) {
                               {list.preview_images[1] && (
                                 <View
                                   className="bg-white rounded-lg overflow-hidden"
-                                  style={{ width: 55, height: 55 }}
+                                  style={{ width: scale(55), height: scale(55) }}
                                 >
                                   <Image
                                     source={{ uri: list.preview_images[1] }}
-                                    style={{ width: 55, height: 55 }}
+                                    style={{ width: scale(55), height: scale(55) }}
                                     resizeMode="cover"
                                   />
                                 </View>
@@ -372,15 +374,15 @@ export default function FavoritesScreen({ navigation }: any) {
                               <View
                                 className="bg-white rounded-lg overflow-hidden absolute"
                                 style={{
-                                  width: 55,
-                                  height: 55,
-                                  top: 70,
-                                  left: 9,
+                                  width: scale(55),
+                                  height: scale(55),
+                                  top: scale(70),
+                                  left: scale(9),
                                 }}
                               >
                                 <Image
                                   source={{ uri: list.preview_images[2] }}
-                                  style={{ width: 55, height: 55 }}
+                                  style={{ width: scale(55), height: scale(55) }}
                                   resizeMode="cover"
                                 />
                               </View>
@@ -388,23 +390,23 @@ export default function FavoritesScreen({ navigation }: any) {
                           </View>
                         ) : (
                           <View className="flex-1 items-center justify-center">
-                            <Ionicons name="cube-outline" size={40} color="rgba(0,0,0,0.3)" />
+                            <Ionicons name="cube-outline" size={scale(40)} color="rgba(0,0,0,0.3)" />
                           </View>
                         )}
                       </View>
 
                       {/* Información de la lista */}
-                      <View className="flex-1 ml-[14px]">
+                      <View style={{ flex: 1, marginLeft: scale(14) }}>
                         <Text
                           className="text-xl font-medium text-black"
-                          style={{ marginTop: 3 }}
+                          style={{ marginTop: scale(3) }}
                           numberOfLines={1}
                         >
                           {list.name}
                         </Text>
                         <Text
                           className="text-[15px] font-light text-gray-500"
-                          style={{ marginTop: 3 }}
+                          style={{ marginTop: scale(3) }}
                         >
                           {list.product_count || 0} productos
                         </Text>
@@ -417,7 +419,7 @@ export default function FavoritesScreen({ navigation }: any) {
                       >
                         <Ionicons
                           name="ellipsis-vertical"
-                          size={22}
+                          size={scale(22)}
                           color="#000"
                         />
                       </TouchableOpacity>
@@ -431,7 +433,7 @@ export default function FavoritesScreen({ navigation }: any) {
                   onPress={handleCreateList}
                 >
                   <View className="flex-row items-center">
-                    <Ionicons name="add-circle-outline" size={24} color={COLORS.primary} />
+                    <Ionicons name="add-circle-outline" size={scale(24)} color={COLORS.primary} />
                     <Text className="text-base font-medium ml-2" style={{ color: COLORS.primary }}>
                       Crear nueva lista
                     </Text>

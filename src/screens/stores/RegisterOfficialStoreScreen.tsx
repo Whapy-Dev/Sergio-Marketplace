@@ -20,6 +20,7 @@ import {
 import type { CreateStoreApplicationData, StoreApplication } from '../../types/officialStore';
 import { useAuth } from '../../contexts/AuthContext';
 import { COLORS } from '../../constants/theme';
+import { scale, moderateScale, verticalScale } from '../../utils/responsive';
 
 export default function RegisterOfficialStoreScreen({ navigation }: any) {
   const { user } = useAuth();
@@ -184,7 +185,7 @@ export default function RegisterOfficialStoreScreen({ navigation }: any) {
         >
           <View className="flex-row items-center px-4 pt-2">
             <TouchableOpacity onPress={() => navigation.goBack()} className="p-2">
-              <Ionicons name="arrow-back" size={24} color="white" />
+              <Ionicons name="arrow-back" size={scale(24)} color="white" />
             </TouchableOpacity>
             <Text className="text-xl font-bold text-white ml-2">Estado de Solicitud</Text>
           </View>
@@ -193,10 +194,10 @@ export default function RegisterOfficialStoreScreen({ navigation }: any) {
         <View className="flex-1 items-center justify-center px-8">
           <View className="bg-white rounded-2xl p-8 w-full shadow-lg">
             <View
-              className="w-20 h-20 rounded-full items-center justify-center mx-auto mb-4"
-              style={{ backgroundColor: config.color + '20' }}
+              className="rounded-full items-center justify-center mx-auto mb-4"
+              style={{ backgroundColor: config.color + '20', width: scale(80), height: scale(80) }}
             >
-              <Ionicons name={config.icon} size={48} color={config.color} />
+              <Ionicons name={config.icon} size={scale(48)} color={config.color} />
             </View>
 
             <Text className="text-2xl font-bold text-center text-gray-900 mb-2">
@@ -256,7 +257,7 @@ export default function RegisterOfficialStoreScreen({ navigation }: any) {
       >
         <View className="flex-row items-center px-4 pt-2">
           <TouchableOpacity onPress={() => navigation.goBack()} className="p-2">
-            <Ionicons name="arrow-back" size={24} color="white" />
+            <Ionicons name="arrow-back" size={scale(24)} color="white" />
           </TouchableOpacity>
           <Text className="text-xl font-bold text-white ml-2">Registrar Tienda Oficial</Text>
         </View>
@@ -271,7 +272,7 @@ export default function RegisterOfficialStoreScreen({ navigation }: any) {
             {/* Info Card */}
             <View className="bg-blue-50 rounded-xl p-4 mb-6">
               <View className="flex-row items-start">
-                <Ionicons name="information-circle" size={24} color="#3B82F6" />
+                <Ionicons name="information-circle" size={scale(24)} color="#3B82F6" />
                 <View className="flex-1 ml-3">
                   <Text className="text-sm font-semibold text-blue-900 mb-1">
                     Beneficios de ser Tienda Oficial
