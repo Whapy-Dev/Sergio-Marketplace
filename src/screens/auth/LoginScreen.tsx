@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView, Alert, ActivityIndicator } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { View, Text, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView, Alert, ActivityIndicator, StatusBar } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as WebBrowser from 'expo-web-browser';
 import * as AuthSession from 'expo-auth-session';
 import { supabase } from '../../services/supabase';
 import Button from '../../components/common/Button';
-import { scale, moderateScale, verticalScale, wp } from '../../utils/responsive';
+import { COLORS } from '../../constants/theme';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -139,25 +139,27 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
-      <KeyboardAvoidingView 
+    <SafeAreaView className="flex-1 bg-white" edges={['top', 'bottom']}>
+      <StatusBar barStyle="dark-content" />
+      <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         className="flex-1"
       >
-        <ScrollView 
+        <ScrollView
           className="flex-1"
           contentContainerStyle={{ flexGrow: 1 }}
           keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
         >
-          <View className="flex-1 px-6 pt-12">
-            <View className="mb-10">
-              <Text className="text-4xl font-bold text-primary mb-2">
-                🛍️ Marketplace
+          <View className="flex-1 px-6 pt-8">
+            <View className="mb-8">
+              <Text className="text-3xl font-bold mb-2" style={{ color: COLORS.primary }}>
+                Marketplace
               </Text>
               <Text className="text-2xl font-bold text-gray-900 mb-2">
                 ¡Bienvenido!
               </Text>
-              <Text className="text-base text-gray-600">
+              <Text className="text-base text-gray-500">
                 Inicia sesión para continuar
               </Text>
             </View>
@@ -214,20 +216,21 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
             </View>
 
             {/* Botones sociales */}
-            <View className="flex-row justify-center space-x-4 mb-6">
+            <View className="flex-row justify-center mb-6">
               {/* Google */}
               <TouchableOpacity
                 onPress={handleGoogleLogin}
                 disabled={googleLoading || loading}
-                className="flex-1 flex-row items-center justify-center bg-white border border-gray-300 rounded-lg py-3 mr-2"
+                className="flex-1 flex-row items-center justify-center bg-white border border-gray-200 rounded-xl py-4 mr-2"
                 style={{ opacity: googleLoading ? 0.7 : 1 }}
+                activeOpacity={0.7}
               >
                 {googleLoading ? (
                   <ActivityIndicator size="small" color="#4285F4" />
                 ) : (
                   <>
-                    <Ionicons name="logo-google" size={scale(20)} color="#4285F4" />
-                    <Text className="ml-2 font-medium text-gray-700">Google</Text>
+                    <Ionicons name="logo-google" size={22} color="#4285F4" />
+                    <Text className="ml-2 font-semibold text-gray-700">Google</Text>
                   </>
                 )}
               </TouchableOpacity>
@@ -236,15 +239,16 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
               <TouchableOpacity
                 onPress={handleAppleLogin}
                 disabled={appleLoading || loading}
-                className="flex-1 flex-row items-center justify-center bg-black rounded-lg py-3 ml-2"
+                className="flex-1 flex-row items-center justify-center bg-black rounded-xl py-4 ml-2"
                 style={{ opacity: appleLoading ? 0.7 : 1 }}
+                activeOpacity={0.7}
               >
                 {appleLoading ? (
                   <ActivityIndicator size="small" color="white" />
                 ) : (
                   <>
-                    <Ionicons name="logo-apple" size={scale(20)} color="white" />
-                    <Text className="ml-2 font-medium text-white">Apple</Text>
+                    <Ionicons name="logo-apple" size={22} color="white" />
+                    <Text className="ml-2 font-semibold text-white">Apple</Text>
                   </>
                 )}
               </TouchableOpacity>

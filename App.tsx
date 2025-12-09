@@ -1,5 +1,6 @@
 import './setupDevTools';
 import { StatusBar } from 'expo-status-bar';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import AppNavigator from './src/navigation/AppNavigator';
 import { AuthProvider } from './src/contexts/AuthContext';
 import { CartProvider } from './src/contexts/CartContext';
@@ -10,15 +11,17 @@ import { NotificationProvider } from './src/contexts/NotificationContext';
 
 export default function App() {
   return (
-    <AuthProvider>
-      <NotificationProvider>
-        <CartProvider>
-          <FavoritesProvider>
-            <AppNavigator />
-            <StatusBar style="auto" />
-          </FavoritesProvider>
-        </CartProvider>
-      </NotificationProvider>
-    </AuthProvider>
+    <SafeAreaProvider>
+      <AuthProvider>
+        <NotificationProvider>
+          <CartProvider>
+            <FavoritesProvider>
+              <AppNavigator />
+              <StatusBar style="auto" translucent />
+            </FavoritesProvider>
+          </CartProvider>
+        </NotificationProvider>
+      </AuthProvider>
+    </SafeAreaProvider>
   );
 }

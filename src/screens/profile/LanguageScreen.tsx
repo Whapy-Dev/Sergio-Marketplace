@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
+import { COLORS } from '../../constants/theme';
 import { scale, moderateScale, verticalScale } from '../../utils/responsive';
 
 const LANGUAGES = [
@@ -25,7 +27,7 @@ export default function LanguageScreen({ navigation }: any) {
       {/* Header */}
       <View className="px-4 py-3 border-b border-gray-200 flex-row items-center">
         <TouchableOpacity onPress={() => navigation.goBack()} className="mr-3">
-          <Text className="text-primary text-2xl font-bold">←</Text>
+          <Ionicons name="arrow-back" size={24} color={COLORS.primary} />
         </TouchableOpacity>
         <Text className="text-xl font-bold text-gray-900">Idioma</Text>
       </View>
@@ -55,7 +57,7 @@ export default function LanguageScreen({ navigation }: any) {
                 </Text>
               </View>
               {selectedLanguage === language.id && (
-                <Text className="text-primary text-xl">✓</Text>
+                <Ionicons name="checkmark" size={20} color={COLORS.primary} />
               )}
             </TouchableOpacity>
           ))}

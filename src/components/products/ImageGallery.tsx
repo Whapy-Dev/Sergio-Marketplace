@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { View, Image, ScrollView, Dimensions, Text } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { scale } from '../../utils/responsive';
 
 interface ImageGalleryProps {
@@ -38,7 +39,7 @@ export default function ImageGallery({ images }: ImageGalleryProps) {
             style={{ width: SCREEN_WIDTH, height: IMAGE_HEIGHT }}
           >
             {imageUrl === 'placeholder' ? (
-              <Text className="text-8xl">📦</Text>
+              <Ionicons name="cube-outline" size={80} color="#9CA3AF" />
             ) : (
               <Image
                 source={{ uri: imageUrl }}

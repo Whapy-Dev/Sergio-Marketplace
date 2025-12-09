@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, ScrollView, Text, ActivityIndicator, TouchableOpacity, RefreshControl, Image, TextInput, Animated } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { View, ScrollView, Text, ActivityIndicator, TouchableOpacity, RefreshControl, Image, TextInput, Animated, Platform, StatusBar } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useCategories } from '../../hooks/useCategories';
@@ -14,8 +14,10 @@ import BannerCard from '../../components/BannerCard';
 import DynamicSection from '../../components/home/DynamicSection';
 import { COLORS } from '../../constants/theme';
 import { scale, verticalScale, moderateScale, wp } from '../../utils/responsive';
+import { CATEGORY_3D_ICONS } from '../../constants/categoryIcons';
 
 export default function HomeScreen({ navigation, route }: any) {
+  const insets = useSafeAreaInsets();
   const { categories, loading: loadingCategories, refresh: refreshCategories } = useCategories();
   const { products, loading: loadingProducts, refetch: refetchProducts } = useProducts();
   const [refreshing, setRefreshing] = useState(false);
@@ -71,20 +73,30 @@ export default function HomeScreen({ navigation, route }: any) {
   const banner5 = banners[4]; // Otro más si existe
   const banner6 = banners[5]; // Otro más si existe
 
-  // Animación del header
+  // Animación del header - valores fijos para mejor rendimiento
   const scrollY = useRef(new Animated.Value(0)).current;
-  const HEADER_EXPANDED_HEIGHT = verticalScale(280); // Altura total del header expandido
-  const HEADER_COLLAPSED_HEIGHT = verticalScale(70); // Altura compacta (igual a SearchScreen)
+  const HEADER_EXPANDED_HEIGHT = 260 + insets.top; // Altura total incluyendo safe area
+  const HEADER_COLLAPSED_HEIGHT = 56 + insets.top; // Altura compacta con safe area
+  const SCROLL_DISTANCE = HEADER_EXPANDED_HEIGHT - HEADER_COLLAPSED_HEIGHT;
 
+  // Interpolaciones optimizadas
   const headerHeight = scrollY.interpolate({
-    inputRange: [0, HEADER_EXPANDED_HEIGHT - HEADER_COLLAPSED_HEIGHT],
+    inputRange: [0, SCROLL_DISTANCE],
     outputRange: [HEADER_EXPANDED_HEIGHT, HEADER_COLLAPSED_HEIGHT],
     extrapolate: 'clamp',
   });
 
-  const headerOpacity = scrollY.interpolate({
-    inputRange: [0, 50, HEADER_EXPANDED_HEIGHT - HEADER_COLLAPSED_HEIGHT],
-    outputRange: [1, 0.5, 0],
+  // Opacidad del header sticky (aparece cuando se colapsa)
+  const stickyHeaderOpacity = scrollY.interpolate({
+    inputRange: [SCROLL_DISTANCE - 60, SCROLL_DISTANCE],
+    outputRange: [0, 1],
+    extrapolate: 'clamp',
+  });
+
+  // Opacidad del contenido expandido (desaparece al hacer scroll)
+  const expandedContentOpacity = scrollY.interpolate({
+    inputRange: [0, SCROLL_DISTANCE * 0.5],
+    outputRange: [1, 0],
     extrapolate: 'clamp',
   });
 
@@ -125,41 +137,47 @@ export default function HomeScreen({ navigation, route }: any) {
 
   return (
     <View className="flex-1 bg-gray-50">
-      {/* Header Sticky Compacto */}
+      {/* StatusBar transparente para el header con gradiente */}
+      <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
+
+      {/* Header Sticky Compacto - aparece al hacer scroll */}
       <Animated.View
+        pointerEvents={stickyHeaderOpacity.interpolate({
+          inputRange: [0, 0.5],
+          outputRange: [0, 1],
+          extrapolate: 'clamp',
+        }) as any > 0.5 ? 'auto' : 'none'}
         style={{
           position: 'absolute',
           top: 0,
           left: 0,
           right: 0,
           zIndex: 1000,
-          opacity: scrollY.interpolate({
-            inputRange: [0, HEADER_EXPANDED_HEIGHT - HEADER_COLLAPSED_HEIGHT - 50, HEADER_EXPANDED_HEIGHT - HEADER_COLLAPSED_HEIGHT],
-            outputRange: [0, 0, 1],
-            extrapolate: 'clamp',
-          }),
+          opacity: stickyHeaderOpacity,
         }}
       >
         <LinearGradient
           colors={['#2563EB', '#DC2626']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
-          className="rounded-b-[40px]"
-          style={{ height: 70 }}
+          style={{
+            paddingTop: insets.top,
+            paddingBottom: 12,
+            borderBottomLeftRadius: 24,
+            borderBottomRightRadius: 24,
+          }}
         >
-          <SafeAreaView edges={['top']} className="flex-1">
-            <View className="px-5 py-3 flex-row items-center justify-between">
-              <Text className="text-base font-bold text-white">Inicio</Text>
-              <View className="flex-row items-center">
-                <TouchableOpacity className="mr-4" onPress={() => navigation.navigate('Notifications')}>
-                  <Ionicons name="notifications-outline" size={24} color="white" />
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => navigation.navigate('Cart')}>
-                  <Ionicons name="cart-outline" size={24} color="white" />
-                </TouchableOpacity>
-              </View>
+          <View className="px-5 flex-row items-center justify-between">
+            <Text className="text-lg font-bold text-white">Inicio</Text>
+            <View className="flex-row items-center">
+              <TouchableOpacity className="mr-4 p-1" onPress={() => navigation.navigate('Notifications')}>
+                <Ionicons name="notifications-outline" size={24} color="white" />
+              </TouchableOpacity>
+              <TouchableOpacity className="p-1" onPress={() => navigation.navigate('Cart')}>
+                <Ionicons name="cart-outline" size={24} color="white" />
+              </TouchableOpacity>
             </View>
-          </SafeAreaView>
+          </View>
         </LinearGradient>
       </Animated.View>
 
@@ -168,7 +186,7 @@ export default function HomeScreen({ navigation, route }: any) {
         className="flex-1"
         showsVerticalScrollIndicator={false}
         scrollEventThrottle={16}
-        contentContainerStyle={{ paddingBottom: TAB_BAR_HEIGHT + 20 }}
+        contentContainerStyle={{ paddingBottom: TAB_BAR_HEIGHT + insets.bottom + 20 }}
         onScroll={Animated.event(
           [{ nativeEvent: { contentOffset: { y: scrollY } } }],
           { useNativeDriver: false }
@@ -179,6 +197,7 @@ export default function HomeScreen({ navigation, route }: any) {
             onRefresh={handleRefresh}
             colors={[COLORS.primary]}
             tintColor={COLORS.primary}
+            progressViewOffset={insets.top}
           />
         }
       >
@@ -195,7 +214,7 @@ export default function HomeScreen({ navigation, route }: any) {
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={{
-              paddingTop: 10,
+              paddingTop: insets.top,
               paddingBottom: 16,
               borderBottomLeftRadius: 32,
               borderBottomRightRadius: 32,
@@ -204,22 +223,25 @@ export default function HomeScreen({ navigation, route }: any) {
           >
           {/* Header con notificaciones y carrito */}
           <View className="flex-row items-center justify-between px-5 py-2">
-            <Text className="text-base font-bold text-white">Inicio</Text>
+            <Text className="text-lg font-bold text-white">Inicio</Text>
             <View className="flex-row items-center">
-              <TouchableOpacity className="mr-4" onPress={() => navigation.navigate('Notifications')}>
+              <TouchableOpacity className="mr-4 p-1" onPress={() => navigation.navigate('Notifications')}>
                 <Ionicons name="notifications-outline" size={24} color="white" />
               </TouchableOpacity>
-              <TouchableOpacity onPress={() => navigation.navigate('Cart')}>
+              <TouchableOpacity className="p-1" onPress={() => navigation.navigate('Cart')}>
                 <Ionicons name="cart-outline" size={24} color="white" />
               </TouchableOpacity>
             </View>
           </View>
 
-          {/* Barra de búsqueda */}
-          <View className="px-4 mt-2 mb-3">
+          {/* Barra de búsqueda - se desvanece al hacer scroll */}
+          <Animated.View
+            className="px-4 mt-2 mb-3"
+            style={{ opacity: expandedContentOpacity }}
+          >
             <TouchableOpacity
               onPress={() => navigation.navigate('Search')}
-              className="bg-white rounded-full px-4 py-2 flex-row items-center justify-between"
+              className="bg-white rounded-full px-4 py-3 flex-row items-center justify-between"
               style={{
                 shadowColor: '#000',
                 shadowOffset: { width: 0, height: 2 },
@@ -228,29 +250,32 @@ export default function HomeScreen({ navigation, route }: any) {
                 elevation: 3,
               }}
             >
-              <Text className="text-gray-400 flex-1 text-sm">Buscar producto</Text>
-              <View className="bg-orange-500 rounded-full w-8 h-8 items-center justify-center">
-                <Ionicons name="search" size={18} color="white" />
+              <Text className="text-gray-400 flex-1 text-base">Buscar producto</Text>
+              <View className="bg-orange-500 rounded-full w-9 h-9 items-center justify-center">
+                <Ionicons name="search" size={20} color="white" />
               </View>
             </TouchableOpacity>
-          </View>
+          </Animated.View>
 
-          {/* Hero estático - sin banners */}
-          <View className="px-4">
-            <View className="relative" style={{ height: 160 }}>
-              <View className="absolute left-0 top-3 z-10" style={{ maxWidth: '55%' }}>
-                <Text className="text-white text-xl font-bold mb-1">
+          {/* Hero estático - se desvanece al hacer scroll */}
+          <Animated.View
+            className="px-4 flex-1"
+            style={{ opacity: expandedContentOpacity }}
+          >
+            <View className="relative flex-1">
+              <View className="absolute left-0 top-3 z-10" style={{ maxWidth: '60%' }}>
+                <Text className="text-white text-2xl font-bold mb-2">
                   Hasta 40% OFF
                 </Text>
-                <Text className="text-white text-xs leading-4">
+                <Text className="text-white text-sm leading-5">
                   La manera más práctica de hacer tus compras del súper
                 </Text>
               </View>
-              <View className="absolute right-0 bottom-0" style={{ opacity: 0.3 }}>
-                <Ionicons name="cart" size={110} color="white" />
+              <View className="absolute right-0 bottom-2" style={{ opacity: 0.25 }}>
+                <Ionicons name="cart" size={120} color="white" />
               </View>
             </View>
-          </View>
+          </Animated.View>
         </LinearGradient>
         </Animated.View>
 
@@ -263,56 +288,110 @@ export default function HomeScreen({ navigation, route }: any) {
               horizontal
               showsHorizontalScrollIndicator={false}
             >
-              {/* Ofertas - siempre visible */}
+              {/* Ofertas - siempre visible con icono 3D */}
               <TouchableOpacity
                 className="items-center mr-4"
                 onPress={() => navigation.navigate('Search', { filter: 'offers' })}
               >
-                <View className="bg-yellow-100 rounded-full items-center justify-center" style={{ width: 55, height: 55 }}>
-                  <Ionicons name="pricetag" size={28} color="#EAB308" />
+                <View className="items-center justify-center" style={{ width: 60, height: 60 }}>
+                  <Image
+                    source={CATEGORY_3D_ICONS.ofertas.source}
+                    style={{ width: CATEGORY_3D_ICONS.ofertas.size, height: CATEGORY_3D_ICONS.ofertas.size }}
+                    resizeMode="contain"
+                  />
                 </View>
                 <Text className="text-xs text-gray-900 mt-1">Ofertas</Text>
               </TouchableOpacity>
 
-              {/* Categorías reales de la DB */}
-              {categories.slice(0, 6).map((category: any) => (
-                <TouchableOpacity
-                  key={category.id}
-                  className="items-center mr-4"
-                  onPress={() => navigation.navigate('Search', { categoryId: category.id, categoryName: category.name })}
-                >
-                  <View
-                    className="rounded-full items-center justify-center"
-                    style={{
-                      width: 55,
-                      height: 55,
-                      backgroundColor: category.color ? `${category.color}20` : '#F3F4F6'
-                    }}
-                  >
-                    <Ionicons
-                      name={(category.icon as any) || 'grid-outline'}
-                      size={28}
-                      color={category.color || '#6B7280'}
-                    />
-                  </View>
-                  <Text className="text-xs text-gray-900 mt-1" numberOfLines={1} style={{ maxWidth: 60 }}>
-                    {category.name}
-                  </Text>
-                </TouchableOpacity>
-              ))}
+              {/* Supermercado con icono 3D */}
+              <TouchableOpacity
+                className="items-center mr-4"
+                onPress={() => navigation.navigate('Search', { categoryName: 'Supermercado' })}
+              >
+                <View className="items-center justify-center" style={{ width: 60, height: 60 }}>
+                  <Image
+                    source={CATEGORY_3D_ICONS.supermercado.source}
+                    style={{ width: CATEGORY_3D_ICONS.supermercado.size, height: CATEGORY_3D_ICONS.supermercado.size }}
+                    resizeMode="contain"
+                  />
+                </View>
+                <Text className="text-xs text-gray-900 mt-1">Supermercado</Text>
+              </TouchableOpacity>
 
-              {/* Ver más */}
-              {categories.length > 6 && (
-                <TouchableOpacity
-                  className="items-center"
-                  onPress={() => navigation.navigate('Categories')}
-                >
-                  <View className="bg-gray-200 rounded-full items-center justify-center" style={{ width: 55, height: 55 }}>
-                    <Ionicons name="add" size={28} color="#6B7280" />
-                  </View>
-                  <Text className="text-xs text-gray-900 mt-1">Ver más</Text>
-                </TouchableOpacity>
-              )}
+              {/* Tecnología con icono 3D */}
+              <TouchableOpacity
+                className="items-center mr-4"
+                onPress={() => navigation.navigate('Search', { categoryName: 'Tecnología' })}
+              >
+                <View className="items-center justify-center" style={{ width: 60, height: 60 }}>
+                  <Image
+                    source={CATEGORY_3D_ICONS.tecnologia.source}
+                    style={{ width: CATEGORY_3D_ICONS.tecnologia.size, height: CATEGORY_3D_ICONS.tecnologia.size }}
+                    resizeMode="contain"
+                  />
+                </View>
+                <Text className="text-xs text-gray-900 mt-1">Tecnología</Text>
+              </TouchableOpacity>
+
+              {/* Moda con icono 3D */}
+              <TouchableOpacity
+                className="items-center mr-4"
+                onPress={() => navigation.navigate('Search', { categoryName: 'Moda' })}
+              >
+                <View className="items-center justify-center" style={{ width: 60, height: 60 }}>
+                  <Image
+                    source={CATEGORY_3D_ICONS.moda.source}
+                    style={{ width: CATEGORY_3D_ICONS.moda.size, height: CATEGORY_3D_ICONS.moda.size }}
+                    resizeMode="contain"
+                  />
+                </View>
+                <Text className="text-xs text-gray-900 mt-1">Moda</Text>
+              </TouchableOpacity>
+
+              {/* Hogar con icono 3D */}
+              <TouchableOpacity
+                className="items-center mr-4"
+                onPress={() => navigation.navigate('Search', { categoryName: 'Hogar' })}
+              >
+                <View className="items-center justify-center" style={{ width: 60, height: 60 }}>
+                  <Image
+                    source={CATEGORY_3D_ICONS.hogar.source}
+                    style={{ width: CATEGORY_3D_ICONS.hogar.size, height: CATEGORY_3D_ICONS.hogar.size }}
+                    resizeMode="contain"
+                  />
+                </View>
+                <Text className="text-xs text-gray-900 mt-1">Hogar</Text>
+              </TouchableOpacity>
+
+              {/* Deportes con icono 3D */}
+              <TouchableOpacity
+                className="items-center mr-4"
+                onPress={() => navigation.navigate('Search', { categoryName: 'Deportes' })}
+              >
+                <View className="items-center justify-center" style={{ width: 60, height: 60 }}>
+                  <Image
+                    source={CATEGORY_3D_ICONS.deportes.source}
+                    style={{ width: CATEGORY_3D_ICONS.deportes.size, height: CATEGORY_3D_ICONS.deportes.size }}
+                    resizeMode="contain"
+                  />
+                </View>
+                <Text className="text-xs text-gray-900 mt-1">Deportes</Text>
+              </TouchableOpacity>
+
+              {/* Ver más con icono 3D */}
+              <TouchableOpacity
+                className="items-center"
+                onPress={() => navigation.navigate('Categories')}
+              >
+                <View className="items-center justify-center" style={{ width: 60, height: 60 }}>
+                  <Image
+                    source={CATEGORY_3D_ICONS['ver-mas'].source}
+                    style={{ width: CATEGORY_3D_ICONS['ver-mas'].size, height: CATEGORY_3D_ICONS['ver-mas'].size }}
+                    resizeMode="contain"
+                  />
+                </View>
+                <Text className="text-xs text-gray-900 mt-1">Ver más</Text>
+              </TouchableOpacity>
             </ScrollView>
           )}
         </View>
@@ -502,7 +581,7 @@ export default function HomeScreen({ navigation, route }: any) {
         )}
 
         {/* FOOTER */}
-        <View className="bg-gray-100 mt-4" style={{ borderTopLeftRadius: 70, borderTopRightRadius: 70, paddingBottom: 90 }}>
+        <View className="bg-gray-100 mt-4" style={{ borderTopLeftRadius: 70, borderTopRightRadius: 70, paddingBottom: TAB_BAR_HEIGHT + insets.bottom + 20 }}>
           {/* Atención al cliente */}
           <View className="px-5 pt-8 pb-6">
             <Text className="text-lg font-bold text-gray-900 mb-2">

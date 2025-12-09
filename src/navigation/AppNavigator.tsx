@@ -2,8 +2,9 @@ import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { View, Text } from 'react-native';
+import { View, Text, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { COLORS } from '../constants/theme';
 import { useAuth } from '../contexts/AuthContext';
 import { useCart } from '../contexts/CartContext';
@@ -71,11 +72,15 @@ import OfficialStoresScreen from '../screens/stores/OfficialStoresScreen';
 import StoreDetailScreen from '../screens/stores/StoreDetailScreen';
 import RegisterOfficialStoreScreen from '../screens/stores/RegisterOfficialStoreScreen';
 
+// Screens - Reviews
+import WriteReviewScreen from '../screens/orders/WriteReviewScreen';
+
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
 // Export tab bar height for screens to use as bottom padding
-export const TAB_BAR_HEIGHT = 70;
+// Base height sin safe area - se ajusta dinámicamente
+export const TAB_BAR_HEIGHT = 60;
 
 // Home Stack Navigator
 function HomeStack() {
@@ -141,6 +146,7 @@ function ProfileStack() {
       <Stack.Screen name="RegisterOfficialStore" component={RegisterOfficialStoreScreen} />
       <Stack.Screen name="MyInvoices" component={MyInvoicesScreen} />
       <Stack.Screen name="InvoiceDetail" component={InvoiceDetailScreen} />
+      <Stack.Screen name="WriteReview" component={WriteReviewScreen} />
     </Stack.Navigator>
   );
 }
@@ -150,6 +156,10 @@ function TabNavigator() {
   const { totalItems } = useCart();
   const { favorites } = useFavorites();
   const { unreadCount } = useNotifications();
+  const insets = useSafeAreaInsets();
+
+  // Altura dinámica basada en safe area
+  const tabBarHeight = TAB_BAR_HEIGHT + Math.max(insets.bottom, 10);
 
   return (
     <Tab.Navigator
@@ -158,18 +168,18 @@ function TabNavigator() {
         tabBarInactiveTintColor: '#9CA3AF',
         tabBarStyle: {
           backgroundColor: 'white',
-          borderTopLeftRadius: 32,
-          borderTopRightRadius: 32,
+          borderTopLeftRadius: 24,
+          borderTopRightRadius: 24,
           borderTopWidth: 0,
-          height: 70,
-          paddingBottom: 10,
-          paddingTop: 10,
+          height: tabBarHeight,
+          paddingBottom: Math.max(insets.bottom, 8),
+          paddingTop: 8,
           position: 'absolute',
-          elevation: 10,
+          elevation: 20,
           shadowColor: '#000',
-          shadowOffset: { width: 0, height: -5 },
+          shadowOffset: { width: 0, height: -4 },
           shadowOpacity: 0.1,
-          shadowRadius: 4,
+          shadowRadius: 8,
         },
         tabBarShowLabel: false,
         headerShown: false,

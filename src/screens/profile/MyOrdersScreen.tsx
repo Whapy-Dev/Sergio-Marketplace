@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../services/supabase';
 import { COLORS } from '../../constants/theme';
@@ -97,11 +98,11 @@ export default function MyOrdersScreen({ navigation, route }: any) {
     <SafeAreaView className="flex-1 bg-white" edges={['top']}>
       {/* Header */}
       <View className="px-4 py-3 border-b border-gray-200 flex-row items-center">
-        <TouchableOpacity 
+        <TouchableOpacity
           onPress={() => navigation.navigate('ProfileMain')}
           className="mr-3"
         >
-          <Text className="text-primary text-2xl font-bold">←</Text>
+          <Ionicons name="arrow-back" size={24} color={COLORS.primary} />
         </TouchableOpacity>
         <Text className="text-xl font-bold text-gray-900">Mis Compras</Text>
       </View>
@@ -112,7 +113,9 @@ export default function MyOrdersScreen({ navigation, route }: any) {
         </View>
       ) : orders.length === 0 ? (
         <View className="flex-1 items-center justify-center px-6">
-          <Text className="text-6xl mb-4">📦</Text>
+          <View className="w-24 h-24 rounded-full bg-gray-100 items-center justify-center mb-4">
+            <Ionicons name="cube-outline" size={48} color="#9CA3AF" />
+          </View>
           <Text className="text-xl font-bold text-gray-900 mb-2">No hay compras</Text>
           <Text className="text-base text-gray-600 text-center">
             Todavía no realizaste ninguna compra

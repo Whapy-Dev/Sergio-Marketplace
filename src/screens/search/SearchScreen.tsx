@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, ScrollView, TouchableOpacity, ActivityIndicator, Image, FlatList } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { View, Text, TextInput, ScrollView, TouchableOpacity, ActivityIndicator, Image, FlatList, StatusBar } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { supabase } from '../../services/supabase';
 import { COLORS } from '../../constants/theme';
+import { TAB_BAR_HEIGHT } from '../../navigation/AppNavigator';
 import FiltersModal, { FilterState } from '../../components/search/FiltersModal';
 import { scale, moderateScale, verticalScale, wp } from '../../utils/responsive';
 
@@ -28,6 +29,7 @@ interface Brand {
 }
 
 export default function SearchScreen({ navigation }: any) {
+  const insets = useSafeAreaInsets();
   const [searchQuery, setSearchQuery] = useState('');
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
@@ -304,7 +306,7 @@ export default function SearchScreen({ navigation }: any) {
             {/* Cuotas Yo Compro */}
             <View className="flex-row items-center mb-1">
               <View className="w-5 h-3 bg-gray-200 rounded mr-1 items-center justify-center">
-                <Text className="text-[6px]">💳</Text>
+                <Ionicons name="card-outline" size={8} color="#6B7280" />
               </View>
               <Text className="text-xs font-medium" style={{ color: COLORS.primary }}>
                 6 Cuotas Yo Compro Crédito
@@ -374,23 +376,32 @@ export default function SearchScreen({ navigation }: any) {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-white" edges={['top']}>
+    <View className="flex-1 bg-white">
+      <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
+
       {/* Header con gradiente */}
       <LinearGradient
         colors={['#2563EB', '#DC2626']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
-        className="rounded-b-[40px]"
-        style={{ height: verticalScale(70) }}
+        style={{
+          paddingTop: insets.top,
+          paddingBottom: 12,
+          borderBottomLeftRadius: 24,
+          borderBottomRightRadius: 24,
+        }}
       >
-        <View className="px-5 py-3 flex-row items-center justify-between">
-          <Text className="text-base font-bold text-white">Búsqueda</Text>
+        <View className="px-5 py-2 flex-row items-center justify-between">
+          <TouchableOpacity onPress={() => navigation.goBack()} className="p-1">
+            <Ionicons name="arrow-back" size={24} color="white" />
+          </TouchableOpacity>
+          <Text className="text-lg font-bold text-white flex-1 ml-4">Búsqueda</Text>
           <View className="flex-row items-center">
-            <TouchableOpacity className="mr-4">
-              <Ionicons name="notifications-outline" size={scale(24)} color="white" />
+            <TouchableOpacity className="mr-4 p-1">
+              <Ionicons name="notifications-outline" size={24} color="white" />
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => navigation.navigate('Cart')}>
-              <Ionicons name="cart-outline" size={scale(24)} color="white" />
+            <TouchableOpacity onPress={() => navigation.navigate('Cart')} className="p-1">
+              <Ionicons name="cart-outline" size={24} color="white" />
             </TouchableOpacity>
           </View>
         </View>
@@ -496,8 +507,7 @@ export default function SearchScreen({ navigation }: any) {
       <ScrollView
         className="flex-1 px-4"
         showsVerticalScrollIndicator={false}
-        style={{ marginBottom: verticalScale(90) }}
-        contentContainerStyle={{ paddingTop: verticalScale(8) }}
+        contentContainerStyle={{ paddingTop: 8, paddingBottom: TAB_BAR_HEIGHT + insets.bottom + 20 }}
       >
         {loading ? (
           <View className="flex-1 items-center justify-center py-12">
@@ -528,6 +538,6 @@ export default function SearchScreen({ navigation }: any) {
         onClose={() => setFiltersVisible(false)}
         onApplyFilters={handleApplyFilters}
       />
-    </SafeAreaView>
+    </View>
   );
 }

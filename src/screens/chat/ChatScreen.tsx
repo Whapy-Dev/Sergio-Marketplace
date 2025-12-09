@@ -268,7 +268,7 @@ export default function ChatScreen({ route, navigation }: any) {
         {/* Header */}
         <View className="flex-row items-center px-4 py-3 bg-white border-b border-gray-200">
           <TouchableOpacity onPress={() => navigation.goBack()} className="mr-3">
-            <Text className="text-2xl">←</Text>
+            <Ionicons name="arrow-back" size={24} color="#374151" />
           </TouchableOpacity>
 
           <View className="flex-row items-center flex-1">
@@ -279,7 +279,7 @@ export default function ChatScreen({ route, navigation }: any) {
               />
             ) : (
               <View className="w-10 h-10 rounded-full bg-gray-200 items-center justify-center mr-3">
-                <Text className="text-xl">👤</Text>
+                <Ionicons name="person" size={20} color="#9CA3AF" />
               </View>
             )}
 
@@ -313,7 +313,7 @@ export default function ChatScreen({ route, navigation }: any) {
                 />
               ) : (
                 <View className="w-full h-full items-center justify-center">
-                  <Text className="text-2xl">📦</Text>
+                  <Ionicons name="cube-outline" size={24} color="#9CA3AF" />
                 </View>
               )}
             </View>

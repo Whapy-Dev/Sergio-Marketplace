@@ -168,7 +168,7 @@ export default function CreateProductScreen({ navigation }: any) {
       {/* Header */}
       <View className="px-4 py-3 border-b border-gray-200 flex-row items-center">
         <TouchableOpacity onPress={() => navigation.goBack()} className="mr-3">
-          <Text className="text-primary text-2xl font-bold">←</Text>
+          <Ionicons name="arrow-back" size={24} color={COLORS.primary} />
         </TouchableOpacity>
         <Text className="text-xl font-bold text-gray-900">Publicar Producto</Text>
       </View>
@@ -316,7 +316,7 @@ export default function CreateProductScreen({ navigation }: any) {
                   {cat.name}
                 </Text>
                 {categoryId === cat.id && (
-                  <Text className="text-primary text-xl">✓</Text>
+                  <Ionicons name="checkmark" size={20} color={COLORS.primary} />
                 )}
               </TouchableOpacity>
             ))}
@@ -335,7 +335,7 @@ export default function CreateProductScreen({ navigation }: any) {
                 freeShipping ? 'bg-primary border-primary' : 'border-gray-300'
               }`}
             >
-              {freeShipping && <Text className="text-white text-sm">✓</Text>}
+              {freeShipping && <Ionicons name="checkmark" size={14} color="white" />}
             </View>
             <View className="flex-1">
               <Text className="text-base font-medium text-gray-900">Envío gratis</Text>
@@ -356,7 +356,7 @@ export default function CreateProductScreen({ navigation }: any) {
                 hasVariants ? 'bg-primary border-primary' : 'border-gray-300'
               }`}
             >
-              {hasVariants && <Text className="text-white text-sm">✓</Text>}
+              {hasVariants && <Ionicons name="checkmark" size={14} color="white" />}
             </View>
             <View className="flex-1">
               <Text className="text-base font-medium text-gray-900">Tiene variantes</Text>

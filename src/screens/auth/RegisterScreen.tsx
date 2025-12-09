@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView, Alert, ActivityIndicator, StatusBar } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as WebBrowser from 'expo-web-browser';
 import * as AuthSession from 'expo-auth-session';
 import { supabase } from '../../services/supabase';
 import Button from '../../components/common/Button';
-import { scale, moderateScale, verticalScale, wp } from '../../utils/responsive';
+import { COLORS } from '../../constants/theme';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -155,45 +155,52 @@ const { error: profileError } = await supabase
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
-      <KeyboardAvoidingView 
+    <SafeAreaView className="flex-1 bg-white" edges={['top', 'bottom']}>
+      <StatusBar barStyle="dark-content" />
+      <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         className="flex-1"
       >
-        <ScrollView 
+        <ScrollView
           className="flex-1"
-          contentContainerStyle={{ paddingBottom: scale(40) }}
+          contentContainerStyle={{ paddingBottom: 40 }}
           keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
         >
-          <View className="px-6 pt-8">
-            <View className="mb-8">
-              <TouchableOpacity onPress={() => navigation.goBack()}>
-                <Text className="text-primary text-lg mb-4">← Volver</Text>
+          <View className="px-6 pt-6">
+            <View className="mb-6">
+              <TouchableOpacity
+                onPress={() => navigation.goBack()}
+                className="flex-row items-center mb-4"
+              >
+                <Ionicons name="arrow-back" size={24} color={COLORS.primary} />
+                <Text className="text-base ml-2" style={{ color: COLORS.primary }}>Volver</Text>
               </TouchableOpacity>
-              
-              <Text className="text-3xl font-bold text-gray-900 mb-2">
+
+              <Text className="text-2xl font-bold text-gray-900 mb-1">
                 Crear cuenta
               </Text>
-              <Text className="text-base text-gray-600">
+              <Text className="text-base text-gray-500">
                 Completa tus datos para registrarte
               </Text>
             </View>
 
             {/* Botones sociales */}
-            <View className="flex-row justify-center space-x-4 mb-4">
+            <View className="flex-row justify-center mb-4">
               {/* Google */}
               <TouchableOpacity
                 onPress={() => handleSocialAuth('google')}
                 disabled={googleLoading || loading}
-                className="flex-1 flex-row items-center justify-center bg-white border border-gray-300 rounded-lg py-3 mr-2"
+                className="flex-1 flex-row items-center justify-center bg-white border border-gray-200 rounded-xl py-4 mr-2"
                 style={{ opacity: googleLoading ? 0.7 : 1 }}
+                activeOpacity={0.7}
               >
                 {googleLoading ? (
                   <ActivityIndicator size="small" color="#4285F4" />
                 ) : (
                   <>
-                    <Ionicons name="logo-google" size={scale(20)} color="#4285F4" />
-                    <Text className="ml-2 font-medium text-gray-700">Google</Text>
+                    <Ionicons name="logo-google" size={22} color="#4285F4" />
+                    <Text className="ml-2 font-semibold text-gray-700">Google</Text>
                   </>
                 )}
               </TouchableOpacity>
@@ -202,15 +209,16 @@ const { error: profileError } = await supabase
               <TouchableOpacity
                 onPress={() => handleSocialAuth('apple')}
                 disabled={appleLoading || loading}
-                className="flex-1 flex-row items-center justify-center bg-black rounded-lg py-3 ml-2"
+                className="flex-1 flex-row items-center justify-center bg-black rounded-xl py-4 ml-2"
                 style={{ opacity: appleLoading ? 0.7 : 1 }}
+                activeOpacity={0.7}
               >
                 {appleLoading ? (
                   <ActivityIndicator size="small" color="white" />
                 ) : (
                   <>
-                    <Ionicons name="logo-apple" size={scale(20)} color="white" />
-                    <Text className="ml-2 font-medium text-white">Apple</Text>
+                    <Ionicons name="logo-apple" size={22} color="white" />
+                    <Text className="ml-2 font-semibold text-white">Apple</Text>
                   </>
                 )}
               </TouchableOpacity>
@@ -225,11 +233,12 @@ const { error: profileError } = await supabase
 
             <View className="mb-4">
               <Text className="text-sm font-medium text-gray-700 mb-2">
-                Nombre completo *
+                Nombre completo
               </Text>
               <TextInput
-                className="bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-base"
+                className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-4 text-base"
                 placeholder="Juan Pérez"
+                placeholderTextColor="#9CA3AF"
                 value={fullName}
                 onChangeText={setFullName}
                 editable={!loading}
@@ -238,11 +247,12 @@ const { error: profileError } = await supabase
 
             <View className="mb-4">
               <Text className="text-sm font-medium text-gray-700 mb-2">
-                Email *
+                Email
               </Text>
               <TextInput
-                className="bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-base"
+                className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-4 text-base"
                 placeholder="tu@email.com"
+                placeholderTextColor="#9CA3AF"
                 value={email}
                 onChangeText={setEmail}
                 autoCapitalize="none"
@@ -253,11 +263,12 @@ const { error: profileError } = await supabase
 
             <View className="mb-4">
               <Text className="text-sm font-medium text-gray-700 mb-2">
-                Contraseña *
+                Contraseña
               </Text>
               <TextInput
-                className="bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-base"
+                className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-4 text-base"
                 placeholder="Mínimo 6 caracteres"
+                placeholderTextColor="#9CA3AF"
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry
@@ -267,11 +278,12 @@ const { error: profileError } = await supabase
 
             <View className="mb-4">
               <Text className="text-sm font-medium text-gray-700 mb-2">
-                Teléfono *
+                Teléfono
               </Text>
               <TextInput
-                className="bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-base"
+                className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-4 text-base"
                 placeholder="3704123456"
+                placeholderTextColor="#9CA3AF"
                 value={phone}
                 onChangeText={setPhone}
                 keyboardType="phone-pad"
@@ -281,29 +293,31 @@ const { error: profileError } = await supabase
 
             <View className="mb-4">
               <Text className="text-sm font-medium text-gray-700 mb-2">
-                Código Postal *
+                Código Postal
               </Text>
               <TextInput
-                className="bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-base"
+                className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-4 text-base"
                 placeholder="3600"
+                placeholderTextColor="#9CA3AF"
                 value={postalCode}
                 onChangeText={setPostalCode}
                 keyboardType="number-pad"
                 maxLength={4}
                 editable={!loading}
               />
-              <Text className="text-xs text-gray-500 mt-1">
+              <Text className="text-xs text-gray-400 mt-1">
                 Solo disponible en Formosa capital por ahora
               </Text>
             </View>
 
             <View className="mb-6">
               <Text className="text-sm font-medium text-gray-700 mb-2">
-                Ciudad *
+                Ciudad
               </Text>
               <TextInput
-                className="bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-base"
+                className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-4 text-base"
                 placeholder="Formosa"
+                placeholderTextColor="#9CA3AF"
                 value={city}
                 onChangeText={setCity}
                 editable={!loading}

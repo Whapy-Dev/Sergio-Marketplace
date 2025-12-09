@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, ScrollView, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../contexts/AuthContext';
 import { useCart } from '../../contexts/CartContext';
 import { createOrder } from '../../services/orders';
@@ -143,7 +144,7 @@ export default function CheckoutScreen({ navigation }: any) {
       {/* Header */}
       <View className="px-4 py-3 border-b border-gray-200 flex-row items-center">
         <TouchableOpacity onPress={() => navigation.goBack()} className="mr-3">
-          <Text className="text-primary text-2xl font-bold">←</Text>
+          <Ionicons name="arrow-back" size={24} color={COLORS.primary} />
         </TouchableOpacity>
         <Text className="text-xl font-bold text-gray-900">Finalizar Compra</Text>
       </View>
@@ -151,9 +152,10 @@ export default function CheckoutScreen({ navigation }: any) {
       <ScrollView className="flex-1">
         {/* Resumen de productos */}
         <View className="px-4 py-4 border-b border-gray-100">
-          <Text className="text-base font-semibold text-gray-900 mb-3">
-            📦 Resumen del Pedido
-          </Text>
+          <View className="flex-row items-center mb-3">
+            <Ionicons name="cube-outline" size={18} color="#374151" style={{ marginRight: 8 }} />
+            <Text className="text-base font-semibold text-gray-900">Resumen del Pedido</Text>
+          </View>
           {items.map((item) => (
             <View key={item.id} className="flex-row justify-between items-center mb-2">
               <Text className="text-sm text-gray-700 flex-1" numberOfLines={1}>
@@ -168,9 +170,10 @@ export default function CheckoutScreen({ navigation }: any) {
 
         {/* Datos de contacto */}
         <View className="px-4 py-4 border-b border-gray-100">
-          <Text className="text-base font-semibold text-gray-900 mb-3">
-            👤 Datos de Contacto
-          </Text>
+          <View className="flex-row items-center mb-3">
+            <Ionicons name="person-outline" size={18} color="#374151" style={{ marginRight: 8 }} />
+            <Text className="text-base font-semibold text-gray-900">Datos de Contacto</Text>
+          </View>
 
           <View className="mb-3">
             <Text className="text-sm text-gray-700 mb-1">Nombre completo *</Text>
@@ -198,9 +201,10 @@ export default function CheckoutScreen({ navigation }: any) {
 
         {/* Dirección de envío */}
         <View className="px-4 py-4 border-b border-gray-100">
-          <Text className="text-base font-semibold text-gray-900 mb-3">
-            📍 Dirección de Envío
-          </Text>
+          <View className="flex-row items-center mb-3">
+            <Ionicons name="location-outline" size={18} color="#374151" style={{ marginRight: 8 }} />
+            <Text className="text-base font-semibold text-gray-900">Dirección de Envío</Text>
+          </View>
 
           <View className="mb-3">
             <Text className="text-sm text-gray-700 mb-1">Dirección *</Text>
@@ -241,9 +245,10 @@ export default function CheckoutScreen({ navigation }: any) {
 
         {/* Método de pago */}
         <View className="px-4 py-4 border-b border-gray-100">
-          <Text className="text-base font-semibold text-gray-900 mb-3">
-            💳 Método de Pago
-          </Text>
+          <View className="flex-row items-center mb-3">
+            <Ionicons name="card-outline" size={18} color="#374151" style={{ marginRight: 8 }} />
+            <Text className="text-base font-semibold text-gray-900">Método de Pago</Text>
+          </View>
 
           <TouchableOpacity
             onPress={() => setPaymentMethod('cash')}
@@ -260,10 +265,13 @@ export default function CheckoutScreen({ navigation }: any) {
               {paymentMethod === 'cash' && <View className="w-3 h-3 rounded-full bg-primary" />}
             </View>
             <View className="flex-1">
-              <Text className={`text-base font-medium ${paymentMethod === 'cash' ? 'text-primary' : 'text-gray-900'}`}>
-                💵 Efectivo contra entrega
-              </Text>
-              <Text className="text-xs text-gray-600">Paga cuando recibas tu pedido</Text>
+              <View className="flex-row items-center">
+                <Ionicons name="cash-outline" size={16} color={paymentMethod === 'cash' ? COLORS.primary : '#374151'} style={{ marginRight: 6 }} />
+                <Text className={`text-base font-medium ${paymentMethod === 'cash' ? 'text-primary' : 'text-gray-900'}`}>
+                  Efectivo contra entrega
+                </Text>
+              </View>
+              <Text className="text-xs text-gray-600 mt-1">Paga cuando recibas tu pedido</Text>
             </View>
           </TouchableOpacity>
 
@@ -282,10 +290,13 @@ export default function CheckoutScreen({ navigation }: any) {
               {paymentMethod === 'transfer' && <View className="w-3 h-3 rounded-full bg-primary" />}
             </View>
             <View className="flex-1">
-              <Text className={`text-base font-medium ${paymentMethod === 'transfer' ? 'text-primary' : 'text-gray-900'}`}>
-                🏦 Transferencia bancaria
-              </Text>
-              <Text className="text-xs text-gray-600">Te enviaremos los datos</Text>
+              <View className="flex-row items-center">
+                <Ionicons name="swap-horizontal-outline" size={16} color={paymentMethod === 'transfer' ? COLORS.primary : '#374151'} style={{ marginRight: 6 }} />
+                <Text className={`text-base font-medium ${paymentMethod === 'transfer' ? 'text-primary' : 'text-gray-900'}`}>
+                  Transferencia bancaria
+                </Text>
+              </View>
+              <Text className="text-xs text-gray-600 mt-1">Te enviaremos los datos</Text>
             </View>
           </TouchableOpacity>
 
@@ -304,19 +315,23 @@ export default function CheckoutScreen({ navigation }: any) {
               {paymentMethod === 'mercadopago' && <View className="w-3 h-3 rounded-full bg-primary" />}
             </View>
             <View className="flex-1">
-              <Text className={`text-base font-medium ${paymentMethod === 'mercadopago' ? 'text-primary' : 'text-gray-900'}`}>
-                💙 Mercado Pago
-              </Text>
-              <Text className="text-xs text-gray-600">Paga con tarjeta o efectivo</Text>
+              <View className="flex-row items-center">
+                <Ionicons name="logo-apple-appstore" size={16} color={paymentMethod === 'mercadopago' ? COLORS.primary : '#374151'} style={{ marginRight: 6 }} />
+                <Text className={`text-base font-medium ${paymentMethod === 'mercadopago' ? 'text-primary' : 'text-gray-900'}`}>
+                  Mercado Pago
+                </Text>
+              </View>
+              <Text className="text-xs text-gray-600 mt-1">Paga con tarjeta o efectivo</Text>
             </View>
           </TouchableOpacity>
         </View>
 
         {/* Notas adicionales */}
         <View className="px-4 py-4">
-          <Text className="text-base font-semibold text-gray-900 mb-3">
-            📝 Notas (opcional)
-          </Text>
+          <View className="flex-row items-center mb-3">
+            <Ionicons name="document-text-outline" size={18} color="#374151" style={{ marginRight: 8 }} />
+            <Text className="text-base font-semibold text-gray-900">Notas (opcional)</Text>
+          </View>
           <TextInput
             className="bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-base"
             value={notes}
@@ -338,7 +353,10 @@ export default function CheckoutScreen({ navigation }: any) {
         </View>
         <View className="flex-row justify-between items-center mb-3">
           <Text className="text-base text-gray-700">Envío</Text>
-          <Text className="text-base font-semibold text-green-600">Gratis 🎉</Text>
+          <View className="flex-row items-center">
+            <Text className="text-base font-semibold text-green-600">Gratis</Text>
+            <Ionicons name="gift-outline" size={16} color="#16A34A" style={{ marginLeft: 4 }} />
+          </View>
         </View>
         <View className="flex-row justify-between items-center mb-4 pt-3 border-t border-gray-200">
           <Text className="text-lg font-bold text-gray-900">Total</Text>

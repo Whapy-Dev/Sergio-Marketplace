@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Image, Alert, ActivityIndicator, TextInput, FlatList, Dimensions, StyleSheet } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { View, Text, ScrollView, TouchableOpacity, Image, Alert, ActivityIndicator, TextInput, FlatList, Dimensions, Platform, StatusBar } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { supabase } from '../../services/supabase';
@@ -25,6 +25,7 @@ import { scale, moderateScale, verticalScale, wp } from '../../utils/responsive'
 const { width } = Dimensions.get('window');
 
 export default function ProductDetailScreen({ route, navigation }: any) {
+  const insets = useSafeAreaInsets();
   const { productId } = route.params;
   const [product, setProduct] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -164,6 +165,43 @@ export default function ProductDetailScreen({ route, navigation }: any) {
       }
     } catch (error) {
       console.error('Error loading store products:', error);
+    }
+  }
+
+  async function handleContactSeller() {
+    if (!user) {
+      Alert.alert(
+        'Iniciar sesión',
+        'Necesitas iniciar sesión para contactar al vendedor',
+        [
+          { text: 'Cancelar', style: 'cancel' },
+          { text: 'Iniciar sesión', onPress: () => navigation.navigate('Auth') }
+        ]
+      );
+      return;
+    }
+
+    if (!product?.seller_id) {
+      Alert.alert('Error', 'No se encontró información del vendedor');
+      return;
+    }
+
+    // Don't allow seller to contact themselves
+    if (user.id === product.seller_id) {
+      Alert.alert('Info', 'Este es tu propio producto');
+      return;
+    }
+
+    try {
+      const conversation = await getOrCreateConversation(user.id, product.seller_id, productId);
+      if (conversation) {
+        navigation.navigate('Chat', { conversationId: conversation.id });
+      } else {
+        Alert.alert('Error', 'No se pudo iniciar la conversación');
+      }
+    } catch (error) {
+      console.error('Error creating conversation:', error);
+      Alert.alert('Error', 'No se pudo contactar al vendedor');
     }
   }
 
@@ -344,29 +382,36 @@ export default function ProductDetailScreen({ route, navigation }: any) {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-white" edges={['top']}>
+    <View className="flex-1 bg-white">
+      <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
+
       {/* Header con gradiente */}
       <LinearGradient
         colors={['#2563EB', '#DC2626']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
-        className="rounded-b-[40px]"
+        style={{
+          paddingTop: insets.top,
+          paddingBottom: 12,
+          borderBottomLeftRadius: 24,
+          borderBottomRightRadius: 24,
+        }}
       >
-        <View className="px-5 py-4 flex-row items-center justify-between">
-          <TouchableOpacity onPress={() => navigation.goBack()}>
-            <Ionicons name="arrow-back" size={scale(26)} color="white" />
+        <View className="px-5 py-2 flex-row items-center justify-between">
+          <TouchableOpacity onPress={() => navigation.goBack()} className="p-1">
+            <Ionicons name="arrow-back" size={26} color="white" />
           </TouchableOpacity>
           <View className="flex-row items-center">
-            <TouchableOpacity className="mr-4">
-              <Ionicons name="notifications-outline" size={scale(28)} color="white" />
+            <TouchableOpacity className="mr-4 p-1">
+              <Ionicons name="notifications-outline" size={26} color="white" />
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => navigation.navigate('Cart')} className="mr-4">
-              <Ionicons name="cart-outline" size={scale(28)} color="white" />
+            <TouchableOpacity onPress={() => navigation.navigate('Cart')} className="mr-4 p-1">
+              <Ionicons name="cart-outline" size={26} color="white" />
             </TouchableOpacity>
-            <TouchableOpacity onPress={handleToggleFavorite}>
+            <TouchableOpacity onPress={handleToggleFavorite} className="p-1">
               <Ionicons
                 name={favorite ? 'heart' : 'heart-outline'}
-                size={scale(28)}
+                size={26}
                 color="white"
               />
             </TouchableOpacity>
@@ -374,7 +419,11 @@ export default function ProductDetailScreen({ route, navigation }: any) {
         </View>
       </LinearGradient>
 
-      <ScrollView className="flex-1" showsVerticalScrollIndicator={false} style={{ paddingBottom: verticalScale(80) }}>
+      <ScrollView
+        className="flex-1"
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 100 + insets.bottom }}
+      >
         {/* Breadcrumb */}
         <View className="px-5 py-4 bg-gray-50 rounded-[20px] mx-5 mt-3">
           <View className="flex-row items-center">
@@ -515,7 +564,7 @@ export default function ProductDetailScreen({ route, navigation }: any) {
           {/* Tarjeta Yo Compro */}
           <View className="flex-row items-center mb-3">
             <View className="w-8 h-5 bg-gray-200 rounded mr-2 items-center justify-center">
-              <Text className="text-[8px]">💳</Text>
+              <Ionicons name="card-outline" size={12} color="#6B7280" />
             </View>
             <Text className="text-base font-medium" style={{ color: COLORS.primary }}>
               6 Cuotas Yo Compro Crédito
@@ -575,6 +624,33 @@ export default function ProductDetailScreen({ route, navigation }: any) {
               <Text className="text-sm text-gray-900 mb-1">Retiro GRATIS en sucursal</Text>
               <Text className="text-sm text-gray-500">Disponible en puntos de retiro</Text>
             </View>
+          </View>
+        </View>
+
+        {/* Vendedor y Contactar */}
+        <View className="px-5 py-4 bg-gray-50">
+          <View className="flex-row items-center justify-between">
+            <View className="flex-row items-center flex-1">
+              <View className="w-12 h-12 rounded-full bg-primary/10 items-center justify-center mr-3">
+                <Ionicons name="storefront-outline" size={24} color={COLORS.primary} />
+              </View>
+              <View className="flex-1">
+                <Text className="text-sm text-gray-500">Vendido por</Text>
+                <Text className="text-base font-semibold text-gray-900" numberOfLines={1}>
+                  {product?.sellers?.store_name || 'Tienda'}
+                </Text>
+              </View>
+            </View>
+            <TouchableOpacity
+              onPress={handleContactSeller}
+              className="flex-row items-center bg-white border border-primary rounded-xl px-4 py-3"
+              activeOpacity={0.7}
+            >
+              <Ionicons name="chatbubble-outline" size={18} color={COLORS.primary} />
+              <Text className="text-sm font-semibold ml-2" style={{ color: COLORS.primary }}>
+                Contactar
+              </Text>
+            </TouchableOpacity>
           </View>
         </View>
 
@@ -865,11 +941,15 @@ export default function ProductDetailScreen({ route, navigation }: any) {
 
       {/* Botón de acción flotante */}
       <View
-        className="absolute bottom-0 left-0 right-0 bg-white px-4 py-3 border-t border-gray-200"
+        className="absolute bottom-0 left-0 right-0 bg-white px-4 pt-3 border-t border-gray-200"
         style={{
           zIndex: 100,
-          elevation: 10,
-          paddingBottom: verticalScale(90) // Espacio para el navbar
+          elevation: 20,
+          paddingBottom: insets.bottom + 16,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: -4 },
+          shadowOpacity: 0.1,
+          shadowRadius: 8,
         }}
       >
         <Button
@@ -888,6 +968,6 @@ export default function ProductDetailScreen({ route, navigation }: any) {
           userId={user.id}
         />
       )}
-    </SafeAreaView>
+    </View>
   );
 }

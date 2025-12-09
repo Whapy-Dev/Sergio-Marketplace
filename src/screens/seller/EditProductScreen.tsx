@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, ScrollView, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { updateProduct } from '../../services/seller';
 import { supabase } from '../../services/supabase';
 import Button from '../../components/common/Button';
@@ -148,7 +149,7 @@ export default function EditProductScreen({ route, navigation }: any) {
       {/* Header */}
       <View className="px-4 py-3 border-b border-gray-200 flex-row items-center">
         <TouchableOpacity onPress={() => navigation.goBack()} className="mr-3">
-          <Text className="text-primary text-2xl font-bold">←</Text>
+          <Ionicons name="arrow-back" size={24} color={COLORS.primary} />
         </TouchableOpacity>
         <Text className="text-xl font-bold text-gray-900">Editar Producto</Text>
       </View>
@@ -285,7 +286,7 @@ export default function EditProductScreen({ route, navigation }: any) {
                 freeShipping ? 'bg-primary border-primary' : 'border-gray-300'
               }`}
             >
-              {freeShipping && <Text className="text-white text-sm">✓</Text>}
+              {freeShipping && <Ionicons name="checkmark" size={14} color="white" />}
             </View>
             <Text className="text-base font-medium text-gray-900">Envío gratis</Text>
           </TouchableOpacity>

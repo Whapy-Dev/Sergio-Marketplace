@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, Image } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useCart } from '../../contexts/CartContext';
 import { useFavorites } from '../../contexts/FavoritesContext';
 import { scale, moderateScale, wp } from '../../utils/responsive';
@@ -73,7 +74,7 @@ export default function FavoriteProductItem({
               resizeMode="contain"
             />
           ) : (
-            <Text style={{ fontSize: scale(40) }}>📦</Text>
+            <Ionicons name="cube-outline" size={scale(40)} color="#9CA3AF" />
           )}
         </View>
 

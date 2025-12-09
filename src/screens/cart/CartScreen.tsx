@@ -1,23 +1,31 @@
 import React from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Image } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { View, Text, ScrollView, TouchableOpacity, Image, StatusBar } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { useCart } from '../../contexts/CartContext';
 import { TAB_BAR_HEIGHT } from '../../navigation/AppNavigator';
 import Button from '../../components/common/Button';
 import { scale, moderateScale, verticalScale } from '../../utils/responsive';
 
 export default function CartScreen({ navigation }: any) {
+  const insets = useSafeAreaInsets();
   const { items, totalItems, totalAmount, removeItem, updateQuantity } = useCart();
+
+  // Altura del footer + safe area + tab bar
+  const footerHeight = 200 + insets.bottom + TAB_BAR_HEIGHT;
 
   if (items.length === 0) {
     return (
-      <SafeAreaView className="flex-1 bg-white">
-        <View className="px-4 py-3 border-b border-gray-200">
-          <Text className="text-xl font-bold text-gray-900">Carrito</Text>
+      <SafeAreaView className="flex-1 bg-white" edges={['top']}>
+        <StatusBar barStyle="dark-content" />
+        <View className="px-5 py-4 border-b border-gray-100">
+          <Text className="text-2xl font-bold text-gray-900">Carrito</Text>
         </View>
-        
-        <View className="flex-1 items-center justify-center px-6">
-          <Text className="text-6xl mb-4">🛒</Text>
+
+        <View className="flex-1 items-center justify-center px-6" style={{ paddingBottom: TAB_BAR_HEIGHT + insets.bottom }}>
+          <View className="w-24 h-24 rounded-full bg-gray-100 items-center justify-center mb-4">
+            <Ionicons name="cart-outline" size={48} color="#9CA3AF" />
+          </View>
           <Text className="text-xl font-bold text-gray-900 mb-2">
             Tu carrito está vacío
           </Text>
@@ -26,9 +34,9 @@ export default function CartScreen({ navigation }: any) {
           </Text>
           <TouchableOpacity
             onPress={() => navigation.navigate('Home')}
-            className="bg-primary rounded-lg px-6 py-3"
+            className="bg-primary rounded-xl px-8 py-4"
           >
-            <Text className="text-white font-semibold">Explorar Productos</Text>
+            <Text className="text-white font-semibold text-base">Explorar Productos</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -36,15 +44,16 @@ export default function CartScreen({ navigation }: any) {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
+    <SafeAreaView className="flex-1 bg-white" edges={['top']}>
+      <StatusBar barStyle="dark-content" />
       {/* Header */}
-      <View className="px-4 py-3 border-b border-gray-200">
-        <Text className="text-xl font-bold text-gray-900">
+      <View className="px-5 py-4 border-b border-gray-100">
+        <Text className="text-2xl font-bold text-gray-900">
           Carrito ({totalItems} {totalItems === 1 ? 'producto' : 'productos'})
         </Text>
       </View>
 
-      <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: TAB_BAR_HEIGHT + 20 }}>
+      <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: footerHeight }}>
         {items.map((item) => (
           <View
             key={item.id}
@@ -60,7 +69,7 @@ export default function CartScreen({ navigation }: any) {
                     resizeMode="cover"
                   />
                 ) : (
-                  <Text className="text-3xl">📦</Text>
+                  <Ionicons name="cube-outline" size={32} color="#9CA3AF" />
                 )}
               </View>
 
@@ -115,22 +124,31 @@ export default function CartScreen({ navigation }: any) {
           </View>
         ))}
 
-        <View className="h-20" />
       </ScrollView>
 
-      {/* Footer con total y botón */}
-      <View className="px-4 pt-4 pb-24 border-t border-gray-200 bg-white">
-        <View className="flex-row justify-between items-center mb-3">
-          <Text className="text-base text-gray-700">Subtotal</Text>
+      {/* Footer con total y botón - Posición absoluta */}
+      <View
+        className="absolute bottom-0 left-0 right-0 bg-white px-5 pt-4 border-t border-gray-100"
+        style={{
+          paddingBottom: TAB_BAR_HEIGHT + insets.bottom + 16,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: -4 },
+          shadowOpacity: 0.1,
+          shadowRadius: 8,
+          elevation: 20,
+        }}
+      >
+        <View className="flex-row justify-between items-center mb-2">
+          <Text className="text-base text-gray-600">Subtotal</Text>
           <Text className="text-base font-semibold text-gray-900">
             ${totalAmount.toLocaleString()}
           </Text>
         </View>
-        <View className="flex-row justify-between items-center mb-3">
-          <Text className="text-base text-gray-700">Envío</Text>
-          <Text className="text-base font-semibold text-green-600">Gratis 🎉</Text>
+        <View className="flex-row justify-between items-center mb-2">
+          <Text className="text-base text-gray-600">Envío</Text>
+          <Text className="text-base font-semibold text-green-600">Gratis</Text>
         </View>
-        <View className="flex-row justify-between items-center mb-4 pt-3 border-t border-gray-200">
+        <View className="flex-row justify-between items-center mb-4 pt-3 border-t border-gray-100">
           <Text className="text-lg font-bold text-gray-900">Total</Text>
           <Text className="text-2xl font-bold text-primary">
             ${totalAmount.toLocaleString()}
@@ -138,7 +156,7 @@ export default function CartScreen({ navigation }: any) {
         </View>
 
         <Button
-          title={`Finalizar Compra`}
+          title="Finalizar Compra"
           onPress={() => navigation.navigate('Checkout')}
         />
       </View>

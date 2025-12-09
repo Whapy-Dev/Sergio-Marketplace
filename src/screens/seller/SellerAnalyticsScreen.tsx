@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../services/supabase';
 import { COLORS } from '../../constants/theme';
@@ -93,7 +94,7 @@ export default function SellerAnalyticsScreen({ navigation }: any) {
     <SafeAreaView className="flex-1 bg-white" edges={['top']}>
       <View className="px-4 py-3 border-b border-gray-200 flex-row items-center">
         <TouchableOpacity onPress={() => navigation.goBack()} className="mr-3">
-          <Text className="text-primary text-2xl font-bold">←</Text>
+          <Ionicons name="arrow-back" size={24} color={COLORS.primary} />
         </TouchableOpacity>
         <Text className="text-xl font-bold text-gray-900">Análisis Detallado</Text>
       </View>
@@ -131,11 +132,14 @@ export default function SellerAnalyticsScreen({ navigation }: any) {
 
       <ScrollView className="flex-1">
         <View className="px-4 py-4">
-          <Text className="text-lg font-bold text-gray-900 mb-3">🏆 Top 10 Productos</Text>
+          <View className="flex-row items-center mb-3">
+            <Ionicons name="trophy-outline" size={20} color="#F59E0B" style={{ marginRight: 8 }} />
+            <Text className="text-lg font-bold text-gray-900">Top 10 Productos</Text>
+          </View>
 
           {topProducts.length === 0 ? (
             <View className="bg-gray-50 rounded-lg p-6 items-center">
-              <Text className="text-4xl mb-2">📊</Text>
+              <Ionicons name="bar-chart-outline" size={40} color="#9CA3AF" style={{ marginBottom: 8 }} />
               <Text className="text-base text-gray-600 text-center">
                 Aún no hay ventas registradas
               </Text>

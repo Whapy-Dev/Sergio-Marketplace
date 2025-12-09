@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Image, Alert, ActivityIndicator } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { View, Text, ScrollView, TouchableOpacity, Image, Alert, ActivityIndicator, StatusBar } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { useAuth } from '../../contexts/AuthContext';
@@ -13,6 +13,7 @@ import { COLORS } from '../../constants/theme';
 import { scale, moderateScale, verticalScale } from '../../utils/responsive';
 
 export default function ProfileScreen({ navigation }: any) {
+  const insets = useSafeAreaInsets();
   const { user, signOut } = useAuth();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -158,12 +159,13 @@ export default function ProfileScreen({ navigation }: any) {
 
   return (
     <SafeAreaView className="flex-1 bg-white" edges={['top']}>
+      <StatusBar barStyle="dark-content" />
       {/* Header */}
-      <View className="px-4 py-4 border-b border-gray-200">
+      <View className="px-5 py-4 border-b border-gray-100">
         <Text className="text-2xl font-bold text-gray-900">Mi Perfil</Text>
       </View>
 
-      <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: TAB_BAR_HEIGHT + 20 }}>
+      <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: TAB_BAR_HEIGHT + insets.bottom + 20 }}>
         {/* Avatar y datos básicos */}
         <View className="items-center py-6 border-b border-gray-100">
           <TouchableOpacity
@@ -180,7 +182,7 @@ export default function ProfileScreen({ navigation }: any) {
                   className="w-24 h-24 rounded-full"
                 />
               ) : (
-                <Text className="text-4xl">👤</Text>
+                <Ionicons name="person" size={40} color="white" />
               )}
             </View>
             <View className="absolute bottom-0 right-0 bg-white rounded-full p-1.5 shadow-md border border-gray-200">
@@ -251,7 +253,9 @@ export default function ProfileScreen({ navigation }: any) {
                 className="flex-row items-center justify-between py-3"
               >
                 <View className="flex-row items-center flex-1">
-                  <Text className="text-2xl mr-3">📦</Text>
+                  <View className="w-10 h-10 rounded-full bg-blue-100 items-center justify-center mr-3">
+                    <Ionicons name="cube-outline" size={22} color="#2563EB" />
+                  </View>
                   <View className="flex-1">
                     <Text className="text-base font-medium text-gray-900">Mis Pedidos</Text>
                     <Text className="text-sm text-gray-500">Ver historial de compras</Text>
@@ -265,7 +269,9 @@ export default function ProfileScreen({ navigation }: any) {
                 className="flex-row items-center justify-between py-3"
               >
                 <View className="flex-row items-center flex-1">
-                  <Text className="text-2xl mr-3">🧾</Text>
+                  <View className="w-10 h-10 rounded-full bg-green-100 items-center justify-center mr-3">
+                    <Ionicons name="receipt-outline" size={22} color="#16A34A" />
+                  </View>
                   <View className="flex-1">
                     <Text className="text-base font-medium text-gray-900">Mis Facturas</Text>
                     <Text className="text-sm text-gray-500">Comprobantes fiscales</Text>
@@ -284,7 +290,9 @@ export default function ProfileScreen({ navigation }: any) {
                 className="flex-row items-center justify-between py-3"
               >
                 <View className="flex-row items-center flex-1">
-                  <Text className="text-2xl mr-3">👤</Text>
+                  <View className="w-10 h-10 rounded-full bg-gray-100 items-center justify-center mr-3">
+                    <Ionicons name="person-outline" size={22} color="#374151" />
+                  </View>
                   <View className="flex-1">
                     <Text className="text-base font-medium text-gray-900">Datos Personales</Text>
                     <Text className="text-sm text-gray-500">Nombre, teléfono, dirección</Text>
@@ -298,7 +306,9 @@ export default function ProfileScreen({ navigation }: any) {
                 className="flex-row items-center justify-between py-3"
               >
                 <View className="flex-row items-center flex-1">
-                  <Text className="text-2xl mr-3">🔒</Text>
+                  <View className="w-10 h-10 rounded-full bg-gray-100 items-center justify-center mr-3">
+                    <Ionicons name="lock-closed-outline" size={22} color="#374151" />
+                  </View>
                   <View className="flex-1">
                     <Text className="text-base font-medium text-gray-900">Seguridad</Text>
                     <Text className="text-sm text-gray-500">Cambiar contraseña</Text>
@@ -339,7 +349,9 @@ export default function ProfileScreen({ navigation }: any) {
                 className="flex-row items-center justify-between py-3"
               >
                 <View className="flex-row items-center flex-1">
-                  <Text className="text-2xl mr-3">📦</Text>
+                  <View className="w-10 h-10 rounded-full bg-blue-100 items-center justify-center mr-3">
+                    <Ionicons name="cube-outline" size={22} color="#2563EB" />
+                  </View>
                   <View className="flex-1">
                     <Text className="text-base font-medium text-gray-900">Mis Productos</Text>
                     <Text className="text-sm text-gray-500">Gestionar publicaciones</Text>
@@ -353,7 +365,9 @@ export default function ProfileScreen({ navigation }: any) {
                 className="flex-row items-center justify-between py-3"
               >
                 <View className="flex-row items-center flex-1">
-                  <Text className="text-2xl mr-3">🛒</Text>
+                  <View className="w-10 h-10 rounded-full bg-orange-100 items-center justify-center mr-3">
+                    <Ionicons name="cart-outline" size={22} color="#EA580C" />
+                  </View>
                   <View className="flex-1">
                     <Text className="text-base font-medium text-gray-900">Pedidos Recibidos</Text>
                     <Text className="text-sm text-gray-500">Gestionar ventas</Text>
@@ -367,7 +381,9 @@ export default function ProfileScreen({ navigation }: any) {
                 className="flex-row items-center justify-between py-3"
               >
                 <View className="flex-row items-center flex-1">
-                  <Text className="text-2xl mr-3">💰</Text>
+                  <View className="w-10 h-10 rounded-full bg-green-100 items-center justify-center mr-3">
+                    <Ionicons name="wallet-outline" size={22} color="#16A34A" />
+                  </View>
                   <View className="flex-1">
                     <Text className="text-base font-medium text-gray-900">Mi Billetera</Text>
                     <Text className="text-sm text-gray-500">Saldo y retiros</Text>
@@ -444,7 +460,9 @@ export default function ProfileScreen({ navigation }: any) {
                 className="flex-row items-center justify-between py-3"
               >
                 <View className="flex-row items-center flex-1">
-                  <Text className="text-2xl mr-3">🛍️</Text>
+                  <View className="w-10 h-10 rounded-full bg-purple-100 items-center justify-center mr-3">
+                    <Ionicons name="bag-outline" size={22} color="#9333EA" />
+                  </View>
                   <View className="flex-1">
                     <Text className="text-base font-medium text-gray-900">Mis Pedidos</Text>
                     <Text className="text-sm text-gray-500">Compras realizadas</Text>
@@ -463,7 +481,9 @@ export default function ProfileScreen({ navigation }: any) {
                 className="flex-row items-center justify-between py-3"
               >
                 <View className="flex-row items-center flex-1">
-                  <Text className="text-2xl mr-3">👤</Text>
+                  <View className="w-10 h-10 rounded-full bg-gray-100 items-center justify-center mr-3">
+                    <Ionicons name="person-outline" size={22} color="#374151" />
+                  </View>
                   <View className="flex-1">
                     <Text className="text-base font-medium text-gray-900">Datos y Banco</Text>
                     <Text className="text-sm text-gray-500">Perfil, CBU/CVU, datos fiscales</Text>
@@ -477,7 +497,9 @@ export default function ProfileScreen({ navigation }: any) {
                 className="flex-row items-center justify-between py-3"
               >
                 <View className="flex-row items-center flex-1">
-                  <Text className="text-2xl mr-3">🔒</Text>
+                  <View className="w-10 h-10 rounded-full bg-gray-100 items-center justify-center mr-3">
+                    <Ionicons name="lock-closed-outline" size={22} color="#374151" />
+                  </View>
                   <View className="flex-1">
                     <Text className="text-base font-medium text-gray-900">Seguridad</Text>
                     <Text className="text-sm text-gray-500">Cambiar contraseña</Text>
@@ -521,7 +543,9 @@ export default function ProfileScreen({ navigation }: any) {
                 className="flex-row items-center justify-between py-3"
               >
                 <View className="flex-row items-center flex-1">
-                  <Text className="text-2xl mr-3">📦</Text>
+                  <View className="w-10 h-10 rounded-full bg-blue-100 items-center justify-center mr-3">
+                    <Ionicons name="cube-outline" size={22} color="#2563EB" />
+                  </View>
                   <View className="flex-1">
                     <Text className="text-base font-medium text-gray-900">Catálogo</Text>
                     <Text className="text-sm text-gray-500">Gestionar productos</Text>
@@ -535,7 +559,9 @@ export default function ProfileScreen({ navigation }: any) {
                 className="flex-row items-center justify-between py-3"
               >
                 <View className="flex-row items-center flex-1">
-                  <Text className="text-2xl mr-3">🛒</Text>
+                  <View className="w-10 h-10 rounded-full bg-orange-100 items-center justify-center mr-3">
+                    <Ionicons name="cart-outline" size={22} color="#EA580C" />
+                  </View>
                   <View className="flex-1">
                     <Text className="text-base font-medium text-gray-900">Pedidos</Text>
                     <Text className="text-sm text-gray-500">Gestionar ventas</Text>
@@ -549,7 +575,9 @@ export default function ProfileScreen({ navigation }: any) {
                 className="flex-row items-center justify-between py-3"
               >
                 <View className="flex-row items-center flex-1">
-                  <Text className="text-2xl mr-3">💰</Text>
+                  <View className="w-10 h-10 rounded-full bg-green-100 items-center justify-center mr-3">
+                    <Ionicons name="wallet-outline" size={22} color="#16A34A" />
+                  </View>
                   <View className="flex-1">
                     <Text className="text-base font-medium text-gray-900">Billetera</Text>
                     <Text className="text-sm text-gray-500">Saldo y retiros</Text>
@@ -563,7 +591,9 @@ export default function ProfileScreen({ navigation }: any) {
                 className="flex-row items-center justify-between py-3"
               >
                 <View className="flex-row items-center flex-1">
-                  <Text className="text-2xl mr-3">📊</Text>
+                  <View className="w-10 h-10 rounded-full bg-indigo-100 items-center justify-center mr-3">
+                    <Ionicons name="bar-chart-outline" size={22} color="#6366F1" />
+                  </View>
                   <View className="flex-1">
                     <Text className="text-base font-medium text-gray-900">Analytics</Text>
                     <Text className="text-sm text-gray-500">Reportes detallados</Text>
@@ -602,7 +632,9 @@ export default function ProfileScreen({ navigation }: any) {
                 className="flex-row items-center justify-between py-3"
               >
                 <View className="flex-row items-center flex-1">
-                  <Text className="text-2xl mr-3">👤</Text>
+                  <View className="w-10 h-10 rounded-full bg-gray-100 items-center justify-center mr-3">
+                    <Ionicons name="person-outline" size={22} color="#374151" />
+                  </View>
                   <View className="flex-1">
                     <Text className="text-base font-medium text-gray-900">Datos Fiscales</Text>
                     <Text className="text-sm text-gray-500">Perfil, CBU/CVU, CUIT</Text>
@@ -616,7 +648,9 @@ export default function ProfileScreen({ navigation }: any) {
                 className="flex-row items-center justify-between py-3"
               >
                 <View className="flex-row items-center flex-1">
-                  <Text className="text-2xl mr-3">🔒</Text>
+                  <View className="w-10 h-10 rounded-full bg-gray-100 items-center justify-center mr-3">
+                    <Ionicons name="lock-closed-outline" size={22} color="#374151" />
+                  </View>
                   <View className="flex-1">
                     <Text className="text-base font-medium text-gray-900">Seguridad</Text>
                     <Text className="text-sm text-gray-500">Cambiar contraseña</Text>
@@ -631,66 +665,74 @@ export default function ProfileScreen({ navigation }: any) {
         {/* Configuración */}
         <View className="px-4 py-4 border-b border-gray-100">
           <Text className="text-sm font-semibold text-gray-500 mb-3">CONFIGURACIÓN</Text>
-          
-          <TouchableOpacity 
+
+          <TouchableOpacity
             onPress={() => navigation.navigate('Notifications')}
             className="flex-row items-center justify-between py-3"
           >
             <View className="flex-row items-center flex-1">
-              <Text className="text-2xl mr-3">🔔</Text>
+              <View className="w-10 h-10 rounded-full bg-red-100 items-center justify-center mr-3">
+                <Ionicons name="notifications-outline" size={22} color="#DC2626" />
+              </View>
               <View className="flex-1">
                 <Text className="text-base font-medium text-gray-900">Notificaciones</Text>
                 <Text className="text-sm text-gray-500">Configurar alertas</Text>
               </View>
             </View>
-            <Text className="text-gray-400">→</Text>
+            <Ionicons name="chevron-forward" size={scale(20)} color="#9CA3AF" />
           </TouchableOpacity>
 
-          <TouchableOpacity 
+          <TouchableOpacity
             onPress={() => navigation.navigate('Language')}
             className="flex-row items-center justify-between py-3"
           >
             <View className="flex-row items-center flex-1">
-              <Text className="text-2xl mr-3">🌎</Text>
+              <View className="w-10 h-10 rounded-full bg-cyan-100 items-center justify-center mr-3">
+                <Ionicons name="globe-outline" size={22} color="#0891B2" />
+              </View>
               <View className="flex-1">
                 <Text className="text-base font-medium text-gray-900">Idioma</Text>
                 <Text className="text-sm text-gray-500">Español</Text>
               </View>
             </View>
-            <Text className="text-gray-400">→</Text>
+            <Ionicons name="chevron-forward" size={scale(20)} color="#9CA3AF" />
           </TouchableOpacity>
         </View>
 
         {/* Soporte */}
         <View className="px-4 py-4 border-b border-gray-100">
           <Text className="text-sm font-semibold text-gray-500 mb-3">SOPORTE</Text>
-          
-          <TouchableOpacity 
+
+          <TouchableOpacity
             onPress={() => navigation.navigate('Help')}
             className="flex-row items-center justify-between py-3"
           >
             <View className="flex-row items-center flex-1">
-              <Text className="text-2xl mr-3">❓</Text>
+              <View className="w-10 h-10 rounded-full bg-amber-100 items-center justify-center mr-3">
+                <Ionicons name="help-circle-outline" size={22} color="#D97706" />
+              </View>
               <View className="flex-1">
                 <Text className="text-base font-medium text-gray-900">Ayuda y Soporte</Text>
                 <Text className="text-sm text-gray-500">Preguntas frecuentes</Text>
               </View>
             </View>
-            <Text className="text-gray-400">→</Text>
+            <Ionicons name="chevron-forward" size={scale(20)} color="#9CA3AF" />
           </TouchableOpacity>
 
-          <TouchableOpacity 
+          <TouchableOpacity
             onPress={() => navigation.navigate('Terms')}
             className="flex-row items-center justify-between py-3"
           >
             <View className="flex-row items-center flex-1">
-              <Text className="text-2xl mr-3">📄</Text>
+              <View className="w-10 h-10 rounded-full bg-gray-100 items-center justify-center mr-3">
+                <Ionicons name="document-text-outline" size={22} color="#374151" />
+              </View>
               <View className="flex-1">
                 <Text className="text-base font-medium text-gray-900">Términos y Condiciones</Text>
                 <Text className="text-sm text-gray-500">Políticas de uso</Text>
               </View>
             </View>
-            <Text className="text-gray-400">→</Text>
+            <Ionicons name="chevron-forward" size={scale(20)} color="#9CA3AF" />
           </TouchableOpacity>
         </View>
 

@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, SafeAreaView } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { scale, moderateScale, verticalScale, wp } from '../../utils/responsive';
 
@@ -23,7 +24,7 @@ export default function Header() {
               height: scale(40),
             }}
           >
-            <Text style={{ fontSize: scale(18), color: 'white' }}>👤</Text>
+            <Ionicons name="person" size={scale(18)} color="white" />
           </TouchableOpacity>
         </View>
 
@@ -37,7 +38,7 @@ export default function Header() {
           }}
           activeOpacity={0.7}
         >
-          <Text style={{ fontSize: scale(18), marginRight: scale(8) }}>🔍</Text>
+          <Ionicons name="search-outline" size={scale(18)} color="#6B7280" style={{ marginRight: scale(8) }} />
           <Text className="text-gray-500">Buscar productos...</Text>
         </TouchableOpacity>
       </View>

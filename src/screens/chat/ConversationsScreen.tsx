@@ -7,8 +7,10 @@ import {
   Image,
   ActivityIndicator,
   RefreshControl,
+  StatusBar,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../contexts/AuthContext';
 import { getUserConversations, Conversation } from '../../services/chat';
 import { TAB_BAR_HEIGHT } from '../../navigation/AppNavigator';
@@ -16,6 +18,7 @@ import { COLORS } from '../../constants/theme';
 import { scale, moderateScale, verticalScale } from '../../utils/responsive';
 
 export default function ConversationsScreen({ navigation }: any) {
+  const insets = useSafeAreaInsets();
   const { user } = useAuth();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
@@ -86,7 +89,7 @@ export default function ConversationsScreen({ navigation }: any) {
             />
           ) : (
             <View className="w-14 h-14 rounded-full bg-gray-200 items-center justify-center">
-              <Text className="text-2xl">👤</Text>
+              <Ionicons name="person" size={28} color="#9CA3AF" />
             </View>
           )}
         </View>
@@ -110,9 +113,12 @@ export default function ConversationsScreen({ navigation }: any) {
 
           {/* Product Info */}
           {item.product && (
-            <Text className="text-xs text-gray-500 mb-1" numberOfLines={1}>
-              📦 {item.product.name}
-            </Text>
+            <View className="flex-row items-center mb-1">
+              <Ionicons name="cube-outline" size={12} color="#6B7280" style={{ marginRight: 4 }} />
+              <Text className="text-xs text-gray-500 flex-1" numberOfLines={1}>
+                {item.product.name}
+              </Text>
+            </View>
           )}
 
           {/* Last Message */}
@@ -155,16 +161,19 @@ export default function ConversationsScreen({ navigation }: any) {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
+    <SafeAreaView className="flex-1 bg-white" edges={['top']}>
+      <StatusBar barStyle="dark-content" />
       {/* Header */}
-      <View className="px-5 py-4 border-b border-gray-200">
-        <Text className="text-2xl font-bold">Mensajes</Text>
+      <View className="px-5 py-4 border-b border-gray-100">
+        <Text className="text-2xl font-bold text-gray-900">Mensajes</Text>
       </View>
 
       {/* Conversations List */}
       {conversations.length === 0 ? (
-        <View className="flex-1 items-center justify-center px-5">
-          <Text className="text-6xl mb-4">💬</Text>
+        <View className="flex-1 items-center justify-center px-5" style={{ paddingBottom: TAB_BAR_HEIGHT + insets.bottom }}>
+          <View className="w-24 h-24 rounded-full bg-gray-100 items-center justify-center mb-4">
+            <Ionicons name="chatbubbles-outline" size={48} color="#9CA3AF" />
+          </View>
           <Text className="text-xl font-bold text-gray-900 mb-2">
             No hay conversaciones
           </Text>
@@ -177,7 +186,7 @@ export default function ConversationsScreen({ navigation }: any) {
           data={conversations}
           renderItem={renderConversation}
           keyExtractor={(item) => item.id}
-          contentContainerStyle={{ paddingBottom: TAB_BAR_HEIGHT + 20 }}
+          contentContainerStyle={{ paddingBottom: TAB_BAR_HEIGHT + insets.bottom + 20 }}
           refreshControl={
             <RefreshControl
               refreshing={refreshing}

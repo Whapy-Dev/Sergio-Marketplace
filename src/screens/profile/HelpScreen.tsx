@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
+import { COLORS } from '../../constants/theme';
 import { scale, moderateScale, verticalScale } from '../../utils/responsive';
 
 const FAQ_ITEMS = [
@@ -58,7 +60,7 @@ export default function HelpScreen({ navigation }: any) {
       {/* Header */}
       <View className="px-4 py-3 border-b border-gray-200 flex-row items-center">
         <TouchableOpacity onPress={() => navigation.goBack()} className="mr-3">
-          <Text className="text-primary text-2xl font-bold">←</Text>
+          <Ionicons name="arrow-back" size={24} color={COLORS.primary} />
         </TouchableOpacity>
         <Text className="text-xl font-bold text-gray-900">Ayuda y Soporte</Text>
       </View>
@@ -120,7 +122,9 @@ export default function HelpScreen({ navigation }: any) {
           </Text>
 
           <View className="flex-row items-center py-3">
-            <Text className="text-2xl mr-3">📧</Text>
+            <View className="w-10 h-10 rounded-full bg-blue-100 items-center justify-center mr-3">
+              <Ionicons name="mail-outline" size={20} color="#2563EB" />
+            </View>
             <View>
               <Text className="text-sm text-gray-500">Email</Text>
               <Text className="text-base text-gray-900">soporte@marketplace.com</Text>
@@ -128,7 +132,9 @@ export default function HelpScreen({ navigation }: any) {
           </View>
 
           <View className="flex-row items-center py-3">
-            <Text className="text-2xl mr-3">📱</Text>
+            <View className="w-10 h-10 rounded-full bg-green-100 items-center justify-center mr-3">
+              <Ionicons name="logo-whatsapp" size={20} color="#16A34A" />
+            </View>
             <View>
               <Text className="text-sm text-gray-500">WhatsApp</Text>
               <Text className="text-base text-gray-900">+54 370 123-4567</Text>
@@ -136,7 +142,9 @@ export default function HelpScreen({ navigation }: any) {
           </View>
 
           <View className="flex-row items-center py-3">
-            <Text className="text-2xl mr-3">📍</Text>
+            <View className="w-10 h-10 rounded-full bg-red-100 items-center justify-center mr-3">
+              <Ionicons name="location-outline" size={20} color="#DC2626" />
+            </View>
             <View>
               <Text className="text-sm text-gray-500">Dirección</Text>
               <Text className="text-base text-gray-900">Formosa, Argentina</Text>

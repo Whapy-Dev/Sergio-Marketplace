@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, ScrollView, ActivityIndicator, TouchableOpacity, Alert, Image } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { View, Text, ScrollView, ActivityIndicator, TouchableOpacity, Alert, Image, StatusBar } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useFavorites } from '../../contexts/FavoritesContext';
@@ -25,6 +25,7 @@ interface FavoriteProduct {
 }
 
 export default function FavoritesScreen({ navigation }: any) {
+  const insets = useSafeAreaInsets();
   const { favorites, loading: favoritesLoading, refreshFavorites } = useFavorites();
   const { user } = useAuth();
   const { totalItems } = useCart();
@@ -212,70 +213,75 @@ export default function FavoritesScreen({ navigation }: any) {
 
   return (
     <View className="flex-1 bg-white">
+      <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
+
       {/* Header con gradiente */}
       <LinearGradient
         colors={['#2563EB', '#DC2626']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
-        style={{ height: verticalScale(100), borderBottomLeftRadius: scale(40), borderBottomRightRadius: scale(40) }}
+        style={{
+          paddingTop: insets.top,
+          paddingBottom: 12,
+          borderBottomLeftRadius: 24,
+          borderBottomRightRadius: 24,
+        }}
       >
-        <SafeAreaView className="flex-1">
-          <View className="px-5 pt-2 flex-row items-center justify-between">
-            <Text className="text-lg font-bold text-white">
-              Mis Favoritos
-            </Text>
+        <View className="px-5 py-2 flex-row items-center justify-between">
+          <Text className="text-lg font-bold text-white">
+            Mis Favoritos
+          </Text>
 
-            <View className="flex-row">
-              {/* Icono de notificaciones */}
-              <TouchableOpacity
-                style={{ width: scale(28), height: scale(28), alignItems: 'center', justifyContent: 'center', marginRight: scale(16) }}
-                onPress={() => navigation.navigate('Profile', { screen: 'Notifications' })}
-              >
-                <Ionicons name="notifications-outline" size={scale(28)} color="white" />
-              </TouchableOpacity>
+          <View className="flex-row items-center">
+            {/* Icono de notificaciones */}
+            <TouchableOpacity
+              className="mr-4 p-1"
+              onPress={() => navigation.navigate('Profile', { screen: 'Notifications' })}
+            >
+              <Ionicons name="notifications-outline" size={24} color="white" />
+            </TouchableOpacity>
 
-              {/* Icono de carrito */}
-              <TouchableOpacity
-                style={{ width: scale(28), height: scale(28), alignItems: 'center', justifyContent: 'center', position: 'relative' }}
-                onPress={() => navigation.navigate('Cart')}
-              >
-                <Ionicons name="cart-outline" size={scale(28)} color="white" />
-                {totalItems > 0 && (
-                  <View style={{ position: 'absolute', top: -scale(4), right: -scale(4), backgroundColor: 'white', borderRadius: scale(8), width: scale(16), height: scale(16), alignItems: 'center', justifyContent: 'center' }}>
-                    <Text className="text-[10px] font-bold text-primary">
-                      {totalItems > 9 ? '9+' : totalItems}
-                    </Text>
-                  </View>
-                )}
-              </TouchableOpacity>
-            </View>
+            {/* Icono de carrito */}
+            <TouchableOpacity
+              className="p-1 relative"
+              onPress={() => navigation.navigate('Cart')}
+            >
+              <Ionicons name="cart-outline" size={24} color="white" />
+              {totalItems > 0 && (
+                <View className="absolute -top-1 -right-1 bg-white rounded-full w-4 h-4 items-center justify-center">
+                  <Text className="text-[10px] font-bold text-primary">
+                    {totalItems > 9 ? '9+' : totalItems}
+                  </Text>
+                </View>
+              )}
+            </TouchableOpacity>
           </View>
-        </SafeAreaView>
+        </View>
       </LinearGradient>
 
       {/* Tabs */}
-      <View style={{ height: verticalScale(53), paddingHorizontal: scale(20), marginTop: verticalScale(4), flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+      <View className="flex-row px-5 py-3 border-b border-gray-100">
         <TouchableOpacity
-          className={`flex-1 h-11 items-center justify-center border-b-2 ${
-            activeTab === 'favorites' ? 'border-black' : 'border-transparent'
+          className={`flex-1 py-2 items-center border-b-2 ${
+            activeTab === 'favorites' ? 'border-primary' : 'border-transparent'
           }`}
           onPress={() => setActiveTab('favorites')}
         >
-          <Text className={`text-lg ${
-            activeTab === 'favorites' ? 'font-medium text-black' : 'font-normal text-gray-400'
+          <Text className={`text-base ${
+            activeTab === 'favorites' ? 'font-semibold text-primary' : 'font-normal text-gray-400'
           }`}>
             Favoritos
           </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          className={`flex-1 h-11 items-center justify-center border-b-2 ${
-            activeTab === 'lists' ? 'border-black' : 'border-transparent'
+          className={`flex-1 py-2 items-center border-b-2 ${
+            activeTab === 'lists' ? 'border-primary' : 'border-transparent'
           }`}
           onPress={() => setActiveTab('lists')}
         >
-          <Text className={`text-lg ${
-            activeTab === 'lists' ? 'font-medium text-black' : 'font-normal text-gray-400'
+          <Text className={`text-base ${
+            activeTab === 'lists' ? 'font-semibold text-primary' : 'font-normal text-gray-400'
           }`}>
             Listas
           </Text>
@@ -283,7 +289,7 @@ export default function FavoritesScreen({ navigation }: any) {
       </View>
 
       {/* Lista de productos o listas */}
-      <ScrollView className="flex-1 px-5 pt-6" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: TAB_BAR_HEIGHT + 20 }}>
+      <ScrollView className="flex-1 px-5 pt-4" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: TAB_BAR_HEIGHT + insets.bottom + 20 }}>
         {activeTab === 'favorites' ? (
           products.map((product) => (
             <FavoriteProductItem

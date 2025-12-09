@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(wc:*)",
+      "Bash(grep:*)",
+      "Bash(npx tsc:*)",
+      "Bash(dir \"C:\\Users\\marti\\Desktop\\Iconos\")",
+      "Bash(dir \"C:\\Users\\marti\\Desktop\\Iconos\" /b)",
+      "Bash(copy \"C:\\Users\\marti\\Desktop\\Iconos\\*.png\" \"C:\\Users\\marti\\Desktop\\Sergio-Marketplace-main\\assets\\categories\"\")",
+      "Bash(powershell -Command:*)",
+      "WebSearch",
+      "WebFetch(domain:3dicons.co)",
+      "WebFetch(domain:www.flaticon.com)",
+      "WebFetch(domain:iconscout.com)",
+      "WebFetch(domain:free3dicon.com)",
+      "WebFetch(domain:pixcap.com)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
+    ]
+  }
+}

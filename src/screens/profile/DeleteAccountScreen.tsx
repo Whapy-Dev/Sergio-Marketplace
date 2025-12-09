@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../contexts/AuthContext';
 import { deleteAccount } from '../../services/profile';
 import Button from '../../components/common/Button';
+import { COLORS } from '../../constants/theme';
 import { scale, moderateScale, verticalScale } from '../../utils/responsive';
 
 export default function DeleteAccountScreen({ navigation }: any) {
@@ -50,14 +52,16 @@ export default function DeleteAccountScreen({ navigation }: any) {
       {/* Header */}
       <View className="px-4 py-3 border-b border-gray-200 flex-row items-center">
         <TouchableOpacity onPress={() => navigation.goBack()} className="mr-3">
-          <Text className="text-primary text-2xl font-bold">←</Text>
+          <Ionicons name="arrow-back" size={24} color={COLORS.primary} />
         </TouchableOpacity>
         <Text className="text-xl font-bold text-gray-900">Eliminar Cuenta</Text>
       </View>
 
       <ScrollView className="flex-1 px-4 py-6">
         <View className="items-center mb-6">
-          <Text className="text-6xl mb-4">⚠️</Text>
+          <View className="w-24 h-24 rounded-full bg-red-100 items-center justify-center mb-4">
+            <Ionicons name="warning-outline" size={48} color="#DC2626" />
+          </View>
           <Text className="text-2xl font-bold text-gray-900 mb-2">¿Estás seguro?</Text>
         </View>
 
@@ -72,35 +76,35 @@ export default function DeleteAccountScreen({ navigation }: any) {
 
         <View className="mb-6">
           <View className="flex-row items-start mb-3">
-            <Text className="text-lg mr-2">❌</Text>
+            <Ionicons name="close-circle" size={20} color="#DC2626" style={{ marginRight: 8, marginTop: 2 }} />
             <Text className="flex-1 text-base text-gray-700">
               Todos tus datos personales
             </Text>
           </View>
 
           <View className="flex-row items-start mb-3">
-            <Text className="text-lg mr-2">❌</Text>
+            <Ionicons name="close-circle" size={20} color="#DC2626" style={{ marginRight: 8, marginTop: 2 }} />
             <Text className="flex-1 text-base text-gray-700">
               Historial de compras y pedidos
             </Text>
           </View>
 
           <View className="flex-row items-start mb-3">
-            <Text className="text-lg mr-2">❌</Text>
+            <Ionicons name="close-circle" size={20} color="#DC2626" style={{ marginRight: 8, marginTop: 2 }} />
             <Text className="flex-1 text-base text-gray-700">
               Lista de favoritos
             </Text>
           </View>
 
           <View className="flex-row items-start mb-3">
-            <Text className="text-lg mr-2">❌</Text>
+            <Ionicons name="close-circle" size={20} color="#DC2626" style={{ marginRight: 8, marginTop: 2 }} />
             <Text className="flex-1 text-base text-gray-700">
               Productos publicados (si eres vendedor)
             </Text>
           </View>
 
           <View className="flex-row items-start mb-3">
-            <Text className="text-lg mr-2">❌</Text>
+            <Ionicons name="close-circle" size={20} color="#DC2626" style={{ marginRight: 8, marginTop: 2 }} />
             <Text className="flex-1 text-base text-gray-700">
               Valoraciones y comentarios
             </Text>

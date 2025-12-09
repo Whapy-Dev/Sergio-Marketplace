@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, Image } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { scale, moderateScale, verticalScale, wp } from '../../utils/responsive';
 
 interface ProductCardProps {
@@ -40,7 +41,7 @@ export default function ProductCard({
             resizeMode="cover"
           />
         ) : (
-          <Text style={{ fontSize: scale(48) }}>📦</Text>
+          <Ionicons name="cube-outline" size={scale(48)} color="#9CA3AF" />
         )}
         
         {discount > 0 && (
